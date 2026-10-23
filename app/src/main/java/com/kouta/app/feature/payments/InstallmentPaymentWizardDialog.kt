@@ -178,6 +178,17 @@ fun InstallmentPaymentWizardDialog(
     }
 
     var currentStep by remember { mutableStateOf(WizardStep.SELECT_METHOD) }
+
+    val activity = context as? android.app.Activity
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        com.kouta.app.core.security.ScreenSecurityManager.enterSensitiveScreen(activity)
+        onDispose {
+            com.kouta.app.core.security.ScreenSecurityManager.exitSensitiveScreen(
+                activity,
+                com.kouta.app.core.security.PinSecurityManager.isLocked(context)
+            )
+        }
+    }
     var selectedChannel by remember { mutableStateOf(PAYMENT_CHANNELS.first()) }
     var selectedOriginBank by remember { mutableStateOf(PERU_BANKS.first()) }
     var payerPhone by remember { mutableStateOf("987654321") }
@@ -641,6 +652,7 @@ fun InstallmentPaymentWizardDialog(
 
                             Button(
                                 onClick = {
+                                    if (!com.kouta.app.core.security.FintechOperationLock.canExecuteAction("confirm_installment_payment")) return@Button
                                     currentStep = WizardStep.VERIFYING_AND_TIMELINE
                                     onConfirmPayment(
                                         selectedChannel.id,

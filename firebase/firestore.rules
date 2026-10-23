@@ -3,58 +3,112 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Función auxiliar: verifica que el usuario esté autenticado
+    // Helper de autenticación básica
     function isAuthenticated() {
-      return request.auth != null;
+      return request.auth != null && request.auth.uid != null;
     }
 
-    // Función auxiliar: verifica que el UID coincida con el ID del negocio
+    // Helper: verifica si el solicitante es el propietario legítimo del recurso
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Perfil del negocio MYPE
+    // Helper: valida que el importe de venta sea entero positivo en centavos y moneda PEN
+    function isValidSale(data) {
+      return data.totalAmountCents is int
+        && data.totalAmountCents > 0
+        && data.totalAmountCents <= 1000000000
+        && data.currency == 'PEN'
+        && (data.status == 'PENDING' || data.status == 'PROCESSING');
+    }
+
+    // Perfil del negocio MYPE y subcolecciones
     match /merchants/{merchantId} {
-      allow read, write: if true;
+      // Solo el propietario autenticado puede consultar su información
+      allow read: if isOwner(merchantId);
 
-      // Ventas a crédito y cuotas de la MYPE
+      // Creación y actualización de perfil:
+      // - El cliente NUNCA puede auto-aprobarse el KYC ('APPROVED').
+      // - El cliente NUNCA puede auto-asignarse límites de crédito o saldo.
+      allow create: if isOwner(merchantId)
+        && (!('kycStatus' in request.resource.data) || request.resource.data.kycStatus == 'PENDING_REVIEW')
+        && (!('creditLimitCents' in request.resource.data));
+
+      allow update: if isOwner(merchantId)
+        && (!('kycStatus' in request.resource.data)
+            || request.resource.data.kycStatus == 'PENDING_REVIEW'
+            || request.resource.data.kycStatus == resource.data.kycStatus)
+        && (!('creditLimitCents' in request.resource.data)
+            || request.resource.data.creditLimitCents == resource.data.creditLimitCents);
+
+      // Prohibida la eliminación directa del comerciante desde el cliente
+      allow delete: if false;
+
+      // Ventas y facturación a crédito de la MYPE
       match /sales/{saleId} {
-        allow read, write: if true;
+        allow read: if isOwner(merchantId);
+        allow create: if isOwner(merchantId) && isValidSale(request.resource.data);
+        allow update: if isOwner(merchantId) && isValidSale(request.resource.data) && request.resource.data.merchantId == merchantId;
+        allow delete: if isOwner(merchantId);
       }
 
-      // Clientes registrados por la MYPE
+      // Directorio de clientes de la MYPE
       match /customers/{customerId} {
-        allow read, write: if true;
+        allow read, write: if isOwner(merchantId);
       }
     }
 
-    // Solicitudes de verificación KYC
+    // Solicitudes de verificación KYC (DNI peruano - Ley N° 29733)
     match /kyc_requests/{requestId} {
-      allow read, write: if true;
+      // El cliente autenticado solo puede registrar una solicitud con estado PENDING_REVIEW
+      // y consentimiento explícito otorgado
+      allow create: if isAuthenticated()
+        && request.resource.data.merchantId == request.auth.uid
+        && request.resource.data.kycStatus == 'PENDING_REVIEW'
+        && request.resource.data.consentGiven == true;
+
+      // Solo el dueño de la solicitud puede consultar su estado
+      allow read: if isAuthenticated() && resource.data.merchantId == request.auth.uid;
+
+      // El cliente NO puede modificar el estado ni eliminar la solicitud (inmutable desde Android)
+      allow update, delete: if false;
     }
 
-    // Registro de dispositivos para notificaciones push (FCM)
+    // Registro de tokens FCM para notificaciones push transaccionales
     match /devices/{deviceToken} {
-      allow read, write: if true;
+      allow read, write: if isAuthenticated();
     }
 
-    // Reclamaciones y quejas (Libro de Reclamaciones - Ley N° 29571)
+    // Libro de Reclamaciones (Ley N° 29571 / INDECOPI)
     match /claims/{claimId} {
-      allow create: if true;
-      allow read: if true; // Permite consultar el estado con el número de reclamo
-      allow update, delete: if false; // Inmutable para auditoría INDECOPI
+      // Cualquier consumidor puede registrar un reclamo legal formal (estado inicial obligado RECEIVED)
+      allow create: if request.resource.data.status == 'RECEIVED'
+        && request.resource.data.claim_number == claimId;
+
+      // Consulta de estado permitida con el número de reclamo
+      allow read: if true;
+
+      // Inmutable para trazabilidad y auditoría de protección al consumidor
+      allow update, delete: if false;
     }
 
-    // Sesiones temporales de código QR dinámico
+    // Sesiones de cobro con QR dinámico seguro
     match /qr_sessions/{sessionId} {
-      allow read, write: if true;
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.merchantId == request.auth.uid;
+      allow update, delete: if false;
     }
 
-    // Registro contable de auditoría inmutable
+    // Registro contable de auditoría inmutable (Append-only)
     match /audit_ledger/{entryId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update, delete: if false; // Append-only inmutable
+      allow update, delete: if false;
+    }
+
+    // Denegación estricta por defecto para cualquier otra ruta no declarada
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

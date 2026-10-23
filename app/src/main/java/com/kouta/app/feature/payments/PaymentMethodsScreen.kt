@@ -195,6 +195,18 @@ fun PaymentMethodsScreen(onOpenFinancing: () -> Unit = {}) {
     var showLearnMoreDialog by remember { mutableStateOf(false) }
     var isCardDemoPaused by rememberSaveable { mutableStateOf(false) }
 
+    val activity = context as? android.app.Activity
+    androidx.compose.runtime.LaunchedEffect(showCardFullDetail, showLimitsSheet) {
+        if (showCardFullDetail || showLimitsSheet) {
+            com.kouta.app.core.security.ScreenSecurityManager.enterSensitiveScreen(activity)
+        } else {
+            com.kouta.app.core.security.ScreenSecurityManager.exitSensitiveScreen(
+                activity,
+                com.kouta.app.core.security.PinSecurityManager.isLocked(context)
+            )
+        }
+    }
+
     // Medio de pago preferido (independiente de la tarjeta seleccionada)
     var selectedMethod by remember { mutableStateOf(paymentMethods.first().name) }
     var pendingSelectedMethod by remember { mutableStateOf(paymentMethods.first().name) }

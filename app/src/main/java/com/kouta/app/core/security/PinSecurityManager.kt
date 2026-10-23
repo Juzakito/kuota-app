@@ -109,6 +109,21 @@ object PinSecurityManager {
         return state.isConfigured && state.isLocked
     }
 
+    /**
+     * Fuerza el bloqueo de la aplicación inmediatamente (por inactividad, solicitud de usuario o reautenticación).
+     */
+    fun lock(context: Context) = synchronized(LOCK) {
+        val current = currentState(context)
+        if (!current.isConfigured || current.isLocked) return@synchronized
+        val now = System.currentTimeMillis()
+        val lockedState = current.copy(
+            isLocked = true,
+            updatedAtEpochMillis = now
+        )
+        writeStateInternal(context.applicationContext, lockedState)
+        _stateFlow.value = lockedState
+    }
+
     fun isValidPinFormat(pin: String): Boolean =
         pin.length == PIN_LENGTH && pin.all { it in '0'..'9' }
 

@@ -107,6 +107,17 @@ fun DniVerificationScreen(
     val scope = rememberCoroutineScope()
     val appSettings = remember(context) { AppSettings(context) }
 
+    val activity = context as? android.app.Activity
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        com.kouta.app.core.security.ScreenSecurityManager.enterSensitiveScreen(activity)
+        onDispose {
+            com.kouta.app.core.security.ScreenSecurityManager.exitSensitiveScreen(
+                activity,
+                com.kouta.app.core.security.PinSecurityManager.isLocked(context)
+            )
+        }
+    }
+
     // Estados persistentes y de formulario
     var currentStatus by remember { mutableStateOf(appSettings.kycStatus) }
     var requestId by remember { mutableStateOf(appSettings.kycRequestId ?: "") }
@@ -646,6 +657,7 @@ fun DniVerificationScreen(
                         // Botón principal de validación
                         Button(
                             onClick = {
+                                if (!com.kouta.app.core.security.FintechOperationLock.canExecuteAction("submit_kyc")) return@Button
                                 focusManager.clearFocus()
                                 when {
                                     dniNumber.length != 8 -> {
