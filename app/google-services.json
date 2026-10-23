@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "955315651156",
+    "project_id": "kuota-android-d049f",
+    "storage_bucket": "kuota-android-d049f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:955315651156:android:eb14b57b0c03e9411863c1",
+        "android_client_info": {
+          "package_name": "com.kouta.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLVPliK2vcCc4eeU-osuvLw2ykk4f122U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

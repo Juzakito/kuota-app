@@ -1,0 +1,29 @@
+HOJA DE RECLAMACIÓN VIRTUAL N° LR-2026-000001
+Fecha de recepción: 2026-10-20T17:33:11.341993200-05:00 (America/Lima)
+Plazo de respuesta: 15 días hábiles · vence el 2026-11-10
+
+1. PROVEEDOR
+Razón social: Kuota Perú S.A.C. [DEMO] · RUC: 00000000000 [DEMO]
+Domicilio: Lima, Perú [DEMO]
+
+2. CONSUMIDOR
+Nombre: Ana Perez
+Documento: DNI 12345678
+Domicilio: Av. Siempre Viva 123
+Teléfono: 987654321 · Correo: ana@example.pe
+
+3. BIEN CONTRATADO
+Tipo: SERVICIO · Descripción: Financiamiento Kuota
+Monto reclamado: S/ 250.00
+Operación relacionada: OP-001
+
+4. DETALLE (RECLAMO)
+Tema: PAGO_NO_REFLEJADO
+Pague mi cuota semanal y no se refleja en el plan.
+
+Pedido del consumidor:
+Que se registre el pago y se actualice mi cronograma.
+
+RECLAMO: disconformidad relacionada con los productos o servicios.
+QUEJA: disconformidad no relacionada con los productos o servicios, o malestar respecto a la atención.
+La formulación del reclamo no impide acudir a otras vías de solución de controversias ni es requisito previo para interponer una denuncia ante el INDECOPI.
