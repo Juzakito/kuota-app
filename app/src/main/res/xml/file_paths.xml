@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <cache-path
+        name="shared_qr"
+        path="shared_qr/" />
+    <cache-path
+        name="kyc_docs"
+        path="kyc_docs/" />
+</paths>

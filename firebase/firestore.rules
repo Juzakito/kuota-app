@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Función auxiliar: verifica que el usuario esté autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Función auxiliar: verifica que el UID coincida con el ID del negocio
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Perfil del negocio MYPE
+    match /merchants/{merchantId} {
+      allow read, write: if true;
+
+      // Ventas a crédito y cuotas de la MYPE
+      match /sales/{saleId} {
+        allow read, write: if true;
+      }
+
+      // Clientes registrados por la MYPE
+      match /customers/{customerId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Solicitudes de verificación KYC
+    match /kyc_requests/{requestId} {
+      allow read, write: if true;
+    }
+
+    // Registro de dispositivos para notificaciones push (FCM)
+    match /devices/{deviceToken} {
+      allow read, write: if true;
+    }
+
+    // Reclamaciones y quejas (Libro de Reclamaciones - Ley N° 29571)
+    match /claims/{claimId} {
+      allow create: if true;
+      allow read: if true; // Permite consultar el estado con el número de reclamo
+      allow update, delete: if false; // Inmutable para auditoría INDECOPI
+    }
+
+    // Sesiones temporales de código QR dinámico
+    match /qr_sessions/{sessionId} {
+      allow read, write: if true;
+    }
+
+    // Registro contable de auditoría inmutable
+    match /audit_ledger/{entryId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Append-only inmutable
+    }
+  }
+}

@@ -1,0 +1,45 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Gradle files
+.gradle/
+build/
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration file (sdk.dir, etc)
+local.properties
+
+# Log files
+*.log
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Node / Firebase
+node_modules/
+firebase/functions/node_modules/
+firebase/functions/lib/
+.env
+.env.local
+.env.*.local
+firebase/functions/.env
+
+# OS / Keystore files
+.DS_Store
+Thumbs.db
+*.jks
+*.keystore
+*.key
+google-services.json.bak
