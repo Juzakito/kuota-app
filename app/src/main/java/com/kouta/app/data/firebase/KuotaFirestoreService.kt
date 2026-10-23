@@ -290,4 +290,24 @@ object KuotaFirestoreService {
         Log.i(TAG, "Reclamación $claimNumber guardada en Firestore")
         return claimNumber
     }
+
+    /**
+     * Observa el estado de verificación KYC del comerciante en tiempo real.
+     */
+    fun observeMerchantKycStatus(context: Context): Flow<String?> = callbackFlow {
+        val db = getDb()
+        val auth = FirebaseAuth.getInstance()
+        val merchantId = auth.currentUser?.uid ?: AppSettings(context).pullToken
+
+        val registration = db.collection("merchants").document(merchantId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.w(TAG, "Error escuchando estado KYC: ${error.message}")
+                    return@addSnapshotListener
+                }
+                val status = snapshot?.getString("kycStatus")
+                trySend(status)
+            }
+        awaitClose { registration.remove() }
+    }
 }

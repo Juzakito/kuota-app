@@ -124,6 +124,15 @@ fun DniVerificationScreen(
     var dniNumber by remember { mutableStateOf(appSettings.kycDni ?: "") }
     var fullName by remember { mutableStateOf(appSettings.kycFullName ?: "") }
     var consentAccepted by remember { mutableStateOf(appSettings.kycConsentGiven) }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        KuotaFirestoreService.observeMerchantKycStatus(context).collect { cloudStatus ->
+            if (cloudStatus != null && cloudStatus != currentStatus) {
+                currentStatus = cloudStatus
+                appSettings.kycStatus = cloudStatus
+            }
+        }
+    }
     var capturedPhotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     var isLoading by remember { mutableStateOf(false) }
@@ -659,9 +668,10 @@ fun DniVerificationScreen(
                             onClick = {
                                 if (!com.kouta.app.core.security.FintechOperationLock.canExecuteAction("submit_kyc")) return@Button
                                 focusManager.clearFocus()
+                                val dniCheck = com.kouta.app.core.util.PeruDniValidator.validateDni(dniNumber)
                                 when {
-                                    dniNumber.length != 8 -> {
-                                        errorMessage = "El DNI debe tener exactamente 8 dígitos numéricos."
+                                    !dniCheck.isValid -> {
+                                        errorMessage = dniCheck.errorMessage ?: "El DNI no cumple el formato oficial de RENIEC."
                                     }
                                     fullName.trim().length < 3 -> {
                                         errorMessage = "Ingresa el nombre completo del titular (mínimo 3 letras)."

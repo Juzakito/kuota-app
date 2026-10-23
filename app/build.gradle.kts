@@ -92,6 +92,8 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation("com.google.firebase:firebase-appcheck-debug")
 
     // QR Code Generation & Real Camera Scanning (ZXing + CameraX)
     implementation("com.google.zxing:core:3.5.3")

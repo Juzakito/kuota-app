@@ -1,5 +1,6 @@
 package com.kouta.app.core.security
 
+import com.kouta.app.core.util.PeruDniValidator
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,7 +13,7 @@ import java.util.UUID
 
 /**
  * Suite de pruebas unitarias para los controles de seguridad fintech de KUOTA.
- * Verifica inactividad, idempotencia, debounce, enmascaramiento de datos y aritmética de centavos.
+ * Verifica inactividad, idempotencia, debounce, validación oficial de DNI y aritmética de centavos.
  */
 class FintechSecuritySuiteTest {
 
@@ -31,7 +32,6 @@ class FintechSecuritySuiteTest {
         assertNotNull(key2)
         assertNotEquals(key1, key2)
 
-        // Verifica que cumpla el estándar de UUID
         val parsed1 = UUID.fromString(key1)
         assertEquals(4, parsed1.version())
     }
@@ -82,15 +82,29 @@ class FintechSecuritySuiteTest {
     }
 
     @Test
-    fun `DNI masking function preserves privacy in logs and UI`() {
-        fun maskDni(dni: String): String {
-            val sanitized = dni.filter { it.isDigit() }
-            return if (sanitized.length == 8) "****${sanitized.takeLast(4)}" else "********"
-        }
+    fun `PeruDniValidator accurately verifies structure, rejects blacklists and calculates check digits`() {
+        // Validación de longitud
+        val shortResult = PeruDniValidator.validateDni("1234567")
+        assertFalse(shortResult.isValid)
+        assertTrue(shortResult.errorMessage!!.contains("8 dígitos"))
 
-        assertEquals("****5678", maskDni("12345678"))
-        assertEquals("****9012", maskDni("78909012"))
-        assertEquals("********", maskDni("123"))
+        // Rechazo de DNI de prueba
+        val blacklistResult = PeruDniValidator.validateDni("00000000")
+        assertFalse(blacklistResult.isValid)
+        assertTrue(blacklistResult.errorMessage!!.contains("prueba"))
+
+        // DNI válido
+        val validResult = PeruDniValidator.validateDni("48291500")
+        assertTrue(validResult.isValid)
+        assertNotNull(validResult.expectedCheckDigit)
+        assertNotNull(validResult.expectedCheckChar)
+    }
+
+    @Test
+    fun `DNI masking function preserves privacy in logs and UI`() {
+        assertEquals("****5678", PeruDniValidator.maskDni("12345678"))
+        assertEquals("****9012", PeruDniValidator.maskDni("78909012"))
+        assertEquals("********", PeruDniValidator.maskDni("123"))
     }
 
     @Test
