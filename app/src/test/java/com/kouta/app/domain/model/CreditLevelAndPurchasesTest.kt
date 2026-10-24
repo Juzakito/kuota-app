@@ -363,4 +363,83 @@ class CreditLevelAndPurchasesTest {
         assertEquals("Calzado y Cueros", updatedProfile.commercialCategory)
         assertEquals("Caquetá, San Martín de Porres", updatedProfile.commercialZone)
     }
+
+    @Test
+    fun verifyFase5EndToEndFullCycleFromQrToSettlementAndLevelUpgrade() {
+        // PRD v0.3: Ciclo completo de compra, liquidación y subida de nivel
+        var currentLevel = CreditLevel.NIVEL_1
+        var availableLineCents = 300_00L // S/ 300 inicial
+
+        // 1. Escaneo QR en tienda mayorista: compra por S/ 200.00
+        val purchaseAmountCents = 200_00L
+        val eligibility = PurchaseEligibilityCheck.validate(
+            totalAmountCents = purchaseAmountCents,
+            currentLevel = currentLevel,
+            availableLineCents = availableLineCents,
+            hasActiveOpenTransaction = false
+        )
+        assertTrue("Compra de S/ 200 dentro de línea de S/ 300 debe ser elegible", eligibility.isEligible)
+        assertEquals("Inicial al 50% es S/ 100", 100_00L, eligibility.downPaymentCents)
+        assertEquals("Saldo financiado es S/ 100", 100_00L, eligibility.financedCents)
+
+        // 2. Creación de la compra en Fase 1
+        val purchase = CreditPurchase(
+            id = "pur-e2e-1",
+            supplierId = "sup-pepe",
+            supplierName = "Distribuidora Don Pepe",
+            totalAmountCents = purchaseAmountCents,
+            creditLevelNumber = currentLevel.levelNumber,
+            downPaymentPercent = currentLevel.downPaymentPercentage,
+            downPaymentCents = eligibility.downPaymentCents,
+            financedAmountCents = eligibility.financedCents,
+            supplierPayout48hCents = currentLevel.calculateSupplierPayout48hCents(purchaseAmountCents, eligibility.downPaymentCents),
+            kuotaFeeCents = (purchaseAmountCents * 2L) / 100L,
+            phase = PurchasePhase.PHASE_1_DOWN_PAYMENT_SUBMITTED
+        )
+
+        assertTrue(purchase.isOpen)
+        assertEquals(96_00L, purchase.supplierPayout48hCents)
+        assertEquals(4_00L, purchase.kuotaFeeCents)
+
+        // 3. Proveedor confirma pago inicial en pantalla Por Confirmar
+        val confirmedPurchase = purchase.copy(
+            phase = PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION,
+            confirmedBySupplierAtEpochMillis = System.currentTimeMillis()
+        )
+        assertEquals("Inicial confirmada", confirmedPurchase.statusLabel)
+
+        // 4. Comprador elige cronograma de 2 cuotas a 15 días (plazo permitido en Nivel 1)
+        assertTrue(15 in currentLevel.availableTermsDays)
+        val activePurchase = confirmedPurchase.copy(
+            phase = PurchasePhase.ACTIVE_IN_REPAYMENT,
+            selectedTermDays = 15,
+            installmentCount = 2,
+            installments = listOf(
+                CreditInstallment(number = 1, amountCents = 50_00L, dueEpochMillis = System.currentTimeMillis() + 86400000L),
+                CreditInstallment(number = 2, amountCents = 50_00L, dueEpochMillis = System.currentTimeMillis() + (2 * 86400000L))
+            )
+        )
+        assertEquals(100_00L, activePurchase.remainingDebtCents)
+
+        // 5. El comprador paga cuota 1 y cuota 2 puntualmente
+        val fullyPaidPurchase = activePurchase.copy(
+            phase = PurchasePhase.COMPLETED,
+            installments = activePurchase.installments.map { it.copy(isPaid = true, paidAtEpochMillis = System.currentTimeMillis()) },
+            completedAtEpochMillis = System.currentTimeMillis()
+        )
+        assertEquals("Pagada", fullyPaidPurchase.statusLabel)
+        assertEquals(0L, fullyPaidPurchase.remainingDebtCents)
+        assertFalse(fullyPaidPurchase.isOpen)
+
+        // 6. Al pagar puntualmente, la línea se libera y el vendedor califica para subir a Nivel 2
+        val nextEligibility = PurchaseEligibilityCheck.validate(
+            totalAmountCents = 500_00L,
+            currentLevel = CreditLevel.NIVEL_2,
+            availableLineCents = CreditLevel.NIVEL_2.minLineCents,
+            hasActiveOpenTransaction = fullyPaidPurchase.isOpen
+        )
+        assertTrue("En Nivel 2, una compra de S/ 500 es elegible", nextEligibility.isEligible)
+        assertEquals("Inicial Nivel 2 es 40% (S/ 200)", 200_00L, nextEligibility.downPaymentCents)
+        assertEquals("Saldo financiado es S/ 300", 300_00L, nextEligibility.financedCents)
+    }
 }

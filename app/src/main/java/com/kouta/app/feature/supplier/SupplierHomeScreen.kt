@@ -19,7 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.NotificationsNone
@@ -243,7 +243,7 @@ fun SupplierHomeScreen(
                                         Text("Toca para verificar los vouchers recibidos", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
-                                Icon(Icons.Default.ArrowForward, contentDescription = null, tint = kuotaColors.accentTeal)
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = kuotaColors.accentTeal)
                             }
                         }
 

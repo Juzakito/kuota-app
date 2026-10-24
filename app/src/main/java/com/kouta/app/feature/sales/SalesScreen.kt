@@ -1026,7 +1026,7 @@ private fun DemoPurchaseCard(
 }
 
 private fun formatPurchaseDueDate(raw: String): String = runCatching {
-    LocalDate.parse(raw).format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("es", "PE")))
+    LocalDate.parse(raw).format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.forLanguageTag("es-PE")))
 }.getOrDefault(raw)
 
 @Composable
@@ -1173,6 +1173,6 @@ private fun parseAmountToCents(input: String): Long? {
 private fun formatAmountInput(cents: Long): String = "${cents / 100}.${(cents % 100).toString().padStart(2, '0')}"
 
 private fun formatSaleDate(epochMillis: Long): String = DateTimeFormatter
-    .ofPattern("dd MMM yyyy · HH:mm", Locale("es", "PE"))
+    .ofPattern("dd MMM yyyy · HH:mm", Locale.forLanguageTag("es-PE"))
     .withZone(ZoneId.systemDefault())
     .format(Instant.ofEpochMilli(epochMillis))

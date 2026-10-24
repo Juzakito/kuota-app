@@ -23,8 +23,8 @@ android {
         applicationId = "com.kouta.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 37
-        versionName = "2.4.0"
+        versionCode = 38
+        versionName = "2.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "KUOTA_API_BASE_URL", "\"$kuotaApiBaseUrl\"")
