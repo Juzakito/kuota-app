@@ -135,7 +135,13 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
     LaunchedEffect(store) {
         val draft = withContext(Dispatchers.IO) { runCatching { store.readOnboardingDraft() }.getOrNull() }
         if (draft != null) {
-            step = draft.step.coerceIn(0, 7)
+            // Auto-reparación si un borrador previo guardó pasos desfasados sin nombre o correo
+            val restoredStep = when {
+                draft.ownerName.isBlank() && draft.step > 2 -> 3
+                draft.email.isBlank() && draft.step > 3 -> 4
+                else -> draft.step.coerceIn(0, 8)
+            }
+            step = restoredStep
             ownerName = draft.ownerName
             email = draft.email
             phone = draft.phone
@@ -155,7 +161,7 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                 runCatching {
                     // Nunca guardamos el PIN en el borrador; solo hasta el paso 7 (creación de PIN)
                     store.saveOnboardingDraft(
-                        OnboardingDraft(step.coerceAtMost(7), false, ownerName.trim(), email.trim(), phone, businessTaxId, selectedRole.code)
+                        OnboardingDraft(step.coerceAtMost(7), false, ownerName.trim(), email.trim().lowercase(), phone, businessTaxId, selectedRole.code)
                     )
                 }
             }
@@ -196,7 +202,7 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                     store.saveBusinessProfile(
                         base.copy(
                             ownerName = ownerName.trim().ifBlank { existing?.ownerName.orEmpty() },
-                            email = email.trim(),
+                            email = email.trim().lowercase(),
                             phone = if (phone.isNotBlank()) phone else existing?.phone.orEmpty(),
                             ruc = if (businessTaxId.isNotBlank()) businessTaxId else existing?.ruc.orEmpty(),
                             role = selectedRole.code
@@ -417,7 +423,7 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                                             }
                                         }
 
-                                        6 -> {
+                                        3 -> {
                                             // Pantalla 3: Nombre del cliente
                                             Column(
                                                 modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 0),
@@ -470,7 +476,7 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                                             }
                                         }
 
-                                        3 -> {
+                                        4 -> {
                                             // Pantalla 4: Correo electrónico
                                             val hasEmailFormatWarning = email.trim().length >= 4 && !isEmailValid
                                             Column(
@@ -479,12 +485,12 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                                             ) {
                                                 Text(
                                                     text = buildAnnotatedString {
-                                                        withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.ExtraBold)) {
-                                                            append("Ingresa tu ")
-                                                        }
-                                                        withStyle(SpanStyle(color = Color(0xFF23D5FF), fontWeight = FontWeight.ExtraBold)) {
-                                                            append("correo")
-                                                        }
+                                                         withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.ExtraBold)) {
+                                                             append("Ingresa tu ")
+                                                         }
+                                                         withStyle(SpanStyle(color = Color(0xFF23D5FF), fontWeight = FontWeight.ExtraBold)) {
+                                                             append("correo")
+                                                         }
                                                     },
                                                     fontSize = 31.sp
                                                 )
@@ -518,7 +524,10 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                                                 KuotaOnboardingInputBox(
                                                     topLabel = null,
                                                     value = email,
-                                                    onValueChange = { email = it.take(120); error = null },
+                                                    onValueChange = {
+                                                        email = it.filterNot { ch -> ch.isWhitespace() }.take(120)
+                                                        error = null
+                                                    },
                                                     placeholder = "nombre@empresa.com",
                                                     leadingIcon = Icons.Default.MailOutline,
                                                     keyboardType = KeyboardType.Email,
@@ -535,11 +544,11 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                                                     color = Color(0xFF7B93B2),
                                                     fontSize = 13.sp,
                                                     modifier = Modifier.padding(start = 4.dp)
-                                                )
+                                                 )
                                             }
                                         }
 
-                                        4 -> {
+                                        5 -> {
                                             // Pantalla 5: Número de celular
                                             val cleanDigits = phone.filter(Char::isDigit)
                                             val hasPhoneWarning = cleanDigits.isNotEmpty() && cleanDigits.length < 9
@@ -605,7 +614,7 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                                             }
                                         }
 
-                                        5 -> {
+                                        6 -> {
                                             // Pantalla 6: RUC del negocio
                                             val cleanRuc = businessTaxId.filter(Char::isDigit)
                                             val hasValidRucPrefix = cleanRuc.length < 2 ||
