@@ -26,11 +26,20 @@ data class ManualSale(
     val syncedAtEpochMillis: Long? = null,
     val syncError: String? = null,
     /** Tombstone: la venta sigue en el archivo cifrado hasta que el servidor confirma el borrado. */
-    val deletedAtEpochMillis: Long? = null
+    val deletedAtEpochMillis: Long? = null,
+    /** PRD v0.3: Venta comprobada al cruzar contra precios de Mis productos. */
+    val isVerified: Boolean = false,
+    val productName: String? = null,
+    val paymentMethod: String = "Yape / Plin"
 )
 
 object SaleSource {
     const val MANUAL = "MANUAL"
+    const val YAPE = "YAPE"
+    const val PLIN = "PLIN"
+    const val LINK_PAGO = "LINK_PAGO"
+    const val TRANSFERENCIA = "TRANSFERENCIA"
+    const val TARJETA = "TARJETA"
 }
 
 object SaleSyncStatus {
@@ -103,6 +112,9 @@ data class LocalBusinessProfile(
     val email: String,
     val phone: String,
     val ruc: String,
+    val role: String = "VENDEDOR",
+    val creditLevel: Int = 1,
+    val availableLineCents: Long = 300_00L,
     val preferredPaymentMethod: String = "Yape / Plin",
     val notificationSettings: LocalNotificationSettings = LocalNotificationSettings(),
     val claims: List<LocalClaimRecord> = emptyList()
@@ -115,7 +127,8 @@ data class OnboardingDraft(
     val ownerName: String = "",
     val email: String,
     val phone: String,
-    val ruc: String
+    val ruc: String,
+    val role: String = "VENDEDOR"
 )
 
 @Serializable
@@ -201,19 +214,21 @@ class SalesJournalStore(context: Context) {
         updated.sortedByDescending { it.receivedAtEpochMillis }
     }
 
-    fun saveSale(existing: ManualSale?, amountCents: Long, now: Long = System.currentTimeMillis()): List<ManualSale> = synchronized(LOCK) {
+    fun saveSale(existing: ManualSale?, amountCents: Long, now: Long = System.currentTimeMillis(), isVerified: Boolean = false): List<ManualSale> = synchronized(LOCK) {
         val snapshot = readSnapshot()
         val current = existing?.let { candidate -> snapshot.sales.firstOrNull { it.id == candidate.id } }
         val updated = if (current == null) {
             snapshot.sales + ManualSale(
                 id = existing?.id ?: java.util.UUID.randomUUID().toString(),
                 amountCents = amountCents,
-                recordedAtEpochMillis = now
+                recordedAtEpochMillis = now,
+                isVerified = isVerified
             )
         } else {
             snapshot.sales.map {
                 if (it.id == current.id) it.copy(
                     amountCents = amountCents,
+                    isVerified = isVerified,
                     revision = it.revision + 1,
                     syncStatus = SaleSyncStatus.PENDING,
                     syncedAtEpochMillis = null,

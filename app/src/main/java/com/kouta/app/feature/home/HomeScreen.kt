@@ -235,10 +235,12 @@ fun HomeScreen(
         KuotaCardCatalog.firstOrNull { it.id == tierId } ?: KuotaCardCatalog.first()
     }
 
-    val levelSubtitle = when {
-        totalPaidInstallments >= 3 -> "${currentCardTier.fullName} · Inicial 0% ⭐"
-        else -> "${currentCardTier.fullName} · Inicial ${currentCardTier.downPaymentPercent}%"
+    val userCreditLevel = remember(revision) {
+        val lvl = appSettings.creditLevelNumber
+        com.kouta.app.domain.model.CreditLevel.fromNumber(lvl)
     }
+
+    val levelSubtitle = "Nivel ${userCreditLevel.levelNumber}: ${userCreditLevel.title} · Inicial ${userCreditLevel.downPaymentPercent}%"
 
     val quickAccess = listOf(
         QuickAccess("Comprar QR", Icons.Default.QrCodeScanner, onFinanceClick),
@@ -389,7 +391,7 @@ fun HomeScreen(
                                 shape = RoundedCornerShape(50),
                                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                             ) {
-                                Text("Mis tarjetas", fontWeight = FontWeight.Bold, maxLines = 1)
+                                Text("Ver niveles", fontWeight = FontWeight.Bold, maxLines = 1)
                             }
                         }
                         Text(
@@ -435,13 +437,13 @@ fun HomeScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                 Text(
-                                    PurchaseOffer.formatPen(currentCardTier.maxCreditCents),
+                                    PurchaseOffer.formatPen(userCreditLevel.maxAmountCents),
                                     style = MaterialTheme.typography.headlineLarge,
                                     fontWeight = FontWeight.ExtraBold,
                                     maxLines = 1
                                 )
                                 Text(
-                                    "Línea ${currentCardTier.categoryName} · Inicial $downPaymentPct%",
+                                    "Línea de crédito · Plazo hasta ${userCreditLevel.maxTermDays} días",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1,
@@ -454,7 +456,7 @@ fun HomeScreen(
                                 shape = RoundedCornerShape(50),
                                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                             ) {
-                                Text("Mis tarjetas", fontWeight = FontWeight.Bold, maxLines = 1)
+                                Text("Ver niveles", fontWeight = FontWeight.Bold, maxLines = 1)
                             }
                         }
                         Button(

@@ -1,5 +1,7 @@
 package com.kouta.app.feature.onboarding
 
+import com.kouta.app.domain.model.UserRole
+
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -114,6 +116,7 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
     var email by rememberSaveable { mutableStateOf("") }
     var phone by rememberSaveable { mutableStateOf("") }
     var businessTaxId by rememberSaveable { mutableStateOf("") }
+    var selectedRole by rememberSaveable { mutableStateOf(UserRole.VENDEDOR) }
     var createdPin by rememberSaveable { mutableStateOf("") }
     var confirmPin by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
@@ -132,11 +135,12 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
     LaunchedEffect(store) {
         val draft = withContext(Dispatchers.IO) { runCatching { store.readOnboardingDraft() }.getOrNull() }
         if (draft != null) {
-            step = draft.step.coerceIn(0, 6)
+            step = draft.step.coerceIn(0, 7)
             ownerName = draft.ownerName
             email = draft.email
             phone = draft.phone
             businessTaxId = draft.ruc
+            selectedRole = UserRole.fromCode(draft.role)
         }
         draftLoaded = true
         KuotaAnalytics.track(
@@ -145,13 +149,13 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
         )
     }
 
-    LaunchedEffect(draftLoaded, step, ownerName, email, phone, businessTaxId) {
-        if (draftLoaded && step in 1..6) {
+    LaunchedEffect(draftLoaded, step, ownerName, email, phone, businessTaxId, selectedRole) {
+        if (draftLoaded && step in 1..7) {
             withContext(Dispatchers.IO) {
                 runCatching {
-                    // Nunca guardamos el PIN en el borrador; solo hasta el paso 6 (creación de PIN)
+                    // Nunca guardamos el PIN en el borrador; solo hasta el paso 7 (creación de PIN)
                     store.saveOnboardingDraft(
-                        OnboardingDraft(step.coerceAtMost(6), false, ownerName.trim(), email.trim(), phone, businessTaxId)
+                        OnboardingDraft(step.coerceAtMost(7), false, ownerName.trim(), email.trim(), phone, businessTaxId, selectedRole.code)
                     )
                 }
             }
@@ -160,7 +164,7 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
 
     // Validación automática al completar los 6 dígitos en Confirmar PIN (Paso 7)
     LaunchedEffect(step, confirmPin, createdPin) {
-        if (step == 7 && confirmPin.length == PinSecurityManager.PIN_LENGTH) {
+        if (step == 8 && confirmPin.length == PinSecurityManager.PIN_LENGTH) {
             if (confirmPin != createdPin) {
                 error = "Los PIN no coinciden. Inténtalo nuevamente."
                 errorPulseKey++
@@ -194,9 +198,11 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                             ownerName = ownerName.trim().ifBlank { existing?.ownerName.orEmpty() },
                             email = email.trim(),
                             phone = if (phone.isNotBlank()) phone else existing?.phone.orEmpty(),
-                            ruc = if (businessTaxId.isNotBlank()) businessTaxId else existing?.ruc.orEmpty()
+                            ruc = if (businessTaxId.isNotBlank()) businessTaxId else existing?.ruc.orEmpty(),
+                            role = selectedRole.code
                         )
                     )
+                    com.kouta.app.data.local.AppSettings(context).userRole = selectedRole
                 }
             }
             isSavingProfile = false
@@ -223,15 +229,16 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
     val isConfirmPinValid = confirmPin.length == PinSecurityManager.PIN_LENGTH && confirmPin == createdPin
 
     val canContinue = when (step) {
-        2 -> isNameValid
-        3 -> isEmailValid
-        4 -> isPhoneValid
-        5 -> isRucValid
-        6 -> isCreatePinValid
-        7 -> isConfirmPinValid
+        2 -> true // Rol seleccionado por defecto
+        3 -> isNameValid
+        4 -> isEmailValid
+        5 -> isPhoneValid
+        6 -> isRucValid
+        7 -> isCreatePinValid
+        8 -> isConfirmPinValid
         else -> true
     }
-    val lastStep = 7
+    val lastStep = 8
 
     // Nivel superior: transición entre Pantalla 1 (Bienvenida), Pantalla 2 (Antes de empezar) y Flujo de Registro (Pasos 2..7)
     val stageBucket = when (step) {
@@ -332,30 +339,32 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                                 }
                             }
 
-                            // Indicador de progreso sincronizado (5 pasos de registro)
+                            // Indicador de progreso sincronizado (6 pasos de registro)
                             val progressStepIndex = when (step) {
                                 2 -> 1
                                 3 -> 2
                                 4 -> 3
                                 5 -> 4
-                                else -> 5
+                                6 -> 5
+                                else -> 6
                             }
                             val progressLabel = when (step) {
-                                2 -> "PASO 1 DE 5"
-                                3 -> "2 de 5"
-                                4 -> "3 DE 5"
-                                5 -> "4 de 5"
-                                else -> "5 de 5"
+                                2 -> "PASO 1 DE 6"
+                                3 -> "2 DE 6"
+                                4 -> "3 DE 6"
+                                5 -> "4 DE 6"
+                                6 -> "5 DE 6"
+                                else -> "6 DE 6"
                             }
                             OnboardingStepProgress(
                                 label = progressLabel,
                                 currentStep = progressStepIndex,
-                                totalSteps = 5
+                                totalSteps = 6
                             )
 
                             // Contenido animado paso a paso (avance y retroceso direccional)
                             KuotaStepAnimatedContent(
-                                targetState = step.coerceIn(2, 7),
+                                targetState = step.coerceIn(2, 8),
                                 modifier = Modifier.fillMaxWidth(),
                                 label = "OnboardingFormStepTransition"
                             ) { currentStep ->
@@ -366,6 +375,49 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                                 ) {
                                     when (currentStep) {
                                         2 -> {
+                                            // Paso 1 de Formulario: Selección de Rol (PRD v0.3)
+                                            Column(
+                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 0),
+                                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                Text(
+                                                    text = buildAnnotatedString {
+                                                        withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.ExtraBold)) {
+                                                            append("¿Cómo usarás ")
+                                                        }
+                                                        withStyle(SpanStyle(color = Color(0xFF23D5FF), fontWeight = FontWeight.ExtraBold)) {
+                                                            append("Kuota?")
+                                                        }
+                                                    },
+                                                    fontSize = 30.sp
+                                                )
+                                                Text(
+                                                    text = "Elige tu rol en la plataforma. Tu cuenta se configurará con las soluciones financieras específicas.",
+                                                    color = Color(0xFFA0B2C8),
+                                                    fontSize = 15.sp,
+                                                    lineHeight = 21.sp
+                                                )
+                                            }
+
+                                            Column(
+                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 45),
+                                                verticalArrangement = Arrangement.spacedBy(14.dp)
+                                            ) {
+                                                RoleSelectionCard(
+                                                    role = UserRole.VENDEDOR,
+                                                    isSelected = selectedRole == UserRole.VENDEDOR,
+                                                    onClick = { selectedRole = UserRole.VENDEDOR }
+                                                )
+
+                                                RoleSelectionCard(
+                                                    role = UserRole.PROVEEDOR,
+                                                    isSelected = selectedRole == UserRole.PROVEEDOR,
+                                                    onClick = { selectedRole = UserRole.PROVEEDOR }
+                                                )
+                                            }
+                                        }
+
+                                        6 -> {
                                             // Pantalla 3: Nombre del cliente
                                             Column(
                                                 modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 0),
@@ -670,7 +722,7 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
 
                                         else -> {
                                             // Pantalla 7 (Crear PIN) y Pantalla 8 (Confirmar PIN)
-                                            val isConfirmPinStep = currentStep == 7
+                                            val isConfirmPinStep = currentStep == 8
                                             val activePinValue = if (isConfirmPinStep) confirmPin else createdPin
                                             Column(
                                                 modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 0),
@@ -779,20 +831,20 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                         ) {
                             val buttonLabel = when {
                                 isSavingProfile -> "Guardando…"
-                                step == 5 -> "Guardar perfil"
+                                step == 6 -> "Guardar perfil"
                                 step == lastStep -> "Finalizar registro"
                                 else -> "Continuar"
                             }
                             val isEnabled = canContinue && !isSavingProfile && draftLoaded
                             KuotaGradientPillButton(
                                 text = buttonLabel,
-                                showArrow = step < 6,
+                                showArrow = step < 7,
                                 enabled = isEnabled,
                                 onClick = {
                                     error = null
-                                    if (step == 6) {
+                                    if (step == 7) {
                                         confirmPin = ""
-                                        step = 7
+                                        step = 8
                                     } else if (step == lastStep) {
                                         finishOnboarding()
                                     } else {
@@ -814,8 +866,8 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
                                 Spacer(Modifier.width(6.dp))
                                 Text(
                                     text = when (step) {
-                                        3 -> "Tu información se guarda de forma segura en este dispositivo."
-                                        6, 7 -> "Tu información se guardará de forma segura en este dispositivo."
+                                        4 -> "Tu información se guarda de forma segura en este dispositivo."
+                                        7, 8 -> "Tu información se guardará de forma segura en este dispositivo."
                                         else -> "Perfil local · guardado cifrado en este teléfono"
                                     },
                                     color = Color(0xFF8CA2C0),
@@ -1452,6 +1504,103 @@ private fun KuotaGradientPillButton(
                     modifier = Modifier.size(20.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun RoleSelectionCard(
+    role: UserRole,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) Color(0xFF26D7FF) else Color(0xFF16325C),
+        label = "roleBorder"
+    )
+    val containerColor by animateColorAsState(
+        targetValue = if (isSelected) Color(0xFF092042) else Color(0xFF06142A),
+        label = "roleContainer"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(if (isSelected) Color(0xFF1E5EC9) else Color(0xFF0E2A54)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (role == UserRole.VENDEDOR) Icons.Default.Storefront else Icons.Default.VerifiedUser,
+                            contentDescription = null,
+                            tint = if (isSelected) Color(0xFF26D7FF) else Color(0xFF8CA2C0),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = role.title,
+                            color = Color.White,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = role.subtitle,
+                            color = Color(0xFF26D7FF),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(2.dp, if (isSelected) Color(0xFF26D7FF) else Color(0xFF38557E), RoundedCornerShape(12.dp))
+                        .background(if (isSelected) Color(0xFF26D7FF) else Color.Transparent),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF04101F),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = role.description,
+                color = Color(0xFFB0C4DE),
+                fontSize = 13.sp,
+                lineHeight = 18.sp
+            )
         }
     }
 }

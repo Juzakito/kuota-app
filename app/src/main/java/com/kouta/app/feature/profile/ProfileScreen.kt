@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.CheckCircle
@@ -347,6 +348,11 @@ fun ProfileScreen(
                         container = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .12f),
                         content = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+                    StatusPill(
+                        text = if (existingProfile?.role == com.kouta.app.domain.model.UserRole.PROVEEDOR.name) "Proveedor" else "Vendedor",
+                        container = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .18f),
+                        content = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
             }
         }
@@ -358,6 +364,30 @@ fun ProfileScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SectionTitle("Mi negocio")
+            GroupCard {
+                MenuRow(
+                    title = "Modo de operación",
+                    subtitle = if (existingProfile?.role == com.kouta.app.domain.model.UserRole.PROVEEDOR.name)
+                        "Proveedor (Cobros QR, liquidaciones 48h)"
+                    else
+                        "Vendedor (Compras a crédito, cuotas, link)",
+                    icon = Icons.Default.SwapHoriz,
+                    onClick = {
+                        scope.launch {
+                            val nextRole = if (existingProfile?.role == com.kouta.app.domain.model.UserRole.PROVEEDOR.name)
+                                com.kouta.app.domain.model.UserRole.VENDEDOR
+                            else
+                                com.kouta.app.domain.model.UserRole.PROVEEDOR
+                            val updated = existingProfile?.copy(role = nextRole.name) ?: com.kouta.app.data.local.LocalBusinessProfile(email = "", phone = "", ruc = "", role = nextRole.name)
+                            store.saveBusinessProfile(updated)
+                            appSettings.userRole = nextRole
+                            existingProfile = updated
+                            KuotaEvents.bump()
+                            Toast.makeText(context, "Modo cambiado a: ${if (nextRole == com.kouta.app.domain.model.UserRole.PROVEEDOR) "Proveedor" else "Vendedor"}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
             GroupCard {
                 MenuRow(
                     title = "Datos del negocio",

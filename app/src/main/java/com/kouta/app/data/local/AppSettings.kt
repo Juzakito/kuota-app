@@ -103,6 +103,21 @@ class AppSettings(context: Context) {
         get() = prefs.getLong(KEY_PAYMENT_METHOD_UPDATED_AT, 0L)
         set(value) = prefs.edit().putLong(KEY_PAYMENT_METHOD_UPDATED_AT, value).apply()
 
+    /** Rol del usuario según PRD v0.3: VENDEDOR o PROVEEDOR. */
+    var userRole: com.kouta.app.domain.model.UserRole
+        get() = com.kouta.app.domain.model.UserRole.fromCode(prefs.getString(KEY_USER_ROLE, "VENDEDOR"))
+        set(value) = prefs.edit().putString(KEY_USER_ROLE, value.code).apply()
+
+    /** Nivel de crédito asignado (1 a 6). Todos inician en Nivel 1. */
+    var creditLevelNumber: Int
+        get() = prefs.getInt(KEY_CREDIT_LEVEL, 1).coerceIn(1, 6)
+        set(value) = prefs.edit().putInt(KEY_CREDIT_LEVEL, value.coerceIn(1, 6)).apply()
+
+    /** Línea de crédito disponible en centavos (inicia en S/ 300.00). */
+    var availableCreditLineCents: Long
+        get() = prefs.getLong(KEY_CREDIT_LINE_CENTS, com.kouta.app.domain.model.CreditLevel.INITIAL_LINE_CENTS)
+        set(value) = prefs.edit().putLong(KEY_CREDIT_LINE_CENTS, value).apply()
+
     /** SYSTEM, LIGHT o DARK. */
     var themeMode: String
         get() = prefs.getString(KEY_THEME_MODE, null) ?: "SYSTEM"
@@ -142,5 +157,8 @@ class AppSettings(context: Context) {
         const val KEY_PREFERRED_PAYMENT_METHOD = "preferred_payment_method"
         const val KEY_PAYMENT_METHOD_UPDATED_AT = "preferred_payment_method_updated_at"
         const val KEY_THEME_MODE = "theme_mode"
+        const val KEY_USER_ROLE = "user_role"
+        const val KEY_CREDIT_LEVEL = "credit_level_num"
+        const val KEY_CREDIT_LINE_CENTS = "credit_line_cents"
     }
 }

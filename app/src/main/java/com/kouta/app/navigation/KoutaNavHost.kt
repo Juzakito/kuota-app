@@ -3,16 +3,17 @@ package com.kouta.app.navigation
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,25 +24,33 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.kouta.app.core.designsystem.motion.KuotaMotion
 import com.kouta.app.core.designsystem.motion.rememberSystemAnimatorScale
-import com.kouta.app.feature.financing.FinancingScreen
+import com.kouta.app.data.local.SalesJournalStore
+import com.kouta.app.domain.model.UserRole
+import com.kouta.app.feature.financing.TradeScreen
 import com.kouta.app.feature.home.HomeScreen
+import com.kouta.app.feature.installments.MyInstallmentsScreen
 import com.kouta.app.feature.legal.LegalScreen
+import com.kouta.app.feature.marketplace.MarketplaceScreen
 import com.kouta.app.feature.notifications.NotificationsScreen
-import com.kouta.app.feature.payments.PaymentMethodsScreen
+import com.kouta.app.feature.onboarding.OnboardingScreen
+import com.kouta.app.feature.products.MyProductsScreen
 import com.kouta.app.feature.profile.ProfileScreen
 import com.kouta.app.feature.sales.SalesScreen
+import com.kouta.app.feature.supplier.SupplierChargeScreen
+import com.kouta.app.feature.supplier.SupplierHomeScreen
+import com.kouta.app.feature.supplier.SupplierPendingConfirmationsScreen
+import com.kouta.app.feature.supplier.SupplierSalesHistoryScreen
 import com.kouta.app.feature.support.SupportScreen
-import com.kouta.app.feature.onboarding.OnboardingScreen
-import com.kouta.app.data.local.SalesJournalStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 fun NavHostController.navigateToTopLevel(route: String) {
     if (currentDestination?.route == route) return
-    if (route == NavDestination.Home.route) {
-        val popped = popBackStack(NavDestination.Home.route, inclusive = false)
+    val rootRoute = if (route.startsWith("supplier")) NavDestination.SupplierHome.route else NavDestination.Home.route
+    if (route == rootRoute) {
+        val popped = popBackStack(rootRoute, inclusive = false)
         if (!popped) {
-            navigate(NavDestination.Home.route) {
+            navigate(rootRoute) {
                 popUpTo(graph.id) { inclusive = true }
                 launchSingleTop = true
             }
@@ -49,7 +58,7 @@ fun NavHostController.navigateToTopLevel(route: String) {
         return
     }
     navigate(route) {
-        popUpTo(NavDestination.Home.route) {
+        popUpTo(rootRoute) {
             inclusive = false
         }
         launchSingleTop = true
@@ -68,26 +77,28 @@ fun KoutaNavHost(
     var startDestination by remember(store) { mutableStateOf<String?>(null) }
 
     LaunchedEffect(store) {
-        val hasLocalProfile = withContext(Dispatchers.IO) {
-            runCatching { store.readBusinessProfile() != null }.getOrDefault(false)
+        val profile = withContext(Dispatchers.IO) {
+            runCatching { store.readBusinessProfile() }.getOrNull()
         }
-        startDestination = if (hasLocalProfile) NavDestination.Home.route else NavDestination.Onboarding.route
+        startDestination = when {
+            profile == null -> NavDestination.Onboarding.route
+            profile.role == UserRole.PROVEEDOR.name -> NavDestination.SupplierHome.route
+            else -> NavDestination.Home.route
+        }
     }
 
     val resolvedStart = startDestination
 
     LaunchedEffect(deepLink, resolvedStart) {
         val link = deepLink ?: return@LaunchedEffect
-        // Espera a que el NavHost tenga grafo antes de consumir el enlace.
         val current = navController.currentDestination?.route ?: return@LaunchedEffect
         val target = when {
-            link.startsWith("kuota://compras") || link.startsWith("kuota://financing") -> NavDestination.Cards.route
+            link.startsWith("kuota://compras") || link.startsWith("kuota://financing") -> NavDestination.Installments.route
             link.startsWith("kuota://soporte") || link.startsWith("kuota://reclamos") -> supportRoute(false)
             else -> NavDestination.Notifications.route
         }
-        // Durante el onboarding se descarta: aún no hay perfil para mostrar estas pantallas.
         if (current != NavDestination.Onboarding.route && current != target) {
-            if (target == NavDestination.Cards.route) {
+            if (target == NavDestination.Installments.route) {
                 navController.navigateToTopLevel(target)
             } else {
                 navController.navigate(target) { launchSingleTop = true }
@@ -114,24 +125,31 @@ fun KoutaNavHost(
             composable(NavDestination.Onboarding.route) {
                 OnboardingScreen(
                     onOnboardingComplete = {
-                        startDestination = NavDestination.Home.route
-                        navController.navigate(NavDestination.Home.route) {
+                        val destination = if (store.readBusinessProfile()?.role == UserRole.PROVEEDOR.name) {
+                            NavDestination.SupplierHome.route
+                        } else {
+                            NavDestination.Home.route
+                        }
+                        startDestination = destination
+                        navController.navigate(destination) {
                             popUpTo(NavDestination.Onboarding.route) { inclusive = true }
                             launchSingleTop = true
                         }
                     }
                 )
             }
+
+            // VENDEDOR ROUTES
             composable(NavDestination.Home.route) {
                 HomeScreen(
                     onFinanceClick = {
-                        navController.navigateToTopLevel(NavDestination.Financing.route)
+                        navController.navigateToTopLevel(NavDestination.Trade.route)
                     },
                     onCardsClick = {
-                        navController.navigateToTopLevel(NavDestination.Cards.route)
+                        navController.navigateToTopLevel(NavDestination.Installments.route)
                     },
                     onActivityClick = {
-                        navController.navigateToTopLevel(NavDestination.Sales.route)
+                        navController.navigateToTopLevel(NavDestination.Finance.route)
                     },
                     onSupportClick = {
                         navController.navigate(supportRoute(false)) { launchSingleTop = true }
@@ -140,33 +158,89 @@ fun KoutaNavHost(
                         navController.navigate(NavDestination.Notifications.route) { launchSingleTop = true }
                     },
                     onOpenProfile = {
-                        navController.navigateToTopLevel(NavDestination.Profile.route)
+                        navController.navigate(NavDestination.Profile.route) { launchSingleTop = true }
                     }
                 )
             }
-            composable(NavDestination.Cards.route) {
-                PaymentMethodsScreen(
-                    onOpenFinancing = {
-                        navController.navigateToTopLevel(NavDestination.Financing.route)
+
+            composable(NavDestination.Marketplace.route) {
+                MarketplaceScreen(
+                    onSelectSupplierForPurchase = { supplier ->
+                        navController.navigateToTopLevel(NavDestination.Trade.route)
                     }
                 )
             }
-            composable(NavDestination.Sales.route) {
-                SalesScreen()
-            }
-            composable(NavDestination.Financing.route) {
-                FinancingScreen(
-                    onOpenCards = {
-                        navController.navigateToTopLevel(NavDestination.Cards.route)
+
+            composable(NavDestination.Trade.route) {
+                TradeScreen(
+                    onNavigateToInstallments = {
+                        navController.navigateToTopLevel(NavDestination.Installments.route)
                     }
                 )
             }
+
+            composable(NavDestination.Finance.route) {
+                SalesScreen(
+                    onOpenMyProducts = {
+                        navController.navigate(NavDestination.MyProducts.route) { launchSingleTop = true }
+                    }
+                )
+            }
+
+            composable(NavDestination.Installments.route) {
+                MyInstallmentsScreen(
+                    onOpenTrade = {
+                        navController.navigateToTopLevel(NavDestination.Trade.route)
+                    }
+                )
+            }
+
+            composable(NavDestination.MyProducts.route) {
+                MyProductsScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // PROVEEDOR ROUTES
+            composable(NavDestination.SupplierHome.route) {
+                SupplierHomeScreen(
+                    onOpenPending = {
+                        navController.navigateToTopLevel(NavDestination.SupplierPending.route)
+                    },
+                    onOpenCharge = {
+                        navController.navigateToTopLevel(NavDestination.SupplierCharge.route)
+                    },
+                    onOpenSales = {
+                        navController.navigateToTopLevel(NavDestination.SupplierSales.route)
+                    },
+                    onOpenProfile = {
+                        navController.navigate(NavDestination.Profile.route) { launchSingleTop = true }
+                    },
+                    onOpenNotifications = {
+                        navController.navigate(NavDestination.Notifications.route) { launchSingleTop = true }
+                    }
+                )
+            }
+
+            composable(NavDestination.SupplierPending.route) {
+                SupplierPendingConfirmationsScreen()
+            }
+
+            composable(NavDestination.SupplierCharge.route) {
+                SupplierChargeScreen()
+            }
+
+            composable(NavDestination.SupplierSales.route) {
+                SupplierSalesHistoryScreen()
+            }
+
+            // COMMON ROUTES
             composable(NavDestination.Profile.route) {
                 ProfileScreen(
                     onLocalProfileDeleted = {
                         startDestination = NavDestination.Onboarding.route
                         navController.navigate(NavDestination.Onboarding.route) {
-                            popUpTo(NavDestination.Home.route) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
                             launchSingleTop = true
                         }
                     },
@@ -180,13 +254,15 @@ fun KoutaNavHost(
                         navController.navigate(NavDestination.Legal.route) { launchSingleTop = true }
                     },
                     onOpenCards = {
-                        navController.navigateToTopLevel(NavDestination.Cards.route)
+                        navController.navigateToTopLevel(NavDestination.Installments.route)
                     }
                 )
             }
+
             composable(NavDestination.Legal.route) {
                 LegalScreen(onBack = { navController.popBackStack() })
             }
+
             composable(
                 route = NavDestination.Support.route,
                 arguments = listOf(navArgument("form") { type = NavType.BoolType; defaultValue = false })
@@ -196,13 +272,14 @@ fun KoutaNavHost(
                     onBack = { navController.popBackStack() }
                 )
             }
+
             composable(NavDestination.Notifications.route) {
                 NotificationsScreen(
                     onBack = { navController.popBackStack() },
                     onOpenDeepLink = { link ->
                         when {
                             link.startsWith("kuota://compras") || link.startsWith("kuota://financing") ->
-                                navController.navigateToTopLevel(NavDestination.Cards.route)
+                                navController.navigateToTopLevel(NavDestination.Installments.route)
                             link.startsWith("kuota://soporte") || link.startsWith("kuota://reclamos") ->
                                 navController.navigate(supportRoute(false)) { launchSingleTop = true }
                             else -> Unit

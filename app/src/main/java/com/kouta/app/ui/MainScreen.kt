@@ -29,10 +29,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
-import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PendingActions
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -41,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -65,8 +69,11 @@ import com.kouta.app.core.designsystem.motion.rememberSystemAnimatorScale
 import com.kouta.app.core.designsystem.theme.kuotaColors
 import com.kouta.app.core.push.KuotaEvents
 import com.kouta.app.core.security.PinSecurityManager
+import com.kouta.app.data.local.CreditPurchaseStore
 import com.kouta.app.data.local.LocalBusinessProfile
 import com.kouta.app.data.local.SalesJournalStore
+import com.kouta.app.domain.model.PurchasePhase
+import com.kouta.app.domain.model.UserRole
 import com.kouta.app.feature.security.PinLockBarrierScreen
 import com.kouta.app.feature.security.PinSetupBarrierScreen
 import com.kouta.app.navigation.KoutaNavHost
@@ -79,6 +86,7 @@ import kotlinx.coroutines.withContext
 fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
     val context = LocalContext.current
     val store = remember(context) { SalesJournalStore(context) }
+    val creditStore = remember(context) { CreditPurchaseStore(context) }
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -86,10 +94,18 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
     val revision by KuotaEvents.revision.collectAsState()
 
     var currentProfile by remember { mutableStateOf<LocalBusinessProfile?>(null) }
+    var pendingBadgeCount by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(store, revision, currentRoute) {
         currentProfile = withContext(Dispatchers.IO) {
             runCatching { store.readBusinessProfile() }.getOrNull()
+        }
+        pendingBadgeCount = withContext(Dispatchers.IO) {
+            runCatching {
+                creditStore.getAll().count {
+                    it.phase == PurchasePhase.PHASE_1_DOWN_PAYMENT_SUBMITTED || it.phase == PurchasePhase.PHASE_1_DOWN_PAYMENT_PENDING
+                }
+            }.getOrDefault(0)
         }
     }
 
@@ -98,13 +114,24 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
     val requiresPinUnlock = isProtectedRoute && pinState.isConfigured && pinState.isLocked
     val isSecurityBarrierActive = requiresPinSetup || requiresPinUnlock
 
-    val topLevelRoutes = setOf(
-        NavDestination.Home.route,
-        NavDestination.Cards.route,
-        NavDestination.Financing.route,
-        NavDestination.Sales.route,
-        NavDestination.Profile.route
-    )
+    val isProveedor = currentProfile?.role == UserRole.PROVEEDOR.name
+
+    val topLevelRoutes = if (isProveedor) {
+        setOf(
+            NavDestination.SupplierHome.route,
+            NavDestination.SupplierPending.route,
+            NavDestination.SupplierCharge.route,
+            NavDestination.SupplierSales.route
+        )
+    } else {
+        setOf(
+            NavDestination.Home.route,
+            NavDestination.Marketplace.route,
+            NavDestination.Trade.route,
+            NavDestination.Finance.route,
+            NavDestination.Installments.route
+        )
+    }
     val showBottomNavigation = currentRoute in topLevelRoutes && !isSecurityBarrierActive
 
     fun navigate(route: String) {
@@ -118,14 +145,25 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
                 if (showBottomNavigation) {
-                    KoutaBottomBar(
-                        currentRoute = currentRoute,
-                        onAccount = { navigate(NavDestination.Home.route) },
-                        onCards = { navigate(NavDestination.Cards.route) },
-                        onQr = { navigate(NavDestination.Financing.route) },
-                        onActivity = { navigate(NavDestination.Sales.route) },
-                        onMenu = { navigate(NavDestination.Profile.route) }
-                    )
+                    if (isProveedor) {
+                        SupplierBottomBar(
+                            currentRoute = currentRoute,
+                            pendingBadgeCount = pendingBadgeCount,
+                            onHome = { navigate(NavDestination.SupplierHome.route) },
+                            onPending = { navigate(NavDestination.SupplierPending.route) },
+                            onCharge = { navigate(NavDestination.SupplierCharge.route) },
+                            onSales = { navigate(NavDestination.SupplierSales.route) }
+                        )
+                    } else {
+                        VendedorBottomBar(
+                            currentRoute = currentRoute,
+                            onHome = { navigate(NavDestination.Home.route) },
+                            onMarketplace = { navigate(NavDestination.Marketplace.route) },
+                            onTrade = { navigate(NavDestination.Trade.route) },
+                            onFinance = { navigate(NavDestination.Finance.route) },
+                            onInstallments = { navigate(NavDestination.Installments.route) }
+                        )
+                    }
                 }
             }
         ) { innerPadding ->
@@ -162,13 +200,13 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
 }
 
 @Composable
-private fun KoutaBottomBar(
+private fun VendedorBottomBar(
     currentRoute: String?,
-    onAccount: () -> Unit,
-    onCards: () -> Unit,
-    onQr: () -> Unit,
-    onActivity: () -> Unit,
-    onMenu: () -> Unit
+    onHome: () -> Unit,
+    onMarketplace: () -> Unit,
+    onTrade: () -> Unit,
+    onFinance: () -> Unit,
+    onInstallments: () -> Unit
 ) {
     val barShape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
     Box(
@@ -186,36 +224,93 @@ private fun KoutaBottomBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             BottomBarItem(
-                label = "Cuenta",
-                icon = Icons.Default.AccountBalance,
+                label = "Inicio",
+                icon = Icons.Default.Home,
                 selected = currentRoute == NavDestination.Home.route,
-                onClick = onAccount,
+                onClick = onHome,
                 modifier = Modifier.weight(1f)
             )
             BottomBarItem(
-                label = "Tarjetas",
-                icon = Icons.Default.CreditCard,
-                selected = currentRoute == NavDestination.Cards.route,
-                onClick = onCards,
+                label = "Marketplace",
+                icon = Icons.Default.Storefront,
+                selected = currentRoute == NavDestination.Marketplace.route,
+                onClick = onMarketplace,
                 modifier = Modifier.weight(1f)
             )
-            CenterQrButton(
-                selected = currentRoute == NavDestination.Financing.route,
-                onClick = onQr,
+            CenterActionButton(
+                label = "Comprar / Vender",
+                selected = currentRoute == NavDestination.Trade.route,
+                onClick = onTrade,
+                modifier = Modifier.weight(1.3f)
+            )
+            BottomBarItem(
+                label = "Finanzas",
+                icon = Icons.AutoMirrored.Filled.ReceiptLong,
+                selected = currentRoute == NavDestination.Finance.route,
+                onClick = onFinance,
+                modifier = Modifier.weight(1f)
+            )
+            BottomBarItem(
+                label = "Mis cuotas",
+                icon = Icons.Default.CalendarMonth,
+                selected = currentRoute == NavDestination.Installments.route,
+                onClick = onInstallments,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SupplierBottomBar(
+    currentRoute: String?,
+    pendingBadgeCount: Int,
+    onHome: () -> Unit,
+    onPending: () -> Unit,
+    onCharge: () -> Unit,
+    onSales: () -> Unit
+) {
+    val barShape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(elevation = 18.dp, shape = barShape, clip = false)
+            .background(MaterialTheme.colorScheme.surface, barShape)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .heightIn(min = 76.dp)
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomBarItem(
+                label = "Inicio",
+                icon = Icons.Default.Home,
+                selected = currentRoute == NavDestination.SupplierHome.route,
+                onClick = onHome,
+                modifier = Modifier.weight(1f)
+            )
+            BottomBarItem(
+                label = "Por confirmar",
+                icon = Icons.Default.PendingActions,
+                selected = currentRoute == NavDestination.SupplierPending.route,
+                badgeCount = pendingBadgeCount,
+                onClick = onPending,
+                modifier = Modifier.weight(1f)
+            )
+            CenterActionButton(
+                label = "Cobrar",
+                selected = currentRoute == NavDestination.SupplierCharge.route,
+                onClick = onCharge,
                 modifier = Modifier.weight(1.2f)
             )
             BottomBarItem(
-                label = "Actividad",
+                label = "Ventas",
                 icon = Icons.AutoMirrored.Filled.ReceiptLong,
-                selected = currentRoute == NavDestination.Sales.route,
-                onClick = onActivity,
-                modifier = Modifier.weight(1f)
-            )
-            BottomBarItem(
-                label = "Menú",
-                icon = Icons.Default.Menu,
-                selected = currentRoute == NavDestination.Profile.route,
-                onClick = onMenu,
+                selected = currentRoute == NavDestination.SupplierSales.route,
+                onClick = onSales,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -227,6 +322,7 @@ private fun BottomBarItem(
     label: String,
     icon: ImageVector,
     selected: Boolean,
+    badgeCount: Int = 0,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -294,26 +390,47 @@ private fun BottomBarItem(
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
                 )
             }
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = tint,
-                modifier = Modifier
-                    .size(23.dp)
-                    .scale(iconScale)
-            )
+            if (badgeCount > 0) {
+                BadgedBox(
+                    badge = {
+                        Badge(containerColor = MaterialTheme.colorScheme.primary) {
+                            Text("$badgeCount")
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        tint = tint,
+                        modifier = Modifier
+                            .size(23.dp)
+                            .scale(iconScale)
+                    )
+                }
+            } else {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = tint,
+                    modifier = Modifier
+                        .size(23.dp)
+                        .scale(iconScale)
+                )
+            }
         }
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-            color = tint
+            color = tint,
+            maxLines = 1
         )
     }
 }
 
 @Composable
-private fun CenterQrButton(
+private fun CenterActionButton(
+    label: String,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -332,17 +449,17 @@ private fun CenterQrButton(
             else -> 1.0f
         },
         animationSpec = tween(durationMillis = KuotaMotion.resolveDurationMs(150, animatorScale)),
-        label = "centerQrScale"
+        label = "centerActionScale"
     )
     val labelColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = tween(durationMillis = duration),
-        label = "centerQrLabelColor"
+        label = "centerActionLabelColor"
     )
     val ringColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
         animationSpec = tween(durationMillis = duration),
-        label = "centerQrRingColor"
+        label = "centerActionRingColor"
     )
 
     Column(
@@ -372,16 +489,17 @@ private fun CenterQrButton(
         ) {
             Icon(
                 Icons.Default.QrCodeScanner,
-                contentDescription = "Comprar con QR",
+                contentDescription = label,
                 tint = kuotaColors.onBrand,
                 modifier = Modifier.size(28.dp)
             )
         }
         Text(
-            "QR",
+            label,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = labelColor
+            color = labelColor,
+            maxLines = 1
         )
     }
 }

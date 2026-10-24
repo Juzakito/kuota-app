@@ -138,7 +138,8 @@ data class KuotaExtendedColors(
     val successContainer: Color,
     val info: Color,
     val infoContainer: Color,
-    val neutral: Color
+    val neutral: Color,
+    val accentTeal: Color = KuotaTurquoise
 )
 
 internal val KuotaLightExtendedColors = KuotaExtendedColors(

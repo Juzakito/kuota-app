@@ -17,7 +17,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,7 +30,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Inventory2
+import com.kouta.app.data.local.ProductCatalogStore
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Search
@@ -103,7 +110,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun SalesScreen() {
+fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
     val context = LocalContext.current
     val store = remember(context) { SalesJournalStore(context) }
     val settings = remember(context) { AppSettings(context) }
@@ -235,17 +242,42 @@ fun SalesScreen() {
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    "Actividad",
+                    "Finanzas",
                     modifier = Modifier.semantics { heading() },
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Ventas manuales y compras con QR",
+                    "Registro de ventas y comprobación automática",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
                 )
+            }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { onOpenMyProducts() },
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Inventory2, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text("Mis productos", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Text("Gestiona artículos para comprobar ventas", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
 
             OutlinedTextField(
@@ -439,7 +471,11 @@ fun SalesScreen() {
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(PurchaseOffer.formatPen(sale.amountCents), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                Text("NO VERIFICADA", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                if (sale.isVerified) {
+                                    Text("COMPROBADA", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.kuotaColors.accentTeal, fontWeight = FontWeight.Bold)
+                                } else {
+                                    Text("NO COMPROBADA", style = MaterialTheme.typography.labelSmall, color = Color(0xFFFFB300), fontWeight = FontWeight.Bold)
+                                }
                             }
                             Text(formatSaleDate(sale.recordedAtEpochMillis), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(
@@ -561,7 +597,7 @@ fun SalesScreen() {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Ingresa el total en soles. La fecha y hora serán las de este registro.", style = MaterialTheme.typography.bodyMedium)
-                    OutlinedTextField(
+            OutlinedTextField(
                         value = amountText,
                         onValueChange = { value ->
                             if (value.length <= 14 && value.all { it.isDigit() || it == '.' || it == ',' }) amountText = value
@@ -587,7 +623,8 @@ fun SalesScreen() {
                             isSaving = true
                             try {
                                 sales = withContext(Dispatchers.IO) {
-                                    val updated = store.saveSale(original, cents)
+                                    val isVerified = ProductCatalogStore(context).isSaleVerified(cents)
+                                    val updated = store.saveSale(original, cents, isVerified = isVerified)
                                     val savedSale = updated.firstOrNull { it.id == (original?.id ?: updated.firstOrNull()?.id) } ?: updated.firstOrNull()
                                     if (savedSale != null) {
                                         KuotaFirestoreService.saveSale(context, savedSale)
