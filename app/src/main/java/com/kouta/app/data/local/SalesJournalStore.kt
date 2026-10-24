@@ -220,7 +220,15 @@ class SalesJournalStore(context: Context) {
         updated.sortedByDescending { it.receivedAtEpochMillis }
     }
 
-    fun saveSale(existing: ManualSale?, amountCents: Long, now: Long = System.currentTimeMillis(), isVerified: Boolean = false): List<ManualSale> = synchronized(LOCK) {
+    fun saveSale(
+        existing: ManualSale?,
+        amountCents: Long,
+        now: Long = System.currentTimeMillis(),
+        isVerified: Boolean = false,
+        productName: String? = null,
+        paymentMethod: String = "Yape / Plin",
+        source: String = SaleSource.MANUAL
+    ): List<ManualSale> = synchronized(LOCK) {
         val snapshot = readSnapshot()
         val current = existing?.let { candidate -> snapshot.sales.firstOrNull { it.id == candidate.id } }
         val updated = if (current == null) {
@@ -228,13 +236,19 @@ class SalesJournalStore(context: Context) {
                 id = existing?.id ?: java.util.UUID.randomUUID().toString(),
                 amountCents = amountCents,
                 recordedAtEpochMillis = now,
-                isVerified = isVerified
+                isVerified = isVerified,
+                productName = productName,
+                paymentMethod = paymentMethod,
+                source = source
             )
         } else {
             snapshot.sales.map {
                 if (it.id == current.id) it.copy(
                     amountCents = amountCents,
                     isVerified = isVerified,
+                    productName = productName ?: it.productName,
+                    paymentMethod = paymentMethod,
+                    source = source,
                     revision = it.revision + 1,
                     syncStatus = SaleSyncStatus.PENDING,
                     syncedAtEpochMillis = null,
@@ -243,6 +257,16 @@ class SalesJournalStore(context: Context) {
             }
         }
         writeSnapshot(snapshot.copy(sales = updated.sortedByDescending { it.recordedAtEpochMillis }))
+        updated.filter { it.deletedAtEpochMillis == null }.sortedByDescending { it.recordedAtEpochMillis }
+    }
+
+    fun recalculateVerificationWithCatalog(catalogPrices: Set<Long>): List<ManualSale> = synchronized(LOCK) {
+        val snapshot = readSnapshot()
+        val updated = snapshot.sales.map { sale ->
+            val shouldBeVerified = sale.source == SaleSource.LINK_PAGO || sale.amountCents in catalogPrices
+            if (sale.isVerified != shouldBeVerified) sale.copy(isVerified = shouldBeVerified) else sale
+        }
+        writeSnapshot(snapshot.copy(sales = updated))
         updated.filter { it.deletedAtEpochMillis == null }.sortedByDescending { it.recordedAtEpochMillis }
     }
 

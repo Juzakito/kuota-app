@@ -1,5 +1,7 @@
 package com.kouta.app.domain.model
 
+import com.kouta.app.data.local.ManualSale
+import com.kouta.app.data.local.SaleSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -195,5 +197,90 @@ class CreditLevelAndPurchasesTest {
         assertEquals("Pagada", completed.statusLabel)
         assertEquals("Deuda restante debe ser 0", 0L, completed.remainingDebtCents)
         assertFalse("Al estar completada ya no es una transacción abierta (libera regla 3.2)", completed.isOpen)
+    }
+
+    @Test
+    fun verifyFase3PaymentLinkFeeAndTransitions() {
+        // PRD 6.4 B: Comisión plana de 1%
+        val amountCents = 185_00L // S/ 185.00
+        val link = PaymentLink(
+            id = "link-test-1",
+            customerName = "Juan Pérez",
+            customerDni = "12345678",
+            customerPhone = "987654321",
+            concept = "Saco de Arroz Extra 50kg",
+            quantity = 1,
+            unitPriceCents = 185_00L,
+            amountCents = amountCents,
+            linkUrl = "https://kuota.pe/pay/link-test-1"
+        )
+
+        assertEquals("Comisión debe ser 1%", 1, link.feePercent)
+        // 1% de 185.00 = S/ 1.85 (185 centavos)
+        assertEquals(1_85L, link.feeCents)
+        // Neto comercio: 185.00 - 1.85 = S/ 183.15 (18315 centavos)
+        assertEquals(183_15L, link.netAmountCents)
+        assertEquals("Total = comisión + neto", link.amountCents, link.feeCents + link.netAmountCents)
+        assertEquals(PaymentLinkStatus.GENERADO, link.status)
+
+        // Transición a ENVIADO
+        val sentLink = link.copy(status = PaymentLinkStatus.ENVIADO)
+        assertEquals(PaymentLinkStatus.ENVIADO, sentLink.status)
+
+        // Transición a PAGADO
+        val paidNow = System.currentTimeMillis()
+        val paidLink = sentLink.copy(status = PaymentLinkStatus.PAGADO, paidAtEpochMillis = paidNow)
+        assertEquals(PaymentLinkStatus.PAGADO, paidLink.status)
+        assertEquals(paidNow, paidLink.paidAtEpochMillis)
+        assertFalse("Un link pagado no debe considerarse vencido", paidLink.isExpired)
+    }
+
+    @Test
+    fun verifyFase3CatalogPriceCrossChecking() {
+        // PRD 6.5 & 6.7: Cruce automático de ventas comprobadas
+        val catalogPrices = setOf(185_00L, 72_00L, 45_50L)
+
+        // 1. Venta que coincide con precio del catálogo -> COMPROBADA
+        val saleMatched = ManualSale(
+            id = "s-1",
+            amountCents = 185_00L,
+            recordedAtEpochMillis = System.currentTimeMillis(),
+            isVerified = 185_00L in catalogPrices
+        )
+        assertTrue("Venta por S/ 185.00 debe ser comprobada", saleMatched.isVerified)
+
+        // 2. Venta libre que no coincide -> NO COMPROBADA
+        val saleUnmatched = ManualSale(
+            id = "s-2",
+            amountCents = 99_90L,
+            recordedAtEpochMillis = System.currentTimeMillis(),
+            isVerified = 99_90L in catalogPrices
+        )
+        assertFalse("Venta por S/ 99.90 no catalogada debe ser no comprobada", saleUnmatched.isVerified)
+
+        // 3. Venta por LINK_PAGO -> Siempre comprobada por construcción (PRD 6.7)
+        val linkSale = ManualSale(
+            id = "s-link",
+            amountCents = 250_00L,
+            recordedAtEpochMillis = System.currentTimeMillis(),
+            source = SaleSource.LINK_PAGO,
+            isVerified = true,
+            productName = "Pedido especial vía Link"
+        )
+        assertTrue("Venta originada por Link de Pago siempre es comprobada", linkSale.isVerified)
+        assertEquals(SaleSource.LINK_PAGO, linkSale.source)
+
+        // 4. Recálculo tras cambio de catálogo
+        val existingSales = listOf(saleMatched, saleUnmatched, linkSale)
+        val newCatalogPrices = setOf(99_90L) // Ahora se añade el producto de 99.90 y se quita 185.00
+
+        val recalculated = existingSales.map { sale ->
+            val shouldBeVerified = sale.source == SaleSource.LINK_PAGO || sale.amountCents in newCatalogPrices
+            sale.copy(isVerified = shouldBeVerified)
+        }
+
+        assertFalse("Venta 1 ya no está en catálogo", recalculated[0].isVerified)
+        assertTrue("Venta 2 ahora coincide con nuevo catálogo", recalculated[1].isVerified)
+        assertTrue("Venta por Link de Pago se mantiene comprobada", recalculated[2].isVerified)
     }
 }

@@ -92,11 +92,13 @@ import com.kouta.app.core.sync.KuotaSync
 import com.kouta.app.data.firebase.KuotaFirestoreService
 import com.kouta.app.data.local.AppSettings
 import com.kouta.app.data.local.ManualSale
+import com.kouta.app.data.local.SaleSource
 import com.kouta.app.data.local.SaleSyncStatus
 import com.kouta.app.data.local.SalesJournalStore
 import com.kouta.app.data.remote.ApiOutcome
 import com.kouta.app.data.remote.KuotaApiClient
 import com.kouta.app.data.remote.PurchaseHistoryItemDto
+import com.kouta.app.domain.model.MerchantProduct
 import com.kouta.app.domain.model.PurchaseOffer
 import com.kouta.app.feature.account.AccountLinkDialog
 import com.kouta.app.feature.account.unreachableMessage
@@ -113,9 +115,12 @@ import java.util.Locale
 fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
     val context = LocalContext.current
     val store = remember(context) { SalesJournalStore(context) }
+    val catalogStore = remember(context) { ProductCatalogStore(context) }
     val settings = remember(context) { AppSettings(context) }
     val scope = rememberCoroutineScope()
     var sales by remember { mutableStateOf<List<ManualSale>>(emptyList()) }
+    var catalogProducts by remember { mutableStateOf<List<MerchantProduct>>(emptyList()) }
+    var selectedCatalogProduct by remember { mutableStateOf<MerchantProduct?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var isSaving by remember { mutableStateOf(false) }
     var storageError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -144,7 +149,12 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
 
     LaunchedEffect(store, eventsRevision) {
         try {
-            sales = withContext(Dispatchers.IO) { store.readAll() }
+            sales = withContext(Dispatchers.IO) {
+                val prods = catalogStore.getAll()
+                catalogProducts = prods
+                val catalogPrices = prods.map { it.priceCents }.toSet()
+                store.recalculateVerificationWithCatalog(catalogPrices)
+            }
             initialPhone = withContext(Dispatchers.IO) {
                 store.readBusinessProfile()?.phone.orEmpty().filter(Char::isDigit).takeLast(9)
             }
@@ -222,13 +232,23 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
     val sevenDaysMillis = 7L * 24 * 60 * 60 * 1000
     val recentSales = sales.filter { it.recordedAtEpochMillis >= now - sevenDaysMillis }
     val recentTotal = recentSales.sumOf { it.amountCents }
+    val recentVerifiedSales = recentSales.filter { it.isVerified }
+    val recentVerifiedTotal = recentVerifiedSales.sumOf { it.amountCents }
+    val recentVerifiedCount = recentVerifiedSales.size
+    val verifiedPercent = if (recentSales.isNotEmpty()) {
+        ((recentVerifiedCount.toDouble() / recentSales.size) * 100).toInt()
+    } else 0
     val pendingBackup = sales.count { it.syncStatus != SaleSyncStatus.SYNCED }
     val filteredSales = sales.filter { sale ->
         val matchesQuery = searchQuery.isBlank() ||
             PurchaseOffer.formatPen(sale.amountCents).contains(searchQuery.trim(), ignoreCase = true) ||
+            (sale.productName ?: "").contains(searchQuery.trim(), ignoreCase = true) ||
             formatSaleDate(sale.recordedAtEpochMillis).contains(searchQuery.trim(), ignoreCase = true)
         val matchesFilter = when (activityFilter) {
             "semana" -> sale.recordedAtEpochMillis >= now - sevenDaysMillis
+            "comprobadas" -> sale.isVerified
+            "no_comprobadas" -> !sale.isVerified
+            "link_pago" -> sale.source == SaleSource.LINK_PAGO
             "locales" -> sale.syncStatus == SaleSyncStatus.LOCAL_ONLY
             else -> true
         }
@@ -305,6 +325,9 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
             ) {
                 listOf(
                     "todas" to "Todas",
+                    "comprobadas" to "Comprobadas",
+                    "no_comprobadas" to "No comprobadas",
+                    "link_pago" to "Link de Pago",
                     "semana" to "Esta semana",
                     "locales" to "Solo local"
                 ).forEach { (key, label) ->
@@ -321,11 +344,20 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("ÚLTIMOS 7 DÍAS · REGISTRO MANUAL", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .8f), fontWeight = FontWeight.SemiBold)
+                Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        "ÚLTIMOS 7 DÍAS · CRUCE AUTOMÁTICO",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .8f),
+                        fontWeight = FontWeight.SemiBold
+                    )
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Metric("Total", PurchaseOffer.formatPen(recentTotal))
-                        Metric("Registros", recentSales.size.toString())
+                        Metric("Total ventas", PurchaseOffer.formatPen(recentTotal))
+                        Metric("Comprobadas", "${PurchaseOffer.formatPen(recentVerifiedTotal)} ($verifiedPercent%)")
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Metric("Total registros", recentSales.size.toString())
+                        Metric("Ventas cruzadas", "$recentVerifiedCount de ${recentSales.size}")
                     }
                 }
             }
@@ -334,6 +366,7 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
                 onClick = {
                     editingSale = null
                     amountText = ""
+                    selectedCatalogProduct = null
                     showEntryDialog = true
                 },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
@@ -469,13 +502,35 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(PurchaseOffer.formatPen(sale.amountCents), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                if (sale.isVerified) {
-                                    Text("COMPROBADA", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.kuotaColors.accentTeal, fontWeight = FontWeight.Bold)
-                                } else {
-                                    Text("NO COMPROBADA", style = MaterialTheme.typography.labelSmall, color = Color(0xFFFFB300), fontWeight = FontWeight.Bold)
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    if (sale.source == SaleSource.LINK_PAGO) {
+                                        Text(
+                                            "LINK DE PAGO",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    if (sale.isVerified) {
+                                        Text("COMPROBADA", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.kuotaColors.accentTeal, fontWeight = FontWeight.Bold)
+                                    } else {
+                                        Text("NO COMPROBADA", style = MaterialTheme.typography.labelSmall, color = Color(0xFFFFB300), fontWeight = FontWeight.Bold)
+                                    }
                                 }
+                            }
+                            if (!sale.productName.isNullOrBlank()) {
+                                Text(
+                                    "Artículo: ${sale.productName}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
                             Text(formatSaleDate(sale.recordedAtEpochMillis), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(
@@ -595,12 +650,43 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
             onDismissRequest = { if (!isSaving) showEntryDialog = false },
             title = { Text(if (editingSale == null) "Registrar venta" else "Corregir venta") },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Ingresa el total en soles. La fecha y hora serán las de este registro.", style = MaterialTheme.typography.bodyMedium)
-            OutlinedTextField(
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        "Ingresa el total en soles o selecciona un producto de tu catálogo para comprobación inmediata.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (catalogProducts.isNotEmpty()) {
+                        Text(
+                            "Productos de tu catálogo:",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            catalogProducts.take(6).forEach { prod ->
+                                val isSelected = selectedCatalogProduct?.id == prod.id || parsedAmount == prod.priceCents
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedCatalogProduct = prod
+                                        amountText = formatAmountInput(prod.priceCents)
+                                    },
+                                    label = { Text("${prod.name} (${PurchaseOffer.formatPen(prod.priceCents)})") }
+                                )
+                            }
+                        }
+                    }
+                    OutlinedTextField(
                         value = amountText,
                         onValueChange = { value ->
-                            if (value.length <= 14 && value.all { it.isDigit() || it == '.' || it == ',' }) amountText = value
+                            if (value.length <= 14 && value.all { it.isDigit() || it == '.' || it == ',' }) {
+                                amountText = value
+                                selectedCatalogProduct = null
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Monto de venta") },
@@ -608,7 +694,14 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
                         placeholder = { Text("0.00") },
                         singleLine = true,
                         isError = amountText.isNotBlank() && parsedAmount == null,
-                        supportingText = { Text("Registro manual · no verificado") },
+                        supportingText = {
+                            val isMatched = parsedAmount != null && (selectedCatalogProduct != null || catalogProducts.any { it.priceCents == parsedAmount })
+                            if (isMatched) {
+                                Text("Comprobada con Mis productos", color = MaterialTheme.kuotaColors.accentTeal)
+                            } else {
+                                Text("Registro manual · monto libre")
+                            }
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                     )
                 }
@@ -623,8 +716,15 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
                             isSaving = true
                             try {
                                 sales = withContext(Dispatchers.IO) {
-                                    val isVerified = ProductCatalogStore(context).isSaleVerified(cents)
-                                    val updated = store.saveSale(original, cents, isVerified = isVerified)
+                                    val matchedProduct = selectedCatalogProduct ?: catalogProducts.firstOrNull { it.priceCents == cents }
+                                    val isVerified = matchedProduct != null
+                                    val prodName = matchedProduct?.name
+                                    val updated = store.saveSale(
+                                        existing = original,
+                                        amountCents = cents,
+                                        isVerified = isVerified,
+                                        productName = prodName
+                                    )
                                     val savedSale = updated.firstOrNull { it.id == (original?.id ?: updated.firstOrNull()?.id) } ?: updated.firstOrNull()
                                     if (savedSale != null) {
                                         KuotaFirestoreService.saveSale(context, savedSale)

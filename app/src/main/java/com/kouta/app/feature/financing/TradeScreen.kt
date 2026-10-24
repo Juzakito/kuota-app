@@ -9,6 +9,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
@@ -34,10 +36,13 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Warning
@@ -46,6 +51,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,6 +62,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -84,10 +92,15 @@ import androidx.compose.ui.unit.dp
 import com.kouta.app.core.designsystem.theme.kuotaColors
 import com.kouta.app.data.local.AppSettings
 import com.kouta.app.data.local.CreditPurchaseStore
+import com.kouta.app.data.local.PaymentLinkStore
+import com.kouta.app.data.local.ProductCatalogStore
 import com.kouta.app.data.local.SalesJournalStore
 import com.kouta.app.domain.model.CreditLevel
 import com.kouta.app.domain.model.CreditPurchase
 import com.kouta.app.domain.model.MarketplaceSupplier
+import com.kouta.app.domain.model.MerchantProduct
+import com.kouta.app.domain.model.PaymentLink
+import com.kouta.app.domain.model.PaymentLinkStatus
 import com.kouta.app.domain.model.PurchaseOffer
 import com.kouta.app.domain.model.PurchasePhase
 import com.kouta.app.domain.model.SeedSuppliers
@@ -110,6 +123,8 @@ fun TradeScreen(
     val scope = rememberCoroutineScope()
     val creditStore = remember(context) { CreditPurchaseStore(context) }
     val journalStore = remember(context) { SalesJournalStore(context) }
+    val paymentLinkStore = remember(context) { PaymentLinkStore(context) }
+    val productCatalogStore = remember(context) { ProductCatalogStore(context) }
     val appSettings = remember(context) { AppSettings(context) }
     val clipboardManager = LocalClipboardManager.current
     val kuotaColors = MaterialTheme.kuotaColors
@@ -132,12 +147,21 @@ fun TradeScreen(
     var selectedInstallmentCount by remember { mutableIntStateOf(3) }
     var showPhase2SuccessDialog by remember { mutableStateOf(false) }
 
-    // Tab 1: Payment Link Generator
+    // Tab 1: Payment Link Generator & History (PRD 6.4 B)
     var linkCustomerName by remember { mutableStateOf("") }
     var linkCustomerPhone by remember { mutableStateOf("") }
     var linkCustomerDni by remember { mutableStateOf("") }
     var linkAmountInput by remember { mutableStateOf("") }
-    var generatedPaymentLink by remember { mutableStateOf<String?>(null) }
+    var linkProducts by remember { mutableStateOf<List<MerchantProduct>>(emptyList()) }
+    var selectedProduct by remember { mutableStateOf<MerchantProduct?>(null) }
+    var linkQuantity by remember { mutableIntStateOf(1) }
+    var linkCustomConcept by remember { mutableStateOf("") }
+    var linkReceiptType by remember { mutableStateOf("BOLETA") }
+    var linkInternalNote by remember { mutableStateOf("") }
+    var linkConsentAccepted by remember { mutableStateOf(false) }
+    var linkFormError by remember { mutableStateOf<String?>(null) }
+    var linkHistory by remember { mutableStateOf<List<PaymentLink>>(emptyList()) }
+    var newlyCreatedLink by remember { mutableStateOf<PaymentLink?>(null) }
 
     fun reload() {
         scope.launch {
@@ -148,6 +172,8 @@ fun TradeScreen(
             buyerPhone = profile?.phone.orEmpty()
             buyerId = profile?.ruc.orEmpty().ifBlank { profile?.phone.orEmpty() }.ifBlank { "buyer-001" }
             activePurchase = creditStore.getActivePurchase()
+            linkProducts = withContext(Dispatchers.IO) { productCatalogStore.getAll() }
+            linkHistory = paymentLinkStore.getAll()
 
             // Preconfigure default term based on level's available terms
             val terms = userCreditLevel.availableTermsDays
@@ -990,11 +1016,16 @@ fun TradeScreen(
                 Spacer(modifier = Modifier.height(80.dp))
             }
         } else {
-            // TAB 1: VENDER CON LINK DE PAGO (1% COMISIÓN)
-            val parsedLinkAmount = linkAmountInput.replace(",", ".").toDoubleOrNull() ?: 0.0
-            val linkAmountCents = (parsedLinkAmount * 100).toLong()
-            val linkFeeCents = (linkAmountCents * 1) / 100
-            val linkNetCents = linkAmountCents - linkFeeCents
+            // TAB 1: VENDER CON LINK DE PAGO (1% COMISIÓN - PRD 6.4 B)
+            val parsedManualAmount = linkAmountInput.replace(",", ".").toDoubleOrNull() ?: 0.0
+            val computedAmountCents = if (selectedProduct != null) {
+                selectedProduct!!.priceCents * linkQuantity
+            } else {
+                (parsedManualAmount * 100).toLong()
+            }
+            val activeConcept = selectedProduct?.name ?: linkCustomConcept.trim().ifBlank { "Venta comercial" }
+            val linkFeeCents = (computedAmountCents * 1L) / 100L
+            val linkNetCents = computedAmountCents - linkFeeCents
 
             Column(
                 modifier = Modifier
@@ -1003,22 +1034,132 @@ fun TradeScreen(
                     .padding(18.dp)
             ) {
                 Text(
-                    "Cobro con Link de Pago (1%)",
+                    "Cobro con Link de Pago (Comisión 1%)",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Genera un link seguro para cobrar a tus clientes por WhatsApp o redes. Comisión plana de 1%.",
+                    "Genera links para cobrar a tus clientes por WhatsApp o redes. Al pagarse, se registra automáticamente como Venta Comprobada.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Section A: Concepto / Producto de Mis Productos
+                Text(
+                    "1. Concepto o producto a cobrar:",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = selectedProduct == null,
+                        onClick = { selectedProduct = null },
+                        label = { Text("Monto libre / Manual") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                    linkProducts.forEach { prod ->
+                        FilterChip(
+                            selected = selectedProduct?.id == prod.id,
+                            onClick = {
+                                selectedProduct = prod
+                                linkQuantity = 1
+                            },
+                            label = { Text("${prod.name} (${PurchaseOffer.formatPen(prod.priceCents)})") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (selectedProduct != null) {
+                    // Stepper de Cantidad
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(selectedProduct!!.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                Text("Precio unitario: ${PurchaseOffer.formatPen(selectedProduct!!.priceCents)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = { if (linkQuantity > 1) linkQuantity-- },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(Icons.Default.Remove, contentDescription = "Menos", modifier = Modifier.size(16.dp))
+                                }
+                                Text("$linkQuantity", fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp))
+                                IconButton(
+                                    onClick = { linkQuantity++ },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = "Más", modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    OutlinedTextField(
+                        value = linkCustomConcept,
+                        onValueChange = { linkCustomConcept = it },
+                        label = { Text("Concepto de la venta (ej. Lote de polos, asesoría)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = linkAmountInput,
+                        onValueChange = { linkAmountInput = it },
+                        label = { Text("Monto a cobrar en Soles (S/)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Section B: Datos del Cliente (Obligatorios según PRD 6.4 B)
+                Text(
+                    "2. Datos del cliente (obligatorios):",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = linkCustomerName,
                     onValueChange = { linkCustomerName = it },
-                    label = { Text("Nombre del cliente") },
+                    label = { Text("Nombre completo del cliente") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -1028,8 +1169,11 @@ fun TradeScreen(
 
                 OutlinedTextField(
                     value = linkCustomerDni,
-                    onValueChange = { linkCustomerDni = it.filter { ch -> ch.isDigit() }.take(8) },
-                    label = { Text("DNI del cliente (opcional)") },
+                    onValueChange = {
+                        val digits = it.filter { ch -> ch.isDigit() }.take(8)
+                        linkCustomerDni = digits
+                    },
+                    label = { Text("DNI del cliente (8 dígitos)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -1041,28 +1185,81 @@ fun TradeScreen(
                 OutlinedTextField(
                     value = linkCustomerPhone,
                     onValueChange = { linkCustomerPhone = it },
-                    label = { Text("WhatsApp del cliente") },
+                    label = { Text("WhatsApp del cliente (9 dígitos)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Comprobante y notas
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    FilterChip(
+                        selected = linkReceiptType == "BOLETA",
+                        onClick = { linkReceiptType = "BOLETA" },
+                        label = { Text("Boleta") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = linkReceiptType == "FACTURA",
+                        onClick = { linkReceiptType = "FACTURA" },
+                        label = { Text("Factura") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
-                    value = linkAmountInput,
-                    onValueChange = { linkAmountInput = it },
-                    label = { Text("Monto a cobrar en Soles (S/)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    value = linkInternalNote,
+                    onValueChange = { linkInternalNote = it },
+                    label = { Text("Nota interna (opcional)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Consentimiento Ley 29733 (Datos Personales de terceros)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { linkConsentAccepted = !linkConsentAccepted }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = linkConsentAccepted,
+                        onCheckedChange = { linkConsentAccepted = it },
+                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        "Cuento con el consentimiento del cliente para el uso de su DNI y teléfono para la emisión del link de pago (Ley N° 29733).",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                if (linkFormError != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        linkFormError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(14.dp))
 
-                if (linkAmountCents > 0) {
+                if (computedAmountCents > 0) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
@@ -1072,8 +1269,8 @@ fun TradeScreen(
                             Text("Desglose Transparente", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(6.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Monto venta:")
-                                Text(PurchaseOffer.formatPen(linkAmountCents), fontWeight = FontWeight.Bold)
+                                Text("Monto cobrado:")
+                                Text(PurchaseOffer.formatPen(computedAmountCents), fontWeight = FontWeight.Bold)
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("Comisión Kuota (1%):")
@@ -1092,34 +1289,87 @@ fun TradeScreen(
 
                 Button(
                     onClick = {
-                        val encClient = URLEncoder.encode(linkCustomerName.trim().ifBlank { "Cliente" }, StandardCharsets.UTF_8.name())
-                        val encSeller = URLEncoder.encode(buyerName, StandardCharsets.UTF_8.name())
-                        generatedPaymentLink = "https://kuota.pe/pay?m=$linkAmountCents&c=$encClient&v=$encSeller"
-                        Toast.makeText(context, "Link generado con éxito", Toast.LENGTH_SHORT).show()
+                        if (linkCustomerName.isBlank()) {
+                            linkFormError = "Ingresa el nombre del cliente."
+                            return@Button
+                        }
+                        if (linkCustomerDni.length != 8) {
+                            linkFormError = "El DNI del cliente debe tener exactamente 8 dígitos."
+                            return@Button
+                        }
+                        if (linkCustomerPhone.filter { it.isDigit() }.length < 9) {
+                            linkFormError = "Ingresa un número de celular/WhatsApp válido (mínimo 9 dígitos)."
+                            return@Button
+                        }
+                        if (computedAmountCents <= 0) {
+                            linkFormError = "El monto debe ser mayor a S/ 0.00."
+                            return@Button
+                        }
+                        if (!linkConsentAccepted) {
+                            linkFormError = "Debes aceptar la declaración de datos personales (Ley N° 29733)."
+                            return@Button
+                        }
+
+                        linkFormError = null
+                        scope.launch {
+                            val created = paymentLinkStore.createLink(
+                                sellerId = buyerId,
+                                sellerName = buyerName,
+                                customerName = linkCustomerName,
+                                customerDni = linkCustomerDni,
+                                customerPhone = linkCustomerPhone,
+                                concept = activeConcept,
+                                quantity = linkQuantity,
+                                unitPriceCents = if (selectedProduct != null) selectedProduct!!.priceCents else computedAmountCents,
+                                totalAmountCents = computedAmountCents,
+                                receiptType = linkReceiptType,
+                                internalNote = linkInternalNote,
+                                validityHours = 24
+                            )
+                            newlyCreatedLink = created
+                            linkHistory = paymentLinkStore.getAll()
+                            Toast.makeText(context, "¡Link de pago generado con éxito!", Toast.LENGTH_SHORT).show()
+                        }
                     },
-                    enabled = linkAmountCents > 0,
-                    modifier = Modifier.fillMaxWidth(),
+                    enabled = computedAmountCents > 0,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Generar link de cobro")
+                    Text("Generar link de cobro (1% comisión)", fontWeight = FontWeight.Bold)
                 }
 
-                if (generatedPaymentLink != null) {
+                if (newlyCreatedLink != null) {
+                    val nl = newlyCreatedLink!!
                     Spacer(modifier = Modifier.height(18.dp))
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = kuotaColors.accentTeal.copy(alpha = 0.12f))
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = kuotaColors.accentTeal.copy(alpha = 0.12f)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, kuotaColors.accentTeal.copy(alpha = 0.4f))
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Text("Enlace de cobro generado:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Link de Pago Listo", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text("Vence en 24h", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(generatedPaymentLink!!, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                "Para: ${nl.customerName} · ${PurchaseOffer.formatPen(nl.amountCents)} (${nl.concept})",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(nl.linkUrl, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -1127,21 +1377,25 @@ fun TradeScreen(
                             ) {
                                 OutlinedButton(
                                     onClick = {
-                                        clipboardManager.setText(AnnotatedString(generatedPaymentLink!!))
+                                        clipboardManager.setText(AnnotatedString(nl.linkUrl))
                                         Toast.makeText(context, "Enlace copiado al portapapeles", Toast.LENGTH_SHORT).show()
                                     },
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(10.dp)
                                 ) {
                                     Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Text("Copiar")
                                 }
 
                                 Button(
                                     onClick = {
-                                        val cleanPhone = linkCustomerPhone.replace(" ", "").replace("-", "")
-                                        val message = "Hola ${linkCustomerName.trim().ifBlank { "" }}, aquí tienes tu enlace de pago Kuota por ${PurchaseOffer.formatPen(linkAmountCents)}: ${generatedPaymentLink!!}"
+                                        scope.launch {
+                                            paymentLinkStore.markAsSent(nl.id)
+                                            linkHistory = paymentLinkStore.getAll()
+                                        }
+                                        val cleanPhone = nl.customerPhone.replace(" ", "").replace("-", "")
+                                        val message = "Hola ${nl.customerName}, aquí tienes tu link de pago Kuota por ${PurchaseOffer.formatPen(nl.amountCents)} correspondiente a ${nl.concept}: ${nl.linkUrl}"
                                         val intent = Intent(Intent.ACTION_VIEW).apply {
                                             data = Uri.parse("https://api.whatsapp.com/send?phone=$cleanPhone&text=${URLEncoder.encode(message, StandardCharsets.UTF_8.name())}")
                                         }
@@ -1155,11 +1409,130 @@ fun TradeScreen(
                                                 context.startActivity(Intent.createChooser(shareIntent, "Compartir enlace"))
                                             }
                                     },
-                                    modifier = Modifier.weight(1.2f),
+                                    modifier = Modifier.weight(1.3f),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
                                 ) {
-                                    Text("Enviar por WhatsApp", fontWeight = FontWeight.Bold, color = Color.White)
+                                    Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("WhatsApp", fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // Demo shortcut
+                            OutlinedButton(
+                                onClick = {
+                                    scope.launch {
+                                        paymentLinkStore.markAsPaid(nl.id)
+                                        linkHistory = paymentLinkStore.getAll()
+                                        newlyCreatedLink = paymentLinkStore.getById(nl.id)
+                                        Toast.makeText(context, "¡Cobro simulado exitoso! Registrado como Venta Comprobada en Finanzas.", Toast.LENGTH_LONG).show()
+                                    }
+                                },
+                                enabled = nl.status != PaymentLinkStatus.PAGADO,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text(if (nl.status == PaymentLinkStatus.PAGADO) "Pagado ✓" else "Simular pago del cliente (Demo)")
+                            }
+                        }
+                    }
+                }
+
+                // Section C: Historial de Links emitidos
+                if (linkHistory.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        "Historial de Links Generados (${linkHistory.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        linkHistory.forEach { link ->
+                            val isPaid = link.status == PaymentLinkStatus.PAGADO
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(link.customerName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+
+                                        val statusColor = when (link.displayStatus) {
+                                            PaymentLinkStatus.PAGADO -> Color(0xFF10B981)
+                                            PaymentLinkStatus.ENVIADO -> Color(0xFF8B5CF6)
+                                            PaymentLinkStatus.GENERADO -> MaterialTheme.colorScheme.primary
+                                            PaymentLinkStatus.VENCIDO -> MaterialTheme.colorScheme.error
+                                            PaymentLinkStatus.ANULADO -> Color.Gray
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(statusColor.copy(alpha = 0.15f))
+                                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                                        ) {
+                                            Text(link.displayStatus.label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = statusColor)
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        "${link.concept} · Total: ${PurchaseOffer.formatPen(link.amountCents)} (Neto: ${PurchaseOffer.formatPen(link.netAmountCents)})",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                    if (!isPaid) {
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            OutlinedButton(
+                                                onClick = {
+                                                    clipboardManager.setText(AnnotatedString(link.linkUrl))
+                                                    Toast.makeText(context, "Enlace copiado", Toast.LENGTH_SHORT).show()
+                                                },
+                                                modifier = Modifier.weight(1f),
+                                                shape = RoundedCornerShape(8.dp)
+                                            ) {
+                                                Text("Copiar", style = MaterialTheme.typography.labelSmall)
+                                            }
+
+                                            Button(
+                                                onClick = {
+                                                    scope.launch {
+                                                        paymentLinkStore.markAsPaid(link.id)
+                                                        linkHistory = paymentLinkStore.getAll()
+                                                        Toast.makeText(context, "¡Venta Comprobada registrada en Finanzas!", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                },
+                                                modifier = Modifier.weight(1.4f),
+                                                shape = RoundedCornerShape(8.dp),
+                                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                            ) {
+                                                Text("Simular pago", style = MaterialTheme.typography.labelSmall)
+                                            }
+                                        }
+                                    } else {
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            "✓ Venta comprobada registrada automáticamente en Finanzas",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color(0xFF10B981),
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
                                 }
                             }
                         }
