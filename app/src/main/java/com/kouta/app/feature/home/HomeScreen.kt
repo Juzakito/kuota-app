@@ -95,6 +95,7 @@ import com.kouta.app.core.sync.KuotaSync
 import com.kouta.app.core.util.NotificationHelper
 import com.kouta.app.data.local.AppSettings
 import com.kouta.app.data.local.ClaimSyncStatus
+import com.kouta.app.data.local.CreditPurchaseStore
 import com.kouta.app.data.local.LocalClaimRecord
 import com.kouta.app.data.local.ManualSale
 import com.kouta.app.data.local.SalesJournalStore
@@ -105,6 +106,7 @@ import com.kouta.app.data.remote.KuotaApiClient
 import com.kouta.app.data.remote.PurchaseHistoryItemDto
 import com.kouta.app.data.remote.QuoteInstallmentDto
 import com.kouta.app.domain.model.PurchaseOffer
+import com.kouta.app.domain.model.PurchasePhase
 import com.kouta.app.feature.account.AccountLinkDialog
 import com.kouta.app.feature.kyc.DniVerificationScreen
 import com.kouta.app.feature.payments.InstallmentPaymentWizardDialog
@@ -113,8 +115,10 @@ import com.kouta.app.feature.payments.resolveCurrentDemoTierId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
@@ -164,15 +168,51 @@ fun HomeScreen(
     suspend fun reloadPurchases() {
         val activeSession = KuotaApiClient.hasSession(context)
         hasSession = activeSession
+
+        val localDtos = withContext(Dispatchers.IO) {
+            val creditStore = CreditPurchaseStore(context)
+            val allLocal = creditStore.getAll()
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            allLocal
+                .filter { it.phase in setOf(PurchasePhase.ACTIVE_IN_REPAYMENT, PurchasePhase.COMPLETED) && it.installments.isNotEmpty() }
+                .map { cp ->
+                    PurchaseHistoryItemDto(
+                        purchaseId = cp.id,
+                        status = if (cp.phase == PurchasePhase.COMPLETED) "PAID" else "ACTIVE",
+                        updatedAt = dateFormat.format(Date(cp.createdAtEpochMillis)),
+                        supplierName = cp.supplierName,
+                        purchaseAmountCents = cp.totalAmountCents,
+                        buyerDownPaymentCents = cp.downPaymentCents,
+                        buyerTotalAfterDownPaymentCents = cp.financedAmountCents,
+                        supplierImmediatePayoutCents = cp.downPaymentCents,
+                        supplierDeferredPayoutCents = cp.supplierPayout48hCents,
+                        koutaInitialContributionCents = cp.financedAmountCents,
+                        supplierFeeCents = cp.kuotaFeeCents,
+                        installments = cp.installments.map { inst ->
+                            QuoteInstallmentDto(
+                                installmentId = "${cp.id}_${inst.number}",
+                                sequenceNumber = inst.number,
+                                amountCents = inst.amountCents,
+                                dueAt = dateFormat.format(Date(inst.dueEpochMillis)),
+                                status = if (inst.isPaid) "PAID" else "PENDING"
+                            )
+                        }
+                    )
+                }
+        }
+
         if (activeSession) {
             val remotePurchases = withContext(Dispatchers.IO) {
                 KuotaApiClient.call(context) { listPurchases() }
             }
             if (remotePurchases is ApiOutcome.Ok) {
-                purchases = remotePurchases.value
+                val localIds = localDtos.map { it.purchaseId }.toSet()
+                purchases = localDtos + remotePurchases.value.filterNot { it.purchaseId in localIds }
+            } else {
+                purchases = localDtos
             }
         } else {
-            purchases = emptyList()
+            purchases = localDtos
         }
     }
 
@@ -726,46 +766,62 @@ fun HomeScreen(
                 if (isPayingInstallment) return@InstallmentPaymentWizardDialog
                 isPayingInstallment = true
                 scope.launch {
-                    val outcome = withContext(Dispatchers.IO) {
-                        val createOutcome = KuotaApiClient.call(context) {
-                            createPaymentIntent(
-                                installmentId = targetInstallment.installmentId,
-                                idempotencyKey = "home-wizard-pay-${targetInstallment.installmentId}-${UUID.randomUUID()}",
-                                body = CreatePaymentIntentBody(paymentMethodId = channelId)
-                            )
-                        }
-                        when (createOutcome) {
-                            is ApiOutcome.Ok -> {
-                                KuotaApiClient.call(context) {
-                                    applyDemoPaymentEvent(
-                                        paymentId = createOutcome.value.paymentId,
-                                        idempotencyKey = "home-wizard-settle-${createOutcome.value.paymentId}-${UUID.randomUUID()}",
-                                        body = DemoPaymentEventBody(eventType = "SUCCEED")
-                                    )
-                                }
-                            }
-                            else -> createOutcome
-                        }
+                    val localPaid = withContext(Dispatchers.IO) {
+                        val creditStore = CreditPurchaseStore(context)
+                        creditStore.payInstallment(targetPurchase.purchaseId, targetInstallment.sequenceNumber)
                     }
-                    when (outcome) {
-                        is ApiOutcome.Ok -> {
-                            reloadPurchases()
-                            KuotaEvents.bump()
-                            Toast.makeText(
-                                context,
-                                "Cuota #${targetInstallment.sequenceNumber} conciliada ($channelId · $originBank · Op. $referenceNumber · $paymentDate)",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            wizardTargetPair = null
+
+                    if (localPaid != null) {
+                        reloadPurchases()
+                        KuotaEvents.bump()
+                        Toast.makeText(
+                            context,
+                            "Cuota #${targetInstallment.sequenceNumber} conciliada ($channelId · $originBank · Op. $referenceNumber · $paymentDate)",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        wizardTargetPair = null
+                    } else {
+                        val outcome = withContext(Dispatchers.IO) {
+                            val createOutcome = KuotaApiClient.call(context) {
+                                createPaymentIntent(
+                                    installmentId = targetInstallment.installmentId,
+                                    idempotencyKey = "home-wizard-pay-${targetInstallment.installmentId}-${UUID.randomUUID()}",
+                                    body = CreatePaymentIntentBody(paymentMethodId = channelId)
+                                )
+                            }
+                            when (createOutcome) {
+                                is ApiOutcome.Ok -> {
+                                    KuotaApiClient.call(context) {
+                                        applyDemoPaymentEvent(
+                                            paymentId = createOutcome.value.paymentId,
+                                            idempotencyKey = "home-wizard-settle-${createOutcome.value.paymentId}-${UUID.randomUUID()}",
+                                            body = DemoPaymentEventBody(eventType = "SUCCEED")
+                                        )
+                                    }
+                                }
+                                else -> createOutcome
+                            }
                         }
-                        is ApiOutcome.Rejected -> {
-                            Toast.makeText(context, outcome.message, Toast.LENGTH_SHORT).show()
-                        }
-                        is ApiOutcome.Unreachable -> {
-                            Toast.makeText(context, "No se pudo conectar al servidor (${outcome.serverUrl}).", Toast.LENGTH_SHORT).show()
-                        }
-                        ApiOutcome.SessionExpired -> {
-                            showLinkDialog = true
+                        when (outcome) {
+                            is ApiOutcome.Ok -> {
+                                reloadPurchases()
+                                KuotaEvents.bump()
+                                Toast.makeText(
+                                    context,
+                                    "Cuota #${targetInstallment.sequenceNumber} conciliada ($channelId · $originBank · Op. $referenceNumber · $paymentDate)",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                wizardTargetPair = null
+                            }
+                            is ApiOutcome.Rejected -> {
+                                Toast.makeText(context, outcome.message, Toast.LENGTH_SHORT).show()
+                            }
+                            is ApiOutcome.Unreachable -> {
+                                Toast.makeText(context, "No se pudo conectar al servidor (${outcome.serverUrl}).", Toast.LENGTH_SHORT).show()
+                            }
+                            ApiOutcome.SessionExpired -> {
+                                showLinkDialog = true
+                            }
                         }
                     }
                     isPayingInstallment = false

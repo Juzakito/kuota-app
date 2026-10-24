@@ -2,7 +2,9 @@ package com.kouta.app.data.local
 
 import android.content.Context
 import com.kouta.app.domain.model.CreditInstallment
+import com.kouta.app.domain.model.CreditLevel
 import com.kouta.app.domain.model.CreditPurchase
+import com.kouta.app.domain.model.PurchaseOffer
 import com.kouta.app.domain.model.PurchasePhase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,6 +14,9 @@ import java.io.File
 import java.util.UUID
 
 class CreditPurchaseStore(private val context: Context) {
+
+    private val appSettings by lazy { AppSettings(context) }
+    private val journalStore by lazy { SalesJournalStore(context) }
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -161,6 +166,22 @@ class CreditPurchaseStore(private val context: Context) {
             )
             list[index] = updated
             writeInternal(list)
+
+            // Reduce available credit line by financed amount (PRD 6.2 item 5)
+            val level = CreditLevel.fromNumber(appSettings.creditLevelNumber)
+            val newAvailable = (level.maxLineCents - p.financedAmountCents).coerceAtLeast(0L)
+            appSettings.availableCreditLineCents = newAvailable
+            journalStore.updateAvailableLine(newAvailable)
+            journalStore.addNotification(
+                LocalNotificationItem(
+                    id = UUID.randomUUID().toString(),
+                    type = "PURCHASE",
+                    title = "¡Plan de cuotas activado!",
+                    body = "Tu compra en ${p.supplierName} por ${PurchaseOffer.formatPen(p.totalAmountCents)} quedó activa en $count cuotas. Kuota desembolsará en 48h.",
+                    receivedAtEpochMillis = now
+                )
+            )
+
             updated
         }
     }
@@ -172,9 +193,10 @@ class CreditPurchaseStore(private val context: Context) {
             if (index == -1) return@withContext null
 
             val p = list[index]
+            val now = System.currentTimeMillis()
             val updatedInstallments = p.installments.map { inst ->
                 if (inst.number == installmentNumber) {
-                    inst.copy(isPaid = true, paidAtEpochMillis = System.currentTimeMillis())
+                    inst.copy(isPaid = true, paidAtEpochMillis = now)
                 } else {
                     inst
                 }
@@ -184,10 +206,40 @@ class CreditPurchaseStore(private val context: Context) {
             val updated = p.copy(
                 installments = updatedInstallments,
                 phase = if (allPaid) PurchasePhase.COMPLETED else p.phase,
-                completedAtEpochMillis = if (allPaid) System.currentTimeMillis() else p.completedAtEpochMillis
+                completedAtEpochMillis = if (allPaid) now else p.completedAtEpochMillis
             )
             list[index] = updated
             writeInternal(list)
+
+            // Restore available credit line as installments are repaid
+            val level = CreditLevel.fromNumber(appSettings.creditLevelNumber)
+            val remainingDebt = updatedInstallments.filter { !it.isPaid }.sumOf { it.amountCents }
+            val newAvailable = (level.maxLineCents - remainingDebt).coerceAtLeast(0L)
+            appSettings.availableCreditLineCents = newAvailable
+            journalStore.updateAvailableLine(newAvailable)
+
+            if (allPaid) {
+                journalStore.addNotification(
+                    LocalNotificationItem(
+                        id = UUID.randomUUID().toString(),
+                        type = "PURCHASE",
+                        title = "¡Crédito liquidado al 100%!",
+                        body = "Completaste todas las cuotas de tu compra en ${p.supplierName}. Tu línea de crédito se ha restablecido a ${PurchaseOffer.formatPen(level.maxLineCents)}.",
+                        receivedAtEpochMillis = now
+                    )
+                )
+            } else {
+                journalStore.addNotification(
+                    LocalNotificationItem(
+                        id = UUID.randomUUID().toString(),
+                        type = "PURCHASE",
+                        title = "Cuota #$installmentNumber pagada",
+                        body = "Tu pago se registró con éxito. Tu línea de crédito disponible aumentó a ${PurchaseOffer.formatPen(newAvailable)}.",
+                        receivedAtEpochMillis = now
+                    )
+                )
+            }
+
             updated
         }
     }
@@ -203,6 +255,12 @@ class CreditPurchaseStore(private val context: Context) {
             )
             list[index] = updated
             writeInternal(list)
+
+            // Restore credit line if needed
+            val level = CreditLevel.fromNumber(appSettings.creditLevelNumber)
+            appSettings.availableCreditLineCents = level.maxLineCents
+            journalStore.updateAvailableLine(level.maxLineCents)
+
             true
         }
     }

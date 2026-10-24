@@ -373,18 +373,18 @@ private fun ActiveInstallmentsTabContent(
                                     )
                                 }
 
-                                val statusText = when (activePurchase.phase) {
-                                    PurchasePhase.PHASE_1_DOWN_PAYMENT_PENDING -> "Fase 1: Inicial pendiente"
-                                    PurchasePhase.PHASE_1_DOWN_PAYMENT_SUBMITTED -> "Fase 1: Esperando proveedor"
-                                    PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION -> "Fase 2: Elegir plazo"
-                                    PurchasePhase.ACTIVE_IN_REPAYMENT -> "En pago"
-                                    else -> "Completado"
+                                val statusText = activePurchase.statusLabel
+                                val statusColor = when (activePurchase.phase) {
+                                    PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION -> kuotaColors.accentTeal
+                                    PurchasePhase.ACTIVE_IN_REPAYMENT -> if (activePurchase.isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                                    PurchasePhase.COMPLETED -> Color(0xFF10B981)
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
                                 }
                                 Text(
                                     statusText,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = statusColor
                                 )
                             }
 
@@ -409,23 +409,49 @@ private fun ActiveInstallmentsTabContent(
                                 }
                             }
 
+                            if (activePurchase.phase == PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION) {
+                                Spacer(modifier = Modifier.height(14.dp))
+                                Button(
+                                    onClick = onOpenTrade,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Elegir plazo y cronograma de cuotas")
+                                }
+                            }
+
                             // Installment list
                             if (activePurchase.installments.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(14.dp))
-                                Text(
-                                    "Cronograma de Cuotas",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "Cronograma de Cuotas",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "${activePurchase.totalPaidInstallments} de ${activePurchase.installments.size} pagadas",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 activePurchase.installments.forEach { inst ->
+                                    val isInstOverdue = !inst.isPaid && inst.dueEpochMillis < System.currentTimeMillis()
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(
                                                 if (inst.isPaid) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                                                else if (isInstOverdue) MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
                                                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                             )
                                             .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -433,11 +459,22 @@ private fun ActiveInstallmentsTabContent(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Column {
-                                            Text(
-                                                "Cuota #${inst.number} · ${dateFormat.format(Date(inst.dueEpochMillis))}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                fontWeight = FontWeight.Bold
-                                            )
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    "Cuota #${inst.number} · ${dateFormat.format(Date(inst.dueEpochMillis))}",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                if (isInstOverdue) {
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text(
+                                                        "Vencida",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.error,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
                                             Text(
                                                 PurchaseOffer.formatPen(inst.amountCents),
                                                 style = MaterialTheme.typography.bodyMedium,

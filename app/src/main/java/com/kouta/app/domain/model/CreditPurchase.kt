@@ -56,6 +56,29 @@ data class CreditPurchase(
             PurchasePhase.ACTIVE_IN_REPAYMENT
         )
 
+    val isOverdue: Boolean
+        get() = phase == PurchasePhase.ACTIVE_IN_REPAYMENT && installments.any { !it.isPaid && it.dueEpochMillis < System.currentTimeMillis() }
+
+    val statusLabel: String
+        get() = when (phase) {
+            PurchasePhase.PHASE_1_DOWN_PAYMENT_PENDING -> "Cuota iniciada"
+            PurchasePhase.PHASE_1_DOWN_PAYMENT_SUBMITTED -> "Comprobante subido"
+            PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION -> "Inicial confirmada"
+            PurchasePhase.ACTIVE_IN_REPAYMENT -> if (isOverdue) "Vencida" else "En cuotas"
+            PurchasePhase.COMPLETED -> "Pagada"
+            PurchasePhase.CANCELLED -> "Cancelada"
+        }
+
+    val remainingDebtCents: Long
+        get() = when (phase) {
+            PurchasePhase.COMPLETED, PurchasePhase.CANCELLED -> 0L
+            PurchasePhase.ACTIVE_IN_REPAYMENT -> {
+                val unpaid = installments.filter { !it.isPaid }.sumOf { it.amountCents }
+                if (unpaid == 0L && installments.isNotEmpty()) 0L else unpaid
+            }
+            else -> financedAmountCents
+        }
+
     val nextPendingInstallment: CreditInstallment?
         get() = installments.firstOrNull { !it.isPaid }
 

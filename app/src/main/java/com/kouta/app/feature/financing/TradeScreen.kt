@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -94,6 +96,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,7 +129,8 @@ fun TradeScreen(
 
     // Phase 2: Term and Installment configuration
     var selectedTermDays by remember { mutableIntStateOf(7) }
-    var selectedInstallmentCount by remember { mutableIntStateOf(1) }
+    var selectedInstallmentCount by remember { mutableIntStateOf(3) }
+    var showPhase2SuccessDialog by remember { mutableStateOf(false) }
 
     // Tab 1: Payment Link Generator
     var linkCustomerName by remember { mutableStateOf("") }
@@ -143,12 +149,10 @@ fun TradeScreen(
             buyerId = profile?.ruc.orEmpty().ifBlank { profile?.phone.orEmpty() }.ifBlank { "buyer-001" }
             activePurchase = creditStore.getActivePurchase()
 
-            // Preconfigure default term based on level
-            selectedTermDays = when (userCreditLevel.levelNumber) {
-                1 -> 7
-                2 -> 14
-                3 -> 21
-                else -> 30
+            // Preconfigure default term based on level's available terms
+            val terms = userCreditLevel.availableTermsDays
+            if (selectedTermDays !in terms) {
+                selectedTermDays = terms.getOrNull(1) ?: terms.firstOrNull() ?: 7
             }
         }
     }
@@ -414,58 +418,130 @@ fun TradeScreen(
 
                         PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION -> {
                             // Fase 2: Elegir plazo en cuotas
+                            val availableTerms = userCreditLevel.availableTermsDays
+                            val installmentOptions = listOf(1, 2, 3, 4)
+                            val esLocale = remember { Locale.forLanguageTag("es-PE") }
+                            val scheduleDateFormatter = remember { SimpleDateFormat("EEEE d 'de' MMMM", esLocale) }
+                            val now = System.currentTimeMillis()
+                            val count = selectedInstallmentCount.coerceAtLeast(1)
+                            val baseAmount = p.financedAmountCents / count
+                            val remainder = p.financedAmountCents % count
+                            val intervalMillis = (selectedTermDays.toLong() * 24L * 60L * 60L * 1000L) / count
+
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(20.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                shape = RoundedCornerShape(22.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                             ) {
                                 Column(modifier = Modifier.padding(20.dp)) {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(kuotaColors.accentTeal.copy(alpha = 0.15f))
-                                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                                    // Stage badge & status indicator
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(kuotaColors.accentTeal.copy(alpha = 0.15f))
+                                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                "FASE 2: CRONOGRAMA DE CUOTAS",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = kuotaColors.accentTeal
+                                            )
+                                        }
+
                                         Text(
-                                            "FASE 2: ELIGE TUS CUOTAS",
+                                            "Inicial Confirmada ✓",
                                             style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = kuotaColors.accentTeal
+                                            color = Color(0xFF10B981),
+                                            fontWeight = FontWeight.Bold
                                         )
                                     }
 
                                     Spacer(modifier = Modifier.height(12.dp))
 
                                     Text(
-                                        "¡Inicial confirmada con éxito!",
+                                        "Configura tu Plan de Pagos",
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold
                                     )
+                                    Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        "Saldo financiado por Kuota: ${PurchaseOffer.formatPen(p.financedAmountCents)}.",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
+                                        "El proveedor ${p.supplierName} confirmó tu cuota inicial de ${PurchaseOffer.formatPen(p.downPaymentCents)}. Kuota financia el saldo restante a 0% comisiones.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
 
-                                    HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp))
+                                    Spacer(modifier = Modifier.height(14.dp))
 
-                                    Text(
-                                        "Plazo disponible (según tu Nivel ${userCreditLevel.levelNumber}):",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    // Allowed term options based on level
-                                    val availableTerms = when (userCreditLevel.levelNumber) {
-                                        1 -> listOf(3, 5, 7)
-                                        2 -> listOf(7, 10, 14)
-                                        3 -> listOf(7, 14, 21)
-                                        4 -> listOf(14, 21, 30)
-                                        5 -> listOf(15, 30, 60)
-                                        else -> listOf(30, 60, 90, 180, 365)
+                                    // Financed balance pill
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+                                            .padding(14.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column {
+                                                Text(
+                                                    "Saldo neto a financiar",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Text(
+                                                    PurchaseOffer.formatPen(p.financedAmountCents),
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(kuotaColors.accentTeal.copy(alpha = 0.2f))
+                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                            ) {
+                                                Text(
+                                                    "0% Interés",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = kuotaColors.accentTeal
+                                                )
+                                            }
+                                        }
                                     }
+
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+                                    // Step 1: Plazo total selector (strictly from availableTermsDays)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            "1. Elige el plazo total:",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            "Nivel ${userCreditLevel.levelNumber} (${userCreditLevel.title})",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
 
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         availableTerms.forEach { days ->
@@ -481,17 +557,27 @@ fun TradeScreen(
                                         }
                                     }
 
-                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                                    Text("Número de cuotas:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    // Step 2: Número de cuotas (1, 2, 3, 4)
+                                    Text(
+                                        "2. Elige en cuántas cuotas pagar el saldo:",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        listOf(1, 2, 4).forEach { count ->
+                                        installmentOptions.forEach { optCount ->
                                             FilterChip(
-                                                selected = selectedInstallmentCount == count,
-                                                onClick = { selectedInstallmentCount = count },
-                                                label = { Text(if (count == 1) "1 cuota única" else "$count cuotas") },
+                                                selected = selectedInstallmentCount == optCount,
+                                                onClick = { selectedInstallmentCount = optCount },
+                                                label = {
+                                                    Text(
+                                                        if (optCount == 1) "1 cuota"
+                                                        else "$optCount cuotas"
+                                                    )
+                                                },
                                                 colors = FilterChipDefaults.filterChipColors(
                                                     selectedContainerColor = MaterialTheme.colorScheme.primary,
                                                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -500,29 +586,123 @@ fun TradeScreen(
                                         }
                                     }
 
-                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Spacer(modifier = Modifier.height(18.dp))
 
-                                    // Calculation preview
-                                    val perInstallmentCents = p.financedAmountCents / selectedInstallmentCount
+                                    // Step 3: Cronograma Visual Detallado
+                                    Text(
+                                        "Cronograma de Pagos Proyectado",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "Tus cuotas vencerán en las siguientes fechas programadas:",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        (1..count).forEach { num ->
+                                            val installmentAmount = if (num == 1) baseAmount + remainder else baseAmount
+                                            val dueEpoch = now + (num * intervalMillis)
+                                            val daysUntil = ((dueEpoch - now) / (24L * 3600_000L)).coerceAtLeast(1L)
+                                            val formattedDate = scheduleDateFormatter.format(Date(dueEpoch))
+
+                                            Card(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                shape = RoundedCornerShape(12.dp),
+                                                colors = CardDefaults.cardColors(
+                                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                                                )
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Column {
+                                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .size(20.dp)
+                                                                    .clip(CircleShape)
+                                                                    .background(MaterialTheme.colorScheme.primary),
+                                                                contentAlignment = Alignment.Center
+                                                            ) {
+                                                                Text(
+                                                                    "$num",
+                                                                    style = MaterialTheme.typography.labelSmall,
+                                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                                    fontWeight = FontWeight.Bold
+                                                                )
+                                                            }
+                                                            Spacer(modifier = Modifier.width(8.dp))
+                                                            Text(
+                                                                "Cuota #$num de $count",
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                fontWeight = FontWeight.Bold
+                                                            )
+                                                        }
+                                                        Spacer(modifier = Modifier.height(2.dp))
+                                                        Text(
+                                                            formattedDate.replaceFirstChar { it.uppercase() } + " (en $daysUntil días)",
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                    }
+
+                                                    Text(
+                                                        PurchaseOffer.formatPen(installmentAmount),
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    // 48h settlement reassurance card
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(12.dp),
-                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                        colors = CardDefaults.cardColors(containerColor = kuotaColors.accentTeal.copy(alpha = 0.08f))
                                     ) {
-                                        Column(modifier = Modifier.padding(14.dp)) {
-                                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                                Text("Monto por cuota:")
-                                                Text(PurchaseOffer.formatPen(perInstallmentCents), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                            }
-                                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                                Text("Plazo total:")
-                                                Text("$selectedTermDays días", fontWeight = FontWeight.Bold)
+                                        Row(
+                                            modifier = Modifier.padding(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.HourglassTop,
+                                                contentDescription = null,
+                                                tint = kuotaColors.accentTeal,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Column {
+                                                Text(
+                                                    "Liquidación garantizada al proveedor",
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = kuotaColors.accentTeal
+                                                )
+                                                Text(
+                                                    "Kuota transferirá ${PurchaseOffer.formatPen(p.supplierPayout48hCents)} a ${p.supplierName} en un plazo máximo de 48 horas.",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
                                             }
                                         }
                                     }
 
                                     Spacer(modifier = Modifier.height(20.dp))
 
+                                    // Button: "Aceptar cronograma" (matches PRD 6.2 item 2)
                                     Button(
                                         onClick = {
                                             scope.launch {
@@ -531,16 +711,18 @@ fun TradeScreen(
                                                     selectedTermDays,
                                                     selectedInstallmentCount
                                                 )
-                                                Toast.makeText(context, "¡Crédito activado! Kuota desembolsará al proveedor.", Toast.LENGTH_LONG).show()
+                                                showPhase2SuccessDialog = true
                                                 reload()
                                             }
                                         },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(12.dp)
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 50.dp),
+                                        shape = RoundedCornerShape(14.dp)
                                     ) {
-                                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Confirmar cronograma y desembolsar")
+                                        Text("Aceptar cronograma", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -987,5 +1169,55 @@ fun TradeScreen(
                 Spacer(modifier = Modifier.height(80.dp))
             }
         }
+    }
+
+    if (showPhase2SuccessDialog && activePurchase != null) {
+        val p = activePurchase!!
+        AlertDialog(
+            onDismissRequest = { showPhase2SuccessDialog = false },
+            icon = {
+                Icon(
+                    Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = kuotaColors.accentTeal,
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = {
+                Text(
+                    "¡Plan de Cuotas Activado!",
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Has aceptado el cronograma para tu compra en ${p.supplierName} por ${PurchaseOffer.formatPen(p.totalAmountCents)}.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "• Número de cuotas: ${p.installmentCount ?: selectedInstallmentCount}\n• Plazo total: ${p.selectedTermDays ?: selectedTermDays} días\n• Próximo vencimiento: ${p.nextPendingInstallment?.dueEpochMillis?.let { SimpleDateFormat("dd/MM/yyyy", Locale.US).format(Date(it)) } ?: "Pronto"}\n• Kuota liquidará al proveedor en un plazo máximo de 48 horas.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPhase2SuccessDialog = false
+                        onNavigateToInstallments()
+                    }
+                ) {
+                    Text("Ver en Mis Cuotas")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPhase2SuccessDialog = false }) {
+                    Text("Continuar")
+                }
+            }
+        )
     }
 }

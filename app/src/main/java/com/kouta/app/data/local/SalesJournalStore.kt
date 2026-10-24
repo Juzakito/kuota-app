@@ -190,6 +190,12 @@ class SalesJournalStore(context: Context) {
     fun updatePreferredPaymentMethod(method: String): LocalBusinessProfile? =
         updateProfile { it.copy(preferredPaymentMethod = method) }
 
+    fun updateAvailableLine(newAvailableLineCents: Long): LocalBusinessProfile? =
+        updateProfile { it.copy(availableLineCents = newAvailableLineCents.coerceAtLeast(0L)) }
+
+    fun updateCreditLevel(newLevel: Int): LocalBusinessProfile? =
+        updateProfile { it.copy(creditLevel = newLevel.coerceIn(1, 6)) }
+
     fun clearBusinessProfileAndDraft() = synchronized(LOCK) {
         writeSnapshot(readSnapshot().copy(businessProfile = null, onboardingDraft = null, notifications = emptyList()))
     }

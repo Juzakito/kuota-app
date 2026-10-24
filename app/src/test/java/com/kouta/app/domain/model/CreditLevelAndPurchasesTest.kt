@@ -110,4 +110,90 @@ class CreditLevelAndPurchasesTest {
         assertEquals(UserRole.PROVEEDOR, UserRole.fromCode("proveedor"))
         assertEquals(UserRole.VENDEDOR, UserRole.fromCode("other"))
     }
+
+    @Test
+    fun verifyFase2TermsAlignedWithPRDTable3() {
+        // Validación rigurosa de los plazos de compra de la Tabla 3 del PRD v0.3
+        assertEquals(listOf(3, 7, 15), CreditLevel.NIVEL_1.availableTermsDays)
+        assertEquals(listOf(7, 15, 30), CreditLevel.NIVEL_2.availableTermsDays)
+        assertEquals(listOf(15, 30, 60), CreditLevel.NIVEL_3.availableTermsDays)
+        assertEquals(listOf(30, 60, 90), CreditLevel.NIVEL_4.availableTermsDays)
+        assertEquals(listOf(30, 60, 90, 150), CreditLevel.NIVEL_5.availableTermsDays)
+        assertEquals(listOf(30, 60, 90, 180, 365), CreditLevel.NIVEL_6.availableTermsDays)
+    }
+
+    @Test
+    fun verifyFase2ThreeInstallmentsArithmeticWithoutFloatingPointLoss() {
+        // En Fase 2 (PRD 6.2): El vendedor elige cuotas (ej: 3 cuotas) para el saldo financiado
+        val financedCents = 100_00L // S/ 100.00
+        val count = 3
+        val baseAmount = financedCents / count
+        val remainder = financedCents % count
+
+        val installments = (1..count).map { num ->
+            val amount = if (num == 1) baseAmount + remainder else baseAmount
+            CreditInstallment(
+                number = num,
+                amountCents = amount,
+                dueEpochMillis = System.currentTimeMillis() + (num * 5L * 24 * 3600_000)
+            )
+        }
+
+        assertEquals(3, installments.size)
+        assertEquals("Cuota 1 absorbe el centavo de residuo (S/ 33.34)", 33_34L, installments[0].amountCents)
+        assertEquals("Cuota 2 es exacta (S/ 33.33)", 33_33L, installments[1].amountCents)
+        assertEquals("Cuota 3 es exacta (S/ 33.33)", 33_33L, installments[2].amountCents)
+        assertEquals("La suma total debe igualar exactamente los 100.00 soles", financedCents, installments.sumOf { it.amountCents })
+    }
+
+    @Test
+    fun verifyPurchasePhasePRDLabelsAndRemainingDebt() {
+        val purchase = CreditPurchase(
+            id = "test-pur-1",
+            supplierId = "sup-1",
+            supplierName = "Distribuidora Central",
+            totalAmountCents = 200_00L,
+            creditLevelNumber = 1,
+            downPaymentPercent = 50,
+            downPaymentCents = 100_00L,
+            financedAmountCents = 100_00L,
+            supplierPayout48hCents = 96_00L,
+            kuotaFeeCents = 4_00L,
+            phase = PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION
+        )
+
+        assertEquals("Inicial confirmada", purchase.statusLabel)
+        assertEquals(100_00L, purchase.remainingDebtCents)
+
+        // Simular confirmación de cronograma de 2 cuotas en Fase 2
+        val activeRepayment = purchase.copy(
+            phase = PurchasePhase.ACTIVE_IN_REPAYMENT,
+            selectedTermDays = 15,
+            installmentCount = 2,
+            installments = listOf(
+                CreditInstallment(number = 1, amountCents = 50_00L, dueEpochMillis = System.currentTimeMillis() + 86400000L, isPaid = false),
+                CreditInstallment(number = 2, amountCents = 50_00L, dueEpochMillis = System.currentTimeMillis() + (2 * 86400000L), isPaid = false)
+            )
+        )
+
+        assertEquals("En cuotas", activeRepayment.statusLabel)
+        assertEquals(100_00L, activeRepayment.remainingDebtCents)
+        assertFalse(activeRepayment.isOverdue)
+
+        // Pagar cuota 1
+        val onePaid = activeRepayment.copy(
+            installments = activeRepayment.installments.map { if (it.number == 1) it.copy(isPaid = true) else it }
+        )
+        assertEquals("Deuda restante debe reducirse a S/ 50.00", 50_00L, onePaid.remainingDebtCents)
+        assertEquals(1, onePaid.totalPaidInstallments)
+
+        // Pagar cuota 2 -> transiciona a COMPLETED
+        val completed = onePaid.copy(
+            phase = PurchasePhase.COMPLETED,
+            installments = onePaid.installments.map { it.copy(isPaid = true) }
+        )
+        assertEquals("Pagada", completed.statusLabel)
+        assertEquals("Deuda restante debe ser 0", 0L, completed.remainingDebtCents)
+        assertFalse("Al estar completada ya no es una transacción abierta (libera regla 3.2)", completed.isOpen)
+    }
 }
