@@ -61,7 +61,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kouta.app.core.designsystem.motion.KuotaMotion
@@ -238,10 +240,10 @@ private fun VendedorBottomBar(
                 modifier = Modifier.weight(1f)
             )
             CenterActionButton(
-                label = "Comprar / Vender",
+                label = "Comprar\ny vender",
                 selected = currentRoute == NavDestination.Trade.route,
                 onClick = onTrade,
-                modifier = Modifier.weight(1.3f)
+                modifier = Modifier.weight(1.25f)
             )
             BottomBarItem(
                 label = "Finanzas",
@@ -444,8 +446,8 @@ private fun CenterActionButton(
 
     val buttonScale by animateFloatAsState(
         targetValue = when {
-            isPressed -> 0.94f
-            selected -> 1.04f
+            isPressed -> 0.93f
+            selected -> 1.05f
             else -> 1.0f
         },
         animationSpec = tween(durationMillis = KuotaMotion.resolveDurationMs(150, animatorScale)),
@@ -457,15 +459,18 @@ private fun CenterActionButton(
         label = "centerActionLabelColor"
     )
     val ringColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        targetValue = if (selected) Color(0xFF26D7FF) else Color.Transparent,
         animationSpec = tween(durationMillis = duration),
         label = "centerActionRingColor"
     )
 
+    val displayLabel = when (label) {
+        "Comprar / Vender", "Comprar y vender" -> "Comprar\ny vender"
+        else -> label
+    }
+
     Column(
         modifier = modifier
-            .offset(y = (-16).dp)
-            .clip(RoundedCornerShape(16.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -474,32 +479,50 @@ private fun CenterActionButton(
                     KuotaMotion.performKeyTapHaptic(view)
                     onClick()
                 }
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally
+            )
+            .padding(bottom = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Box(
             modifier = Modifier
-                .size(60.dp)
+                .offset(y = (-18).dp)
+                .size(54.dp)
                 .scale(buttonScale)
-                .shadow(if (selected) 14.dp else 10.dp, CircleShape)
+                .shadow(if (selected) 12.dp else 8.dp, CircleShape)
                 .clip(CircleShape)
                 .background(Brush.linearGradient(kuotaColors.brandGradient), CircleShape)
-                .border(if (selected) 2.dp else 0.dp, ringColor, CircleShape),
+                .border(if (selected) 2.dp else 0.dp, ringColor, CircleShape)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    role = Role.Button,
+                    onClick = {
+                        KuotaMotion.performKeyTapHaptic(view)
+                        onClick()
+                    }
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 Icons.Default.QrCodeScanner,
-                contentDescription = label,
+                contentDescription = displayLabel.replace("\n", " "),
                 tint = kuotaColors.onBrand,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(26.dp)
             )
         }
+
         Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
+            text = displayLabel,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = if (displayLabel.contains("\n") || displayLabel.length > 8) 10.sp else 11.sp,
+                lineHeight = 11.5.sp,
+                letterSpacing = (-0.2).sp
+            ),
+            textAlign = TextAlign.Center,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
             color = labelColor,
-            maxLines = 1
+            maxLines = 2
         )
     }
 }
