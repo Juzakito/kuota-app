@@ -130,6 +130,21 @@ class CreditPurchaseStore(private val context: Context) {
         }
     }
 
+    suspend fun supplierRejectDownPayment(purchaseId: String): CreditPurchase? = withContext(Dispatchers.IO) {
+        synchronized(lock) {
+            val list = readInternal().toMutableList()
+            val index = list.indexOfFirst { it.id == purchaseId }
+            if (index == -1) return@withContext null
+
+            val updated = list[index].copy(
+                phase = PurchasePhase.CANCELLED
+            )
+            list[index] = updated
+            writeInternal(list)
+            updated
+        }
+    }
+
     suspend fun confirmInstallmentPlan(
         purchaseId: String,
         termDays: Int,

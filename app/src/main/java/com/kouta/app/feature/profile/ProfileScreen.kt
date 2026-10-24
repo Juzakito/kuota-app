@@ -145,6 +145,10 @@ fun ProfileScreen(
     var phone by remember { mutableStateOf("") }
     var ruc by remember { mutableStateOf("") }
     var preferredPaymentMethod by remember { mutableStateOf("Yape / Plin") }
+    var commercialCategory by remember { mutableStateOf("") }
+    var commercialZone by remember { mutableStateOf("") }
+    var commercialAddress by remember { mutableStateOf("") }
+    var operatingHours by remember { mutableStateOf("") }
 
     var hasSession by remember { mutableStateOf(false) }
     var kycSummary by remember { mutableStateOf<String?>(null) }
@@ -170,6 +174,10 @@ fun ProfileScreen(
             phone = it.phone
             ruc = it.ruc
             preferredPaymentMethod = it.preferredPaymentMethod
+            commercialCategory = it.commercialCategory
+            commercialZone = it.commercialZone
+            commercialAddress = it.commercialAddress
+            operatingHours = it.operatingHours
         }
         hasSession = KuotaApiClient.hasSession(context)
         kycSummary = appSettings.kycSummary
@@ -205,7 +213,11 @@ fun ProfileScreen(
                                 email = email.trim(),
                                 phone = phone,
                                 ruc = ruc,
-                                preferredPaymentMethod = preferredPaymentMethod
+                                preferredPaymentMethod = preferredPaymentMethod,
+                                commercialCategory = commercialCategory.trim().ifBlank { base.commercialCategory },
+                                commercialZone = commercialZone.trim().ifBlank { base.commercialZone },
+                                commercialAddress = commercialAddress.trim().ifBlank { base.commercialAddress },
+                                operatingHours = operatingHours.trim().ifBlank { base.operatingHours }
                             )
                             store.saveBusinessProfile(updated)
                             runCatching { KuotaFirestoreService.saveMerchantProfile(context, updated) }
@@ -451,6 +463,38 @@ fun ProfileScreen(
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     singleLine = true
                                 )
+                                if (existingProfile?.role == com.kouta.app.domain.model.UserRole.PROVEEDOR.name) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text("Perfil Comercial (Marketplace de proveedores)", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                    OutlinedTextField(
+                                        value = commercialCategory,
+                                        onValueChange = { commercialCategory = it.take(60); feedback = null },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        label = { Text("Rubro comercial (ej. Textil, Calzado, Abarrotes)") },
+                                        singleLine = true
+                                    )
+                                    OutlinedTextField(
+                                        value = commercialZone,
+                                        onValueChange = { commercialZone = it.take(60); feedback = null },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        label = { Text("Zona comercial (ej. Gamarra, Polvos Azules)") },
+                                        singleLine = true
+                                    )
+                                    OutlinedTextField(
+                                        value = commercialAddress,
+                                        onValueChange = { commercialAddress = it.take(120); feedback = null },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        label = { Text("Dirección de tienda o puesto") },
+                                        singleLine = true
+                                    )
+                                    OutlinedTextField(
+                                        value = operatingHours,
+                                        onValueChange = { operatingHours = it.take(80); feedback = null },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        label = { Text("Horario de atención") },
+                                        singleLine = true
+                                    )
+                                }
                                 Text(
                                     "Se guardan cifrados con Android Keystore AES-256 en este teléfono.",
                                     style = MaterialTheme.typography.bodySmall,

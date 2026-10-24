@@ -1,5 +1,6 @@
 package com.kouta.app.domain.model
 
+import com.kouta.app.data.local.LocalBusinessProfile
 import com.kouta.app.data.local.ManualSale
 import com.kouta.app.data.local.SaleSource
 import org.junit.Assert.assertEquals
@@ -282,5 +283,84 @@ class CreditLevelAndPurchasesTest {
         assertFalse("Venta 1 ya no está en catálogo", recalculated[0].isVerified)
         assertTrue("Venta 2 ahora coincide con nuevo catálogo", recalculated[1].isVerified)
         assertTrue("Venta por Link de Pago se mantiene comprobada", recalculated[2].isVerified)
+    }
+
+    @Test
+    fun verifyFase4SupplierPayoutFormulasAndNetReceipt() {
+        // PRD 10 & 13.4: El proveedor recibe el 98% de la venta total
+        // Ejemplo de la sección 13.4: Venta de S/ 1,000 con inicial de S/ 500
+        val totalSaleCents = 1_000_00L
+        val downPaymentCents = 500_00L
+        val kuotaFeeCents = (totalSaleCents * 2L) / 100L // 2% = S/ 20.00
+
+        // Payout a 48h = 98% * venta - inicial = 980 - 500 = S/ 480.00
+        val payout48hCents = CreditLevel.NIVEL_1.calculateSupplierPayout48hCents(totalSaleCents, downPaymentCents)
+        assertEquals(480_00L, payout48hCents)
+        assertEquals(20_00L, kuotaFeeCents)
+
+        // El proveedor recibe en mano la inicial (S/ 500) y de Kuota a 48h (S/ 480) = S/ 980 (98%)
+        val totalReceivedBySupplier = downPaymentCents + payout48hCents
+        assertEquals(980_00L, totalReceivedBySupplier)
+        assertEquals(totalSaleCents, totalReceivedBySupplier + kuotaFeeCents)
+    }
+
+    @Test
+    fun verifyFase4SupplierRejectionFreesBuyerRule32() {
+        // PRD 13.9 & 14.10: Rechazo de pago inicial cancela la operación y libera regla 3.2
+        val pendingPurchase = CreditPurchase(
+            id = "pur-pending-1",
+            supplierId = "sup-10",
+            supplierName = "Textiles Gamarra",
+            totalAmountCents = 400_00L,
+            creditLevelNumber = 1,
+            downPaymentPercent = 50,
+            downPaymentCents = 200_00L,
+            financedAmountCents = 200_00L,
+            supplierPayout48hCents = 192_00L,
+            kuotaFeeCents = 8_00L,
+            phase = PurchasePhase.PHASE_1_DOWN_PAYMENT_SUBMITTED
+        )
+
+        assertTrue("La compra en revisión es una transacción abierta", pendingPurchase.isOpen)
+
+        // El proveedor rechaza el voucher no válido ("No recibí el pago")
+        val rejectedPurchase = pendingPurchase.copy(phase = PurchasePhase.CANCELLED)
+
+        assertEquals("Cancelada", rejectedPurchase.statusLabel)
+        assertEquals(0L, rejectedPurchase.remainingDebtCents)
+        assertFalse("Al ser cancelada ya no es una transacción abierta y libera al comprador", rejectedPurchase.isOpen)
+
+        // Verificamos que ahora el comprador vuelve a ser elegible bajo regla 3.2
+        val eligibility = PurchaseEligibilityCheck.validate(
+            totalAmountCents = 300_00L,
+            currentLevel = CreditLevel.NIVEL_1,
+            availableLineCents = 300_00L,
+            hasActiveOpenTransaction = rejectedPurchase.isOpen
+        )
+        assertTrue("El comprador puede volver a comprar tras el rechazo", eligibility.isEligible)
+    }
+
+    @Test
+    fun verifyFase4SupplierCommercialProfileDefaults() {
+        // PRD 13.2: Perfil comercial del proveedor
+        val profile = LocalBusinessProfile(
+            businessName = "Confecciones Don Pepe",
+            email = "pepe@kuota.pe",
+            phone = "987123456",
+            ruc = "20123456789",
+            role = UserRole.PROVEEDOR.name
+        )
+
+        assertEquals("Textil y Confección", profile.commercialCategory)
+        assertEquals("Gamarra, La Victoria", profile.commercialZone)
+        assertTrue(profile.commercialAddress.isNotEmpty())
+        assertTrue(profile.operatingHours.isNotEmpty())
+
+        val updatedProfile = profile.copy(
+            commercialCategory = "Calzado y Cueros",
+            commercialZone = "Caquetá, San Martín de Porres"
+        )
+        assertEquals("Calzado y Cueros", updatedProfile.commercialCategory)
+        assertEquals("Caquetá, San Martín de Porres", updatedProfile.commercialZone)
     }
 }

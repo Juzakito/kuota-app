@@ -41,8 +41,8 @@ class PaymentLinkStore(private val context: Context) {
     }
 
     suspend fun createLink(
-        sellerId: String,
-        sellerName: String,
+        sellerId: String = "",
+        sellerName: String = "",
         customerName: String,
         customerDni: String,
         customerPhone: String,

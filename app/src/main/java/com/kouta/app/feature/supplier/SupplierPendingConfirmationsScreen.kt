@@ -20,8 +20,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.HourglassBottom
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PendingActions
 import androidx.compose.material.icons.filled.Person
@@ -68,12 +70,17 @@ fun SupplierPendingConfirmationsScreen() {
 
     var pendingList by remember { mutableStateOf<List<CreditPurchase>>(emptyList()) }
     var viewingVoucherPurchase by remember { mutableStateOf<CreditPurchase?>(null) }
+    var rejectingPurchase by remember { mutableStateOf<CreditPurchase?>(null) }
 
     fun reload() {
         scope.launch {
             val all = creditStore.getAll()
             pendingList = all.filter {
-                it.phase == PurchasePhase.PHASE_1_DOWN_PAYMENT_SUBMITTED || it.phase == PurchasePhase.PHASE_1_DOWN_PAYMENT_PENDING
+                it.phase in setOf(
+                    PurchasePhase.PHASE_1_DOWN_PAYMENT_SUBMITTED,
+                    PurchasePhase.PHASE_1_DOWN_PAYMENT_PENDING,
+                    PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION
+                )
             }
         }
     }
@@ -167,7 +174,8 @@ fun SupplierPendingConfirmationsScreen() {
                                 ).show()
                                 reload()
                             }
-                        }
+                        },
+                        onRejectPayment = { rejectingPurchase = purchase }
                     )
                 }
 
@@ -243,16 +251,54 @@ fun SupplierPendingConfirmationsScreen() {
             }
         )
     }
+
+    if (rejectingPurchase != null) {
+        val toReject = rejectingPurchase!!
+        AlertDialog(
+            onDismissRequest = { rejectingPurchase = null },
+            title = { Text("¿Rechazar cuota inicial?") },
+            text = {
+                Text(
+                    "Operación OP-${toReject.id.takeLast(6).uppercase()}.\n\n" +
+                    "Si no recibiste la transferencia o el comprobante adjunto no es válido, se cancelará esta operación y el comprador será notificado para que intente nuevamente."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val id = toReject.id
+                        rejectingPurchase = null
+                        scope.launch {
+                            creditStore.supplierRejectDownPayment(id)
+                            Toast.makeText(context, "Operación cancelada. Se notificó al comprador.", Toast.LENGTH_SHORT).show()
+                            reload()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Sí, rechazar pago")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { rejectingPurchase = null }) {
+                    Text("Volver")
+                }
+            }
+        )
+    }
 }
 
 @Composable
 private fun PendingItemCard(
     purchase: CreditPurchase,
     onViewVoucher: () -> Unit,
-    onConfirmPayment: () -> Unit
+    onConfirmPayment: () -> Unit,
+    onRejectPayment: () -> Unit
 ) {
     val kuotaColors = MaterialTheme.kuotaColors
+    val isWaitingForBuyer = purchase.phase == PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION
     val hasVoucher = purchase.phase == PurchasePhase.PHASE_1_DOWN_PAYMENT_SUBMITTED
+    val opCode = "OP-${purchase.id.takeLast(6).uppercase()}"
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -285,11 +331,19 @@ private fun PendingItemCard(
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
-                        Text(
-                            text = if (purchase.buyerName.isNotBlank()) purchase.buyerName else "Comprador Kuota",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (purchase.buyerName.isNotBlank()) purchase.buyerName else "Comprador Kuota",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = opCode,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         if (purchase.buyerPhone.isNotBlank()) {
                             Text(
                                 text = "Cel: ${purchase.buyerPhone}",
@@ -304,16 +358,27 @@ private fun PendingItemCard(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(
-                            if (hasVoucher) kuotaColors.accentTeal.copy(alpha = 0.2f)
-                            else MaterialTheme.colorScheme.surfaceVariant
+                            when {
+                                isWaitingForBuyer -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                hasVoucher -> kuotaColors.accentTeal.copy(alpha = 0.2f)
+                                else -> MaterialTheme.colorScheme.surfaceVariant
+                            }
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = if (hasVoucher) "Voucher Subido" else "Esperando al comprador",
+                        text = when {
+                            isWaitingForBuyer -> "Esperando al comprador"
+                            hasVoucher -> "Voucher Subido"
+                            else -> "Esperando voucher"
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (hasVoucher) kuotaColors.accentTeal else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = when {
+                            isWaitingForBuyer -> MaterialTheme.colorScheme.primary
+                            hasVoucher -> kuotaColors.accentTeal
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
                 }
             }
@@ -329,7 +394,7 @@ private fun PendingItemCard(
                     Text(PurchaseOffer.formatPen(purchase.totalAmountCents), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                 }
                 Column {
-                    Text("Cuota Inicial que debes recibir", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    Text("Cuota Inicial", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     Text(
                         PurchaseOffer.formatPen(purchase.downPaymentCents),
                         style = MaterialTheme.typography.titleMedium,
@@ -350,34 +415,71 @@ private fun PendingItemCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                if (hasVoucher) {
-                    OutlinedButton(
-                        onClick = onViewVoucher,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp)
+            if (isWaitingForBuyer) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Ver voucher", style = MaterialTheme.typography.labelMedium)
+                        Icon(
+                            Icons.Default.HourglassTop,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            "Inicial confirmada. El comprador está eligiendo sus cuotas. Cuando acepte, la venta pasará a Por cobrar (48h).",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
-
-                Button(
-                    onClick = onConfirmPayment,
-                    modifier = Modifier.weight(1.2f),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = kuotaColors.accentTeal,
-                        contentColor = Color.Black
-                    )
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Confirmar pago", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    if (hasVoucher) {
+                        OutlinedButton(
+                            onClick = onViewVoucher,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Voucher", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = onRejectPayment,
+                        modifier = Modifier.weight(1.1f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(Icons.Default.Cancel, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("No recibí pago", style = MaterialTheme.typography.labelSmall)
+                    }
+
+                    Button(
+                        onClick = onConfirmPayment,
+                        modifier = Modifier.weight(1.3f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = kuotaColors.accentTeal,
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Confirmar pago", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }

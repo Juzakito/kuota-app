@@ -24,14 +24,17 @@ import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.PendingActions
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,10 +56,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kouta.app.core.designsystem.theme.kuotaColors
 import com.kouta.app.data.local.CreditPurchaseStore
+import com.kouta.app.data.local.PaymentLinkStore
 import com.kouta.app.data.local.SalesJournalStore
 import com.kouta.app.domain.model.CreditPurchase
+import com.kouta.app.domain.model.PaymentLink
+import com.kouta.app.domain.model.PaymentLinkStatus
 import com.kouta.app.domain.model.PurchaseOffer
 import com.kouta.app.domain.model.PurchasePhase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun SupplierHomeScreen(
@@ -69,29 +77,53 @@ fun SupplierHomeScreen(
     val context = LocalContext.current
     val journalStore = remember(context) { SalesJournalStore(context) }
     val creditStore = remember(context) { CreditPurchaseStore(context) }
+    val linkStore = remember(context) { PaymentLinkStore(context) }
     val kuotaColors = MaterialTheme.kuotaColors
 
     var businessName by remember { mutableStateOf("") }
     var ownerName by remember { mutableStateOf("") }
+    var commercialCategory by remember { mutableStateOf("") }
+    var commercialZone by remember { mutableStateOf("") }
     var pendingPurchasesCount by remember { mutableIntStateOf(0) }
-    var totalSalesCents by remember { mutableStateOf(0L) }
+    var totalWeekSalesCents by remember { mutableStateOf(0L) }
+    var qrWeekSalesCents by remember { mutableStateOf(0L) }
+    var linkWeekSalesCents by remember { mutableStateOf(0L) }
     var pendingPayout48hCents by remember { mutableStateOf(0L) }
+    var pendingPayoutPurchases by remember { mutableStateOf<List<CreditPurchase>>(emptyList()) }
     var recentTransactions by remember { mutableStateOf<List<CreditPurchase>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        val profile = journalStore.readBusinessProfile()
+        val profile = withContext(Dispatchers.IO) { journalStore.readBusinessProfile() }
         businessName = profile?.businessName.orEmpty().ifBlank { "Comercio Aliado" }
         ownerName = profile?.ownerName.orEmpty()
+        commercialCategory = profile?.commercialCategory.orEmpty().ifBlank { "Textil y Confección" }
+        commercialZone = profile?.commercialZone.orEmpty().ifBlank { "Gamarra, La Victoria" }
 
-        val allPurchases = creditStore.getAll()
+        val allPurchases = withContext(Dispatchers.IO) { creditStore.getAll() }
+        val allLinks = withContext(Dispatchers.IO) { linkStore.getAll() }
+
         pendingPurchasesCount = allPurchases.count {
             it.phase == PurchasePhase.PHASE_1_DOWN_PAYMENT_SUBMITTED || it.phase == PurchasePhase.PHASE_1_DOWN_PAYMENT_PENDING
         }
+
         val confirmedPurchases = allPurchases.filter {
             it.phase in setOf(PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION, PurchasePhase.ACTIVE_IN_REPAYMENT, PurchasePhase.COMPLETED)
         }
-        totalSalesCents = confirmedPurchases.sumOf { it.totalAmountCents }
-        pendingPayout48hCents = confirmedPurchases.filter { it.phase != PurchasePhase.COMPLETED }.sumOf { it.supplierPayout48hCents }
+        val paidLinks = allLinks.filter { it.status == PaymentLinkStatus.PAGADO }
+
+        val now = System.currentTimeMillis()
+        val sevenDaysAgo = now - (7L * 24 * 3600_000L)
+
+        val weekQr = confirmedPurchases.filter { it.createdAtEpochMillis >= sevenDaysAgo }
+        val weekLinks = paidLinks.filter { (it.paidAtEpochMillis ?: it.createdAtEpochMillis) >= sevenDaysAgo }
+
+        qrWeekSalesCents = weekQr.sumOf { it.totalAmountCents }
+        linkWeekSalesCents = weekLinks.sumOf { it.amountCents }
+        totalWeekSalesCents = qrWeekSalesCents + linkWeekSalesCents
+
+        val pendingPayouts = confirmedPurchases.filter { it.phase != PurchasePhase.COMPLETED }
+        pendingPayoutPurchases = pendingPayouts
+        pendingPayout48hCents = pendingPayouts.sumOf { it.supplierPayout48hCents }
         recentTransactions = allPurchases.take(5)
     }
 
@@ -158,7 +190,7 @@ fun SupplierHomeScreen(
                                     }
                                 }
                                 Text(
-                                    if (ownerName.isNotBlank()) "Titular: $ownerName" else "Comercio verificado",
+                                    "$commercialCategory · $commercialZone",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = kuotaColors.headerContent.copy(alpha = 0.7f)
                                 )
@@ -174,16 +206,58 @@ fun SupplierHomeScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
-                    // Hub 48h Card
+                    // Banner de alertas para pagos por confirmar (PRD 13.5)
+                    if (pendingPurchasesCount > 0) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onOpenPending() },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = kuotaColors.accentTeal.copy(alpha = 0.18f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .background(kuotaColors.accentTeal),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "$pendingPurchasesCount",
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black,
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text("Cuotas iniciales por confirmar", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                        Text("Toca para verificar los vouchers recibidos", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                                Icon(Icons.Default.ArrowForward, contentDescription = null, tint = kuotaColors.accentTeal)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    // Hub Financiero: Ventas de la semana y Por cobrar en 48h (PRD 13.7)
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
+                        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -191,7 +265,7 @@ fun SupplierHomeScreen(
                             ) {
                                 Column {
                                     Text(
-                                        "Por liquidar en 48 horas",
+                                        "Por liquidar en 48 horas (PRD §13.7)",
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -219,10 +293,28 @@ fun SupplierHomeScreen(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider()
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text("Ventas de la semana", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(PurchaseOffer.formatPen(totalWeekSalesCents), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text("Desglose por canal", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(
+                                        "QR: ${PurchaseOffer.formatPen(qrWeekSalesCents)} · Links: ${PurchaseOffer.formatPen(linkWeekSalesCents)}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
 
                             Text(
-                                "Kuota te transfiere el saldo restante (98% de la venta menos la inicial) directamente a tu cuenta bancaria dentro de las 48h hábiles.",
+                                "Kuota te transfiere el saldo restante (98% de la venta menos la inicial) directamente a tu cuenta bancaria en 48 horas hábiles.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -286,7 +378,7 @@ fun SupplierHomeScreen(
                             }
                             Spacer(modifier = Modifier.height(10.dp))
                             Text("Por confirmar", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                            Text("Pagos iniciales", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Cuotas iniciales", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
 
@@ -363,6 +455,7 @@ fun SupplierHomeScreen(
             }
         } else {
             items(recentTransactions, key = { it.id }) { tx ->
+                val opCode = "OP-${tx.id.takeLast(6).uppercase()}"
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -378,13 +471,17 @@ fun SupplierHomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    if (tx.buyerName.isNotBlank()) tx.buyerName else "Comprador Kuota",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(opCode, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                             Text(
-                                if (tx.buyerName.isNotBlank()) tx.buyerName else "Comprador Kuota",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "Venta: ${PurchaseOffer.formatPen(tx.totalAmountCents)} · Inicial: ${PurchaseOffer.formatPen(tx.downPaymentCents)}",
+                                "Venta: ${PurchaseOffer.formatPen(tx.totalAmountCents)} · Inicial recibida: ${PurchaseOffer.formatPen(tx.downPaymentCents)}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

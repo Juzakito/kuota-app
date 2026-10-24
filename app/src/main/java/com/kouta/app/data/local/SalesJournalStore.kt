@@ -117,7 +117,11 @@ data class LocalBusinessProfile(
     val availableLineCents: Long = 300_00L,
     val preferredPaymentMethod: String = "Yape / Plin",
     val notificationSettings: LocalNotificationSettings = LocalNotificationSettings(),
-    val claims: List<LocalClaimRecord> = emptyList()
+    val claims: List<LocalClaimRecord> = emptyList(),
+    val commercialCategory: String = "Textil y Confección",
+    val commercialZone: String = "Gamarra, La Victoria",
+    val commercialAddress: String = "Jr. Gamarra 1234, Galería Guizado",
+    val operatingHours: String = "Lun - Sáb: 9:00 AM - 6:00 PM"
 )
 
 @Serializable
@@ -195,6 +199,20 @@ class SalesJournalStore(context: Context) {
 
     fun updateCreditLevel(newLevel: Int): LocalBusinessProfile? =
         updateProfile { it.copy(creditLevel = newLevel.coerceIn(1, 6)) }
+
+    fun updateCommercialProfile(
+        category: String,
+        zone: String,
+        address: String,
+        hours: String
+    ): LocalBusinessProfile? = updateProfile {
+        it.copy(
+            commercialCategory = category.trim().ifBlank { it.commercialCategory },
+            commercialZone = zone.trim().ifBlank { it.commercialZone },
+            commercialAddress = address.trim().ifBlank { it.commercialAddress },
+            operatingHours = hours.trim().ifBlank { it.operatingHours }
+        )
+    }
 
     fun clearBusinessProfileAndDraft() = synchronized(LOCK) {
         writeSnapshot(readSnapshot().copy(businessProfile = null, onboardingDraft = null, notifications = emptyList()))

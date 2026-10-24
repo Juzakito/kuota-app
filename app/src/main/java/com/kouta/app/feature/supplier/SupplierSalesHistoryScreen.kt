@@ -21,7 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.PointOfSale
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,45 +49,88 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kouta.app.core.designsystem.theme.kuotaColors
 import com.kouta.app.data.local.CreditPurchaseStore
+import com.kouta.app.data.local.PaymentLinkStore
 import com.kouta.app.domain.model.CreditPurchase
+import com.kouta.app.domain.model.PaymentLink
+import com.kouta.app.domain.model.PaymentLinkStatus
 import com.kouta.app.domain.model.PurchaseOffer
 import com.kouta.app.domain.model.PurchasePhase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private sealed class UnifiedSupplierSale(
+    val id: String,
+    val epochMillis: Long,
+    val grossAmountCents: Long,
+    val netAmountCents: Long,
+    val channel: String
+) {
+    class QrBusiness(val purchase: CreditPurchase) : UnifiedSupplierSale(
+        id = purchase.id,
+        epochMillis = purchase.createdAtEpochMillis,
+        grossAmountCents = purchase.totalAmountCents,
+        netAmountCents = purchase.supplierPayout48hCents,
+        channel = "QR_BUSINESS"
+    )
+
+    class PaymentLinkItem(val link: PaymentLink) : UnifiedSupplierSale(
+        id = link.id,
+        epochMillis = link.paidAtEpochMillis ?: link.createdAtEpochMillis,
+        grossAmountCents = link.amountCents,
+        netAmountCents = link.netAmountCents,
+        channel = "LINK_PAGO"
+    )
+}
 
 @Composable
 fun SupplierSalesHistoryScreen() {
     val context = LocalContext.current
     val creditStore = remember(context) { CreditPurchaseStore(context) }
+    val linkStore = remember(context) { PaymentLinkStore(context) }
     val kuotaColors = MaterialTheme.kuotaColors
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy · HH:mm", Locale.US) }
 
-    var allSales by remember { mutableStateOf<List<CreditPurchase>>(emptyList()) }
+    var allSales by remember { mutableStateOf<List<UnifiedSupplierSale>>(emptyList()) }
     var selectedFilter by remember { mutableStateOf("Todas") }
 
     LaunchedEffect(Unit) {
-        val list = creditStore.getAll()
-        // Include confirmed or completed transactions
-        allSales = list.filter {
-            it.phase in setOf(
-                PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION,
-                PurchasePhase.ACTIVE_IN_REPAYMENT,
-                PurchasePhase.COMPLETED
-            )
+        val qrList = withContext(Dispatchers.IO) {
+            creditStore.getAll().filter {
+                it.phase in setOf(
+                    PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION,
+                    PurchasePhase.ACTIVE_IN_REPAYMENT,
+                    PurchasePhase.COMPLETED
+                )
+            }.map { UnifiedSupplierSale.QrBusiness(it) }
         }
+        val linksList = withContext(Dispatchers.IO) {
+            linkStore.getAll().map { UnifiedSupplierSale.PaymentLinkItem(it) }
+        }
+        allSales = (qrList + linksList).sortedByDescending { it.epochMillis }
     }
 
     val filtered = remember(allSales, selectedFilter) {
         when (selectedFilter) {
-            "Por liquidar (48h)" -> allSales.filter { it.phase != PurchasePhase.COMPLETED }
-            "Liquidadas" -> allSales.filter { it.phase == PurchasePhase.COMPLETED }
+            "QR Business (48h)" -> allSales.filter { it is UnifiedSupplierSale.QrBusiness }
+            "Links de Pago (1%)" -> allSales.filter { it is UnifiedSupplierSale.PaymentLinkItem }
+            "Por liquidar (48h)" -> allSales.filter {
+                it is UnifiedSupplierSale.QrBusiness && it.purchase.phase != PurchasePhase.COMPLETED
+            }
+            "Liquidadas / Pagadas" -> allSales.filter {
+                (it is UnifiedSupplierSale.QrBusiness && it.purchase.phase == PurchasePhase.COMPLETED) ||
+                (it is UnifiedSupplierSale.PaymentLinkItem && it.link.status == PaymentLinkStatus.PAGADO)
+            }
             else -> allSales
         }
     }
 
-    val totalVolumeCents = allSales.sumOf { it.totalAmountCents }
-    val pendingPayoutCents = allSales.filter { it.phase != PurchasePhase.COMPLETED }.sumOf { it.supplierPayout48hCents }
+    val totalVolumeCents = allSales.sumOf { it.grossAmountCents }
+    val pendingPayoutCents = allSales.filterIsInstance<UnifiedSupplierSale.QrBusiness>()
+        .filter { it.purchase.phase != PurchasePhase.COMPLETED }
+        .sumOf { it.purchase.supplierPayout48hCents }
 
     Column(
         modifier = Modifier
@@ -114,7 +159,7 @@ fun SupplierSalesHistoryScreen() {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        "Liquidaciones a 48h con comisión del 2%",
+                        "Canales QR Business (98%) y Links de Pago (1%)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -144,7 +189,7 @@ fun SupplierSalesHistoryScreen() {
                     colors = CardDefaults.cardColors(containerColor = kuotaColors.accentTeal.copy(alpha = 0.12f))
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Por cobrar (48h)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Por liquidar (48h)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
                             PurchaseOffer.formatPen(pendingPayoutCents),
                             style = MaterialTheme.typography.titleMedium,
@@ -164,7 +209,7 @@ fun SupplierSalesHistoryScreen() {
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            listOf("Todas", "Por liquidar (48h)", "Liquidadas").forEach { filter ->
+            listOf("Todas", "QR Business (48h)", "Links de Pago (1%)", "Por liquidar (48h)", "Liquidadas / Pagadas").forEach { filter ->
                 FilterChip(
                     selected = selectedFilter == filter,
                     onClick = { selectedFilter = filter },
@@ -197,77 +242,154 @@ fun SupplierSalesHistoryScreen() {
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(filtered, key = { it.id }) { sale ->
-                    val isSettled = sale.phase == PurchasePhase.COMPLETED
+                items(filtered, key = { it.id }) { item ->
+                    when (item) {
+                        is UnifiedSupplierSale.QrBusiness -> {
+                            val sale = item.purchase
+                            val isCompleted = sale.phase == PurchasePhase.COMPLETED
+                            val opCode = "OP-${sale.id.takeLast(6).uppercase()}"
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
+                            Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                             ) {
-                                Column {
-                                    Text(
-                                        if (sale.buyerName.isNotBlank()) sale.buyerName else "Comprador Kuota",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.QrCode2, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Column {
+                                                Text(
+                                                    if (sale.buyerName.isNotBlank()) sale.buyerName else "Comprador Kuota",
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(opCode, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(
+                                                    if (isCompleted) kuotaColors.accentTeal.copy(alpha = 0.2f)
+                                                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                                )
+                                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                                        ) {
+                                            Text(
+                                                if (isCompleted) "Liquidada" else "En liquidación 48h",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isCompleted) kuotaColors.accentTeal else MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Total venta:", style = MaterialTheme.typography.bodySmall)
+                                        Text(PurchaseOffer.formatPen(sale.totalAmountCents), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Inicial cobrada en mano:", style = MaterialTheme.typography.bodySmall)
+                                        Text(PurchaseOffer.formatPen(sale.downPaymentCents), style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Comisión Kuota (2%):", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                                        Text("- ${PurchaseOffer.formatPen(sale.kuotaFeeCents)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Abono Kuota a 48h:", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                        Text(PurchaseOffer.formatPen(sale.supplierPayout48hCents), fontWeight = FontWeight.Bold, color = kuotaColors.accentTeal)
+                                    }
+
                                     Text(
                                         dateFormat.format(Date(sale.createdAtEpochMillis)),
-                                        style = MaterialTheme.typography.bodySmall,
+                                        style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = if (isSettled) Icons.Default.CheckCircle else Icons.Default.HourglassTop,
-                                        contentDescription = null,
-                                        tint = if (isSettled) kuotaColors.accentTeal else Color(0xFFFFB300),
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        if (isSettled) "Liquidada" else "En 48h",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isSettled) kuotaColors.accentTeal else Color(0xFFFFB300)
-                                    )
-                                }
                             }
+                        }
+                        is UnifiedSupplierSale.PaymentLinkItem -> {
+                            val link = item.link
 
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
-
-                            Row(
+                            Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                             ) {
-                                Column {
-                                    Text("Venta Total", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(PurchaseOffer.formatPen(sale.totalAmountCents), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                }
-                                Column {
-                                    Text("Inicial Cobrada", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(PurchaseOffer.formatPen(sale.downPaymentCents), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                }
-                                Column {
-                                    Text("Liquidado Kuota", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.Link, contentDescription = null, tint = kuotaColors.accentTeal, modifier = Modifier.size(20.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Column {
+                                                Text(link.customerName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                                Text("Link: ${link.concept}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(
+                                                    when (link.displayStatus) {
+                                                        PaymentLinkStatus.PAGADO -> kuotaColors.accentTeal.copy(alpha = 0.2f)
+                                                        PaymentLinkStatus.ENVIADO -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                                        PaymentLinkStatus.VENCIDO -> MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                                                        else -> MaterialTheme.colorScheme.surfaceVariant
+                                                    }
+                                                )
+                                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                                        ) {
+                                            Text(
+                                                link.displayStatus.label,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = when (link.displayStatus) {
+                                                    PaymentLinkStatus.PAGADO -> kuotaColors.accentTeal
+                                                    PaymentLinkStatus.ENVIADO -> MaterialTheme.colorScheme.primary
+                                                    PaymentLinkStatus.VENCIDO -> MaterialTheme.colorScheme.error
+                                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                                }
+                                            )
+                                        }
+                                    }
+
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Monto cobrado:", style = MaterialTheme.typography.bodySmall)
+                                        Text(PurchaseOffer.formatPen(link.amountCents), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Comisión Kuota (1% plano):", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                                        Text("- ${PurchaseOffer.formatPen(link.feeCents)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Neto recibido (99%):", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                        Text(PurchaseOffer.formatPen(link.netAmountCents), fontWeight = FontWeight.Bold, color = kuotaColors.accentTeal)
+                                    }
+
                                     Text(
-                                        PurchaseOffer.formatPen(sale.supplierPayout48hCents),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = kuotaColors.accentTeal
+                                        dateFormat.format(Date(link.createdAtEpochMillis)),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                }
-                                Column {
-                                    Text("Comisión 2%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(PurchaseOffer.formatPen(sale.kuotaFeeCents), style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                         }
