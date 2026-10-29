@@ -22,6 +22,20 @@ export default {
         'navy-hard-lg': '6px 6px 0px 0px #00235C',
         'dodger-glow': '0 10px 30px -5px rgba(3, 145, 253, 0.45)',
       },
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        marquee: 'marquee 18s linear infinite',
+        fadeIn: 'fadeIn 0.35s ease-out forwards',
+      },
     },
   },
   plugins: [],

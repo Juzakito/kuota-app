@@ -4,29 +4,36 @@ import { Image as ImageIcon } from 'lucide-react';
 interface ImagePlaceholderProps {
   id: string;
   label: string;
-  aspectRatioLabel: string;
+  aspectRatioLabel?: string;
+  dimensionsLabel?: string;
   aspectClass?: string;
   className?: string;
   children?: React.ReactNode;
 }
 
 /**
- * PRD §4: Todas las imágenes se entregan como placeholders
- * (caja con etiqueta y proporción definida); el equipo las carga después.
+ * Placeholder unificado para Compradores (proporción) y Proveedores (dimensiones IMG-01..IMG-21).
  */
 export const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
   id,
   label,
   aspectRatioLabel,
+  dimensionsLabel,
   aspectClass = 'aspect-[4/3]',
   className = '',
   children,
 }) => {
+  const badgeRight = dimensionsLabel
+    ? dimensionsLabel
+    : aspectRatioLabel
+      ? `Proporción ${aspectRatioLabel}`
+      : '';
+
   return (
     <div
       role="img"
-      aria-label={label}
-      className={`relative overflow-hidden rounded-2xl border-2 border-kuota-deepnavy bg-white/85 placeholder-stripes flex flex-col justify-between p-4 sm:p-5 shadow-navy-hard ${aspectClass} ${className}`}
+      aria-label={`${id}: ${label}`}
+      className={`relative overflow-hidden rounded-2xl border-2 border-kuota-deepnavy bg-white/90 placeholder-stripes flex flex-col justify-between p-4 sm:p-5 shadow-navy-hard ${aspectClass} ${className}`}
     >
       {/* Cabecera de metadatos del placeholder */}
       <div className="flex items-center justify-between gap-2 z-10">
@@ -34,13 +41,15 @@ export const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
           <ImageIcon className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
           Placeholder · {id}
         </span>
-        <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-kuota-palesky border border-kuota-deepnavy text-kuota-deepnavy text-xs font-extrabold">
-          Proporción {aspectRatioLabel}
-        </span>
+        {badgeRight && (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-kuota-palesky border border-kuota-deepnavy text-kuota-deepnavy text-xs font-extrabold">
+            {badgeRight}
+          </span>
+        )}
       </div>
 
-      {/* Contenido central opcional (wireframe esquemático o ícono) */}
-      <div className="my-auto py-3 z-10 flex flex-col items-center justify-center text-center">
+      {/* Contenido esquemático central */}
+      <div className="my-auto py-3 z-10 flex flex-col items-center justify-center text-center w-full">
         {children ? (
           children
         ) : (
