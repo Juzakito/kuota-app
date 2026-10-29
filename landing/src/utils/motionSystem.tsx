@@ -17,14 +17,12 @@ export const MOTION_TOKENS = {
 } as const;
 
 export function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState<boolean>(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  });
+  const [reduced, setReduced] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mediaQuery.matches);
     const handler = (event: MediaQueryListEvent) => setReduced(event.matches);
 
     mediaQuery.addEventListener('change', handler);
@@ -44,22 +42,22 @@ interface ScrollRevealProps {
 
 /**
  * Componente de aparición progresiva en scroll (FASE 6 y 7).
- * Utiliza únicamente `transform` y `opacity` con aceleración GPU, sin bloquear
- * la interacción del usuario ni causar desplazamientos de layout (CLS = 0).
+ * Renderiza visible por defecto en SSR y en el primer pliegue para evitar
+ * pantallas en blanco al recargar o hidratar en Next.js / Vite.
  */
 export const ScrollReveal: React.FC<ScrollRevealProps> = ({
   children,
   delayMs = 0,
   direction = 'up',
   className = '',
-  threshold = 0.12,
+  threshold = 0.08,
 }) => {
   const reducedMotion = usePrefersReducedMotion();
-  const [isVisible, setIsVisible] = useState<boolean>(reducedMotion);
+  const [isVisible, setIsVisible] = useState<boolean>(true);
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (reducedMotion) {
+    if (reducedMotion || typeof window === 'undefined') {
       setIsVisible(true);
       return;
     }
@@ -70,42 +68,74 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
       return;
     }
 
+    const rect = node.getBoundingClientRect();
+    // Si el nodo aún está en un contenedor oculto de hidratación (0x0) o ya está dentro/cerca del viewport actual, mantenerlo visible
+    if (
+      (rect.width === 0 && rect.height === 0) ||
+      rect.top < window.innerHeight * 0.95
+    ) {
+      setIsVisible(true);
+      return;
+    }
+
+    setIsVisible(false);
+
+    const reveal = () => setIsVisible(true);
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-            observer.unobserve(entry.target);
+          if (entry.isIntersecting || entry.intersectionRatio > 0) {
+            reveal();
+            observer.disconnect();
           }
         });
       },
       {
-        threshold,
-        rootMargin: '0px 0px -36px 0px',
+        threshold: Math.min(threshold, 0.08),
+        rootMargin: '80px 0px 40px 0px',
       }
     );
 
     observer.observe(node);
-    return () => observer.disconnect();
+
+    const handleScrollFallback = () => {
+      if (!ref.current) return;
+      const currentRect = ref.current.getBoundingClientRect();
+      if (currentRect.top < window.innerHeight * 0.98) {
+        reveal();
+        window.removeEventListener('scroll', handleScrollFallback);
+      }
+    };
+
+    window.addEventListener('scroll', handleScrollFallback, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScrollFallback);
+    };
   }, [reducedMotion, threshold]);
 
   const hiddenTransform = {
-    up: 'translate3d(0, 22px, 0)',
-    left: 'translate3d(-22px, 0, 0)',
-    right: 'translate3d(22px, 0, 0)',
-    scale: 'translate3d(0, 14px, 0) scale(0.97)',
+    up: 'translate3d(0, 14px, 0)',
+    left: 'translate3d(-14px, 0, 0)',
+    right: 'translate3d(14px, 0, 0)',
+    scale: 'translate3d(0, 10px, 0) scale(0.985)',
   }[direction];
 
   const style: React.CSSProperties = reducedMotion
-    ? {}
+    ? {
+        opacity: 1,
+        transform: 'none',
+      }
     : {
-        opacity: isVisible ? 1 : 0,
+        opacity: 1,
         transform: isVisible ? 'translate3d(0, 0, 0) scale(1)' : hiddenTransform,
-        transitionProperty: 'opacity, transform',
+        transitionProperty: 'transform',
         transitionDuration: `${MOTION_TOKENS.duration.sectionMs}ms`,
         transitionTimingFunction: MOTION_TOKENS.easing.springOut,
         transitionDelay: `${delayMs}ms`,
-        willChange: isVisible ? 'auto' : 'opacity, transform',
+        willChange: isVisible ? 'auto' : 'transform',
       };
 
   return (
