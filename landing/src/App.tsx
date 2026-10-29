@@ -5,6 +5,7 @@ import {
   CrossAudienceBanner,
   FloatingAudienceSwitch,
 } from './components/EcosystemBanner';
+import { LaunchCountdownSection } from './components/LaunchCountdownSection';
 
 // Secciones Compradores (B2C / Emprendedores)
 import { HeroSection as BuyerHeroSection } from './components/HeroSection';
@@ -115,6 +116,7 @@ export const App: React.FC = () => {
         {mode === 'compradores' ? (
           <>
             <BuyerHeroSection />
+            <LaunchCountdownSection mode="compradores" />
             <BuyerProblemSolutionSection />
             <BuyerPaymentMethodsSection />
             <BuyerProductChipsSection />
@@ -127,6 +129,7 @@ export const App: React.FC = () => {
         ) : (
           <>
             <SupplierHeroSection />
+            <LaunchCountdownSection mode="proveedores" />
             <SupplierProblemSolutionSection />
             <SupplierSocialProofSection />
             <SupplierProductChipsSection />

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
+import { LaunchCountdownSection } from './components/LaunchCountdownSection';
 import { ProblemSolutionSection } from './components/ProblemSolutionSection';
 import { SocialProofSection } from './components/SocialProofSection';
 import { ProductChipsSection } from './components/ProductChipsSection';
@@ -25,6 +26,9 @@ export const App: React.FC = () => {
       <main className="flex-1">
         {/* 2. Hero */}
         <HeroSection />
+
+        {/* 2.1. Countdown de Lanzamiento Oficial (10.11.2026) */}
+        <LaunchCountdownSection />
 
         {/* 3. Problema + solución */}
         <ProblemSolutionSection />

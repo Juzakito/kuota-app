@@ -27,9 +27,14 @@ export default {
           '0%': { transform: 'translateX(0%)' },
           '100%': { transform: 'translateX(-50%)' },
         },
+        digitSlide: {
+          '0%': { opacity: '0.45', transform: 'translateY(-4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         marquee: 'marquee 18s linear infinite',
+        digitSlide: 'digitSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
     },
   },
