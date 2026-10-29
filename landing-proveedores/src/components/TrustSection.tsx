@@ -47,36 +47,46 @@ export const TrustSection: React.FC = () => {
               className="rounded-3xl bg-white border-2 border-kuota-deepnavy p-5 sm:p-6 shadow-navy-hard flex flex-col justify-between"
             >
               <div>
-                <div
-                  role="img"
-                  aria-label={`${member.placeholderId}: Foto de ${member.name} (${member.dimensions})`}
-                  className="aspect-square w-full rounded-2xl border-2 border-kuota-deepnavy bg-kuota-palesky/65 placeholder-stripes p-3.5 flex flex-col justify-between mb-4"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="px-2 py-0.5 rounded bg-kuota-deepnavy text-white text-[10px] font-bold uppercase">
-                      Placeholder · {member.placeholderId}
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-white border border-kuota-deepnavy text-kuota-deepnavy text-[10px] font-extrabold">
-                      {member.dimensions}
-                    </span>
+                {member.photoUrl ? (
+                  <div className="aspect-square w-full rounded-2xl border-2 border-kuota-deepnavy bg-kuota-palesky overflow-hidden mb-4">
+                    <img
+                      src={member.photoUrl}
+                      alt={`${member.name} — ${member.role}`}
+                      className="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105"
+                    />
                   </div>
-
-                  <div className="my-auto flex flex-col items-center text-center">
-                    <div className="w-16 h-16 rounded-full bg-kuota-deepnavy text-white border-2 border-white flex items-center justify-center text-xl font-extrabold shadow-sm">
-                      {member.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')}
+                ) : (
+                  <div
+                    role="img"
+                    aria-label={`${member.placeholderId}: Foto de ${member.name} (${member.dimensions})`}
+                    className="aspect-square w-full rounded-2xl border-2 border-kuota-deepnavy bg-kuota-palesky/65 placeholder-stripes p-3.5 flex flex-col justify-between mb-4"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="px-2 py-0.5 rounded bg-kuota-deepnavy text-white text-[10px] font-bold uppercase">
+                        Placeholder · {member.placeholderId}
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-white border border-kuota-deepnavy text-kuota-deepnavy text-[10px] font-extrabold">
+                        {member.dimensions}
+                      </span>
                     </div>
-                    <span className="text-xs font-bold text-kuota-deepnavy mt-2">
-                      Foto de {member.name}
-                    </span>
-                  </div>
 
-                  <div className="text-[11px] font-bold text-kuota-deepnavy bg-white/90 border border-kuota-deepnavy rounded-lg px-2.5 py-1 text-center">
-                    {member.placeholderId} · {member.dimensions}
+                    <div className="my-auto flex flex-col items-center text-center">
+                      <div className="w-16 h-16 rounded-full bg-kuota-deepnavy text-white border-2 border-white flex items-center justify-center text-xl font-extrabold shadow-sm">
+                        {member.name
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')}
+                      </div>
+                      <span className="text-xs font-bold text-kuota-deepnavy mt-2">
+                        Foto de {member.name}
+                      </span>
+                    </div>
+
+                    <div className="text-[11px] font-bold text-kuota-deepnavy bg-white/90 border border-kuota-deepnavy rounded-lg px-2.5 py-1 text-center">
+                      {member.placeholderId} · {member.dimensions}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <h3 className="text-xl font-extrabold text-kuota-deepnavy">
                   {member.name}

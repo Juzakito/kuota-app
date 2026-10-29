@@ -194,6 +194,7 @@ export interface TeamMemberItem {
   role: string;
   placeholderId: string;
   linkedinUrl: string;
+  photoUrl?: string;
 }
 
 export const TEAM_MEMBERS: TeamMemberItem[] = [
@@ -203,6 +204,7 @@ export const TEAM_MEMBERS: TeamMemberItem[] = [
     role: 'CTO',
     placeholderId: 'IMG-TEAM-01',
     linkedinUrl: 'https://www.linkedin.com',
+    photoUrl: '/images/team/jose-gonzalez.png',
   },
   {
     id: 'josue-lovaton',
@@ -210,6 +212,7 @@ export const TEAM_MEMBERS: TeamMemberItem[] = [
     role: 'CEO',
     placeholderId: 'IMG-TEAM-02',
     linkedinUrl: 'https://www.linkedin.com',
+    photoUrl: '/images/team/josue-lovaton.png',
   },
   {
     id: 'rolando-quiroz',

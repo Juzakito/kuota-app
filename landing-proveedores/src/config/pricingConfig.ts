@@ -249,6 +249,7 @@ export interface SupplierTeamMember {
   role: string;
   dimensions: string;
   linkedinUrl: string;
+  photoUrl?: string;
 }
 
 /** PRD §5.7 y §11: IMG-17 a IMG-19 (400×400) */
@@ -260,6 +261,7 @@ export const SUPPLIER_TEAM_MEMBERS: SupplierTeamMember[] = [
     role: 'CTO',
     dimensions: '400×400',
     linkedinUrl: 'https://www.linkedin.com',
+    photoUrl: '/images/team/jose-gonzalez.png',
   },
   {
     id: 'josue-lovaton',
@@ -268,6 +270,7 @@ export const SUPPLIER_TEAM_MEMBERS: SupplierTeamMember[] = [
     role: 'CEO',
     dimensions: '400×400',
     linkedinUrl: 'https://www.linkedin.com',
+    photoUrl: '/images/team/josue-lovaton.png',
   },
   {
     id: 'rolando-quiroz',
