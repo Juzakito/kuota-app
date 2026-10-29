@@ -129,21 +129,26 @@ export const TrustSection: React.FC = () => {
               <div
                 key={inst.id}
                 role="listitem"
-                aria-label={`${inst.placeholderId}: Logo de ${inst.name} (${inst.dimensions})`}
-                className="rounded-2xl bg-white border-2 border-kuota-deepnavy px-7 py-5 shadow-navy-hard flex items-center gap-4 min-w-[270px] sm:min-w-[320px]"
+                aria-label={`Logo de ${inst.name}`}
+                className="rounded-2xl bg-white border-2 border-kuota-deepnavy px-6 py-4 shadow-navy-hard flex items-center gap-4 min-w-[270px] sm:min-w-[320px]"
               >
-                <div className="w-12 h-12 rounded-xl bg-kuota-palesky border-2 border-kuota-deepnavy flex items-center justify-center shrink-0">
-                  <Building2 className="w-6 h-6 text-kuota-deepnavy" aria-hidden="true" />
-                </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-kuota-deepnavy text-white">
-                      {inst.placeholderId}
-                    </span>
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-kuota-palesky text-kuota-deepnavy border border-kuota-deepnavy">
-                      {inst.dimensions}
-                    </span>
+                {inst.logoUrl ? (
+                  <div className="w-16 h-16 rounded-xl border-2 border-kuota-deepnavy overflow-hidden shrink-0 shadow-sm">
+                    <img
+                      src={inst.logoUrl}
+                      alt={inst.subtitle}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-kuota-palesky border-2 border-kuota-deepnavy flex items-center justify-center shrink-0">
+                    <Building2 className="w-6 h-6 text-kuota-deepnavy" aria-hidden="true" />
+                  </div>
+                )}
+                <div className="text-left">
+                  <span className="inline-block text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-kuota-palesky text-kuota-deepnavy border border-kuota-deepnavy mb-1">
+                    Respaldo Institucional
+                  </span>
                   <div className="text-lg font-extrabold text-kuota-deepnavy leading-tight">
                     {inst.name}
                   </div>

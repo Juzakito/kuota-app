@@ -228,6 +228,7 @@ export interface TrustedInstitutionItem {
   name: string;
   subtitle: string;
   placeholderId: string;
+  logoUrl?: string;
 }
 
 /**
@@ -240,5 +241,6 @@ export const TRUSTED_INSTITUTIONS: TrustedInstitutionItem[] = [
     name: 'Científica del Sur',
     subtitle: 'Universidad Científica del Sur',
     placeholderId: 'LOGO-INST-01',
+    logoUrl: '/logos/cientifica-del-sur.png',
   },
 ];

@@ -288,6 +288,7 @@ export interface SupplierTrustedInstitution {
   name: string;
   subtitle: string;
   dimensions: string;
+  logoUrl?: string;
 }
 
 /** PRD §5.7 y §11: IMG-20 (200×80) */
@@ -298,6 +299,7 @@ export const SUPPLIER_TRUSTED_INSTITUTIONS: SupplierTrustedInstitution[] = [
     name: 'Científica del Sur',
     subtitle: 'Universidad Científica del Sur',
     dimensions: '200×80',
+    logoUrl: '/logos/cientifica-del-sur.png',
   },
 ];
 
