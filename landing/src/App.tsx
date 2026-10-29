@@ -30,7 +30,11 @@ function getInitialAudienceMode(): AudienceMode {
   if (typeof window === 'undefined') return 'compradores';
   const params = new URLSearchParams(window.location.search);
   const perfil = params.get('perfil') || params.get('modo');
-  if (perfil === 'proveedores' || window.location.hash === '#proveedores') {
+  if (
+    perfil === 'proveedores' ||
+    window.location.hash === '#proveedores' ||
+    window.location.hash === '#agendar-call'
+  ) {
     return 'proveedores';
   }
   return 'compradores';

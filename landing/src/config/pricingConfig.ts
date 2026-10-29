@@ -298,27 +298,27 @@ export const SUPPLIER_TRUSTED_INSTITUTIONS: SupplierTrustedInstitution[] = [
   },
 ];
 
-/** Configuración de Cal.com para agendar con José o Josué (PRD §5.9 y P4) */
+/** Configuración oficial de Calendly para agendar con José o Josué (PRD §5.9 y P4) */
 export const CAL_COM_CONFIG = {
-  fallbackUrl: 'https://cal.com/kuota',
+  fallbackUrl: 'https://calendly.com/jmgonzalez-contact/30min',
   hosts: [
     {
-      id: 'round-robin',
-      name: 'Equipo Kuota (José o Josué)',
-      role: 'Asignación automática según disponibilidad',
-      calLink: 'https://cal.com/kuota/demo-proveedores',
+      id: 'jose',
+      name: 'José Gonzales',
+      role: 'CTO · Integración y flujo operativo',
+      calLink: 'https://calendly.com/jmgonzalez-contact/30min',
     },
     {
       id: 'josue',
       name: 'Josué Lovatón',
       role: 'CEO · Estrategia comercial y planes',
-      calLink: 'https://cal.com/josue-kuota/proveedores',
+      calLink: 'https://calendly.com/2025joshoficial/30min',
     },
     {
-      id: 'jose',
-      name: 'José Gonzales',
-      role: 'CTO · Integración y flujo operativo',
-      calLink: 'https://cal.com/jose-kuota/proveedores',
+      id: 'round-robin',
+      name: 'Asignación automática (José o Josué)',
+      role: 'Turno automático según disponibilidad',
+      calLink: 'https://calendly.com/jmgonzalez-contact/30min',
     },
   ],
 } as const;
