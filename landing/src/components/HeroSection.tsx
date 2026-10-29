@@ -1,6 +1,5 @@
 import React from 'react';
 import { ShieldCheck, Sparkles, Store, Smartphone } from 'lucide-react';
-import { KuotaLogo } from './KuotaLogo';
 import { PlayStoreButton } from './PlayStoreButton';
 import { ImagePlaceholder } from './ImagePlaceholder';
 
@@ -25,11 +24,10 @@ export const HeroSection: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           {/* Columna de Copy y CTA */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm mb-5">
-              <KuotaLogo size="sm" />
-              <span className="h-4 w-[2px] bg-kuota-deepnavy/25" aria-hidden="true" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm mb-5">
+              <span className="w-2.5 h-2.5 rounded-full bg-kuota-dodger" aria-hidden="true" />
               <span className="text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider">
-                Para compradores y negocios
+                Kuota para Emprendedores y Negocios
               </span>
             </div>
 

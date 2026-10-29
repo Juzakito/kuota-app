@@ -1,10 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { UnifiedNavbar, AudienceMode } from './components/UnifiedNavbar';
-import {
-  EcosystemRibbon,
-  CrossAudienceBanner,
-  FloatingAudienceSwitch,
-} from './components/EcosystemBanner';
+import { CrossAudienceBanner } from './components/EcosystemBanner';
 import { LaunchCountdownSection } from './components/LaunchCountdownSection';
 
 // Secciones Compradores (B2C / Emprendedores)
@@ -105,13 +101,10 @@ export const App: React.FC = () => {
       id="inicio"
       className="min-h-screen flex flex-col bg-kuota-palesky text-kuota-crayola font-sans"
     >
-      {/* 1. Navbar unificada con selector de perfil Compradores / Proveedores */}
+      {/* 1. Navbar unificada con selector único de perfil Compradores / Proveedores */}
       <UnifiedNavbar mode={mode} onModeChange={handleModeChange} />
 
-      {/* 2. Cinta interactiva del Ecosistema Kuota 360° */}
-      <EcosystemRibbon mode={mode} onModeChange={handleModeChange} />
-
-      {/* 3. Contenido principal según el perfil activo */}
+      {/* 2. Contenido principal según el perfil activo */}
       <main key={mode} className="flex-1 animate-fadeIn">
         {mode === 'compradores' ? (
           <>
@@ -142,9 +135,6 @@ export const App: React.FC = () => {
           </>
         )}
       </main>
-
-      {/* 4. Selector flotante rápido en esquina inferior derecha */}
-      <FloatingAudienceSwitch mode={mode} onModeChange={handleModeChange} />
     </div>
   );
 };
