@@ -1,6 +1,7 @@
 import React from 'react';
 import { PLAY_STORE_URL } from '../data/landingData';
 import { trackEvent } from '../utils/analytics';
+import { kuotaSound } from '../utils/soundSystem';
 
 interface PlayStoreButtonProps {
   section: 'navbar' | 'hero' | 'cta_final';
@@ -25,10 +26,11 @@ export const PlayStoreButton: React.FC<PlayStoreButtonProps> = ({
 
   const variantStyles =
     variant === 'primary'
-      ? 'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard hover:translate-y-[-1px] active:translate-y-[1px]'
-      : 'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-palesky shadow-dodger-glow hover:translate-y-[-1px] active:translate-y-[1px]';
+      ? 'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98]'
+      : 'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-palesky shadow-dodger-glow hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98]';
 
   const handleClick = () => {
+    kuotaSound.playCtaClick();
     trackEvent('cta_download_click', {
       section,
       destination: PLAY_STORE_URL,
@@ -43,11 +45,13 @@ export const PlayStoreButton: React.FC<PlayStoreButtonProps> = ({
       rel="noopener noreferrer"
       onClick={handleClick}
       data-analytics-section={section}
-      className={`inline-flex items-center justify-center font-extrabold tracking-tight transition-all duration-150 ${sizeStyles} ${variantStyles} ${className}`}
+      className={`group inline-flex items-center justify-center font-extrabold tracking-tight transition-all duration-150 ${sizeStyles} ${variantStyles} ${className}`}
     >
-      {/* Ícono de Google Play */}
+      {/* Ícono de Google Play con microanimación sutil */}
       <svg
-        className={size === 'sm' ? 'w-4 h-4 shrink-0' : 'w-5 h-5 shrink-0'}
+        className={`${
+          size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
+        } shrink-0 transition-transform duration-150 group-hover:scale-110`}
         viewBox="0 0 24 24"
         fill="currentColor"
         aria-hidden="true"

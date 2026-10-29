@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Menu, X, ShoppingBag, Store } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Menu, X, ShoppingBag, Store, Volume2, VolumeX } from 'lucide-react';
 import { KuotaLogo } from './KuotaLogo';
 import { PlayStoreButton } from './PlayStoreButton';
 import { ScheduleCallButton } from './supplier/ScheduleCallButton';
 import { trackEvent } from '../utils/analytics';
+import { kuotaSound } from '../utils/soundSystem';
 
 export type AudienceMode = 'compradores' | 'proveedores';
 
@@ -16,7 +17,7 @@ const BUYER_LINKS = [
   { label: 'Producto', href: '#producto' },
   { label: 'Beneficios', href: '#beneficios' },
   { label: 'Niveles', href: '#niveles' },
-  { label: 'Nosotros', href: '#nosotros' },
+  { label: 'Nosotros', href: '#confianza' },
 ];
 
 const SUPPLIER_LINKS = [
@@ -31,11 +32,24 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
   onModeChange,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [soundPanelOpen, setSoundPanelOpen] = useState(false);
+  const [soundState, setSoundState] = useState(() => kuotaSound.getState());
+
+  useEffect(() => {
+    return kuotaSound.subscribe(setSoundState);
+  }, []);
+
   const navLinks = mode === 'compradores' ? BUYER_LINKS : SUPPLIER_LINKS;
 
   const handleLinkClick = (label: string) => {
+    kuotaSound.playSelectOption();
     trackEvent('click_nav_link', { section: label.toLowerCase(), audience: mode });
     setMobileMenuOpen(false);
+  };
+
+  const handleSwitchMode = (nextMode: AudienceMode, source: string) => {
+    kuotaSound.playSelectOption();
+    onModeChange(nextMode, source);
   };
 
   return (
@@ -46,7 +60,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           <a
             href="#inicio"
             aria-label="Kuota — Ir al inicio"
-            className="focus-visible:outline-none shrink-0"
+            className="focus-visible:outline-none shrink-0 transition-transform duration-150 hover:scale-[1.02]"
           >
             <KuotaLogo size="md" />
           </a>
@@ -61,8 +75,8 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               type="button"
               role="tab"
               aria-selected={mode === 'compradores'}
-              onClick={() => onModeChange('compradores', 'navbar_pill')}
-              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold transition-all ${
+              onClick={() => handleSwitchMode('compradores', 'navbar_pill')}
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold transition-all duration-200 ${
                 mode === 'compradores'
                   ? 'bg-kuota-dodger text-white shadow-sm'
                   : 'text-kuota-deepnavy hover:bg-kuota-palesky/60'
@@ -75,8 +89,8 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               type="button"
               role="tab"
               aria-selected={mode === 'proveedores'}
-              onClick={() => onModeChange('proveedores', 'navbar_pill')}
-              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold transition-all ${
+              onClick={() => handleSwitchMode('proveedores', 'navbar_pill')}
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold transition-all duration-200 ${
                 mode === 'proveedores'
                   ? 'bg-kuota-deepnavy text-white shadow-sm'
                   : 'text-kuota-deepnavy hover:bg-kuota-palesky/60'
@@ -98,15 +112,103 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               key={link.href}
               href={link.href}
               onClick={() => handleLinkClick(link.label)}
-              className="text-sm font-bold text-kuota-deepnavy hover:text-kuota-dodger transition-colors py-1"
+              className="relative text-sm font-bold text-kuota-deepnavy hover:text-kuota-dodger transition-colors duration-150 py-1 after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[2px] after:bg-kuota-dodger after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-200 after:origin-left"
             >
               {link.label}
             </a>
           ))}
         </nav>
 
-        {/* Derecha: CTA contextual en Desktop o botón hamburguesa en Móvil */}
+        {/* Derecha: Control de identidad sonora + CTA contextual + menú móvil */}
         <div className="flex items-center gap-2">
+          {/* Control opcional de Identidad Sonora Kuota (FASE 5 — desactivado por defecto) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                if (!soundState.enabled) {
+                  kuotaSound.setEnabled(true);
+                  setSoundPanelOpen(true);
+                } else {
+                  setSoundPanelOpen((prev) => !prev);
+                }
+              }}
+              aria-label={
+                soundState.enabled
+                  ? 'Configurar sonidos de interacción (activos)'
+                  : 'Activar sonidos de interacción (desactivados por defecto)'
+              }
+              title={
+                soundState.enabled
+                  ? 'Sonido interactivo activo'
+                  : 'Activar sonido interactivo'
+              }
+              className={`w-9 h-9 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center transition-all duration-150 ${
+                soundState.enabled
+                  ? 'bg-kuota-deepnavy text-white shadow-sm'
+                  : 'bg-white text-kuota-deepnavy hover:bg-kuota-palesky/70'
+              }`}
+            >
+              {soundState.enabled ? (
+                <Volume2 className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+              ) : (
+                <VolumeX className="w-4 h-4 opacity-70" aria-hidden="true" />
+              )}
+            </button>
+
+            {soundPanelOpen && (
+              <div
+                role="dialog"
+                aria-label="Control de sonido Kuota"
+                className="absolute right-0 mt-2 w-60 rounded-2xl bg-white border-2 border-kuota-deepnavy p-3.5 shadow-navy-hard z-50 space-y-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-extrabold text-kuota-deepnavy">
+                    Sonido interactivo
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => kuotaSound.setEnabled(!soundState.enabled)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold border border-kuota-deepnavy transition-colors ${
+                      soundState.enabled
+                        ? 'bg-kuota-dodger text-white'
+                        : 'bg-kuota-palesky text-kuota-deepnavy'
+                    }`}
+                  >
+                    {soundState.enabled ? 'Activado' : 'Desactivado'}
+                  </button>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between text-[11px] font-bold text-kuota-crayola mb-1">
+                    <label htmlFor="kuota-sound-volume">Volumen</label>
+                    <span>{Math.round(soundState.volume * 100)}%</span>
+                  </div>
+                  <input
+                    id="kuota-sound-volume"
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(soundState.volume * 100)}
+                    onChange={(e) => {
+                      const val = Number(e.target.value) / 100;
+                      kuotaSound.setVolume(val);
+                    }}
+                    className="w-full accent-kuota-dodger cursor-pointer"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSoundPanelOpen(false)}
+                  className="w-full py-1.5 rounded-lg bg-kuota-palesky/70 hover:bg-kuota-palesky text-[11px] font-extrabold text-kuota-deepnavy transition-colors"
+                >
+                  Listo
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="hidden md:block">
             {mode === 'compradores' ? (
               <PlayStoreButton

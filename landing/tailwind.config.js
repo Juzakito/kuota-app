@@ -35,11 +35,16 @@ export default {
           '0%': { opacity: '0.45', transform: 'translateY(-4px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        floatCard: {
+          '0%, 100%': { transform: 'translate3d(0, 0px, 0)' },
+          '50%': { transform: 'translate3d(0, -6px, 0)' },
+        },
       },
       animation: {
         marquee: 'marquee 18s linear infinite',
         fadeIn: 'fadeIn 0.35s ease-out forwards',
         digitSlide: 'digitSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        floatCard: 'floatCard 5s ease-in-out infinite',
       },
     },
   },

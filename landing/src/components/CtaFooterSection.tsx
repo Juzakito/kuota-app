@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { Mail, FileText, Shield, X } from 'lucide-react';
 import { KuotaLogo } from './KuotaLogo';
 import { PlayStoreButton } from './PlayStoreButton';
+import { ScrollReveal } from '../utils/motionSystem';
+import { kuotaSound } from '../utils/soundSystem';
 
 /**
- * PRD §6.8: CTA final + Pie de página
- * - Card de cierre en Deep Navy con texto claro:
- *   "Descarga la app, completa tu perfil y empieza a financiar tu crecimiento a kuotas."
- * - Botón Descargar en Play Store.
- * - Pie de página: logo, enlaces legales (términos, privacidad) y contacto.
+ * PRD §6.8 + FASE 3.G: CTA final + Pie de página con aparición progresiva y microinteracciones.
  */
 export const CtaFooterSection: React.FC = () => {
   const [legalModal, setLegalModal] = useState<'terms' | 'privacy' | null>(null);
+
+  const openModal = (type: 'terms' | 'privacy') => {
+    kuotaSound.playSelectOption();
+    setLegalModal(type);
+  };
 
   return (
     <>
@@ -21,30 +24,30 @@ export const CtaFooterSection: React.FC = () => {
         className="py-14 sm:py-20"
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Card de cierre en Deep Navy */}
-          <div className="rounded-3xl bg-kuota-deepnavy text-white border-2 border-kuota-deepnavy p-8 sm:p-12 lg:p-14 shadow-navy-hard-lg text-center flex flex-col items-center">
-            <span className="inline-block px-3.5 py-1 rounded-full bg-kuota-dodger/25 border border-kuota-palesky/40 text-kuota-palesky text-xs font-extrabold uppercase tracking-wider mb-4">
-              Empieza hoy en 3 clics
-            </span>
+          <ScrollReveal delayMs={0} direction="scale">
+            <div className="rounded-3xl bg-kuota-deepnavy text-white border-2 border-kuota-deepnavy p-8 sm:p-12 lg:p-14 shadow-navy-hard-lg text-center flex flex-col items-center">
+              <span className="inline-block px-3.5 py-1 rounded-full bg-kuota-dodger/25 border border-kuota-palesky/40 text-kuota-palesky text-xs font-extrabold uppercase tracking-wider mb-4">
+                Empieza hoy en 3 clics
+              </span>
 
-            <h2
-              id="final-cta-heading"
-              className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight max-w-3xl leading-tight mb-8"
-            >
-              Descarga la app, completa tu perfil y empieza a financiar tu crecimiento a kuotas.
-            </h2>
+              <h2
+                id="final-cta-heading"
+                className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight max-w-3xl leading-tight mb-8"
+              >
+                Descarga la app, completa tu perfil y empieza a financiar tu crecimiento a kuotas.
+              </h2>
 
-            <PlayStoreButton
-              section="cta_final"
-              label="Descargar en Play Store"
-              size="lg"
-              variant="inverted"
-            />
-          </div>
+              <PlayStoreButton
+                section="cta_final"
+                label="Descargar en Play Store"
+                size="lg"
+                variant="inverted"
+              />
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* Pie de página (Footer) */}
       <footer className="border-t-2 border-kuota-deepnavy bg-white/75 py-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-kuota-deepnavy/20">
@@ -55,31 +58,30 @@ export const CtaFooterSection: React.FC = () => {
               </p>
             </div>
 
-            {/* Enlaces legales y contacto (PRD §6.8) */}
             <div className="flex flex-wrap items-center gap-5 text-sm font-extrabold text-kuota-deepnavy">
               <button
                 type="button"
-                onClick={() => setLegalModal('terms')}
-                className="inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors"
+                onClick={() => openModal('terms')}
+                className="group inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors duration-150"
               >
-                <FileText className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                <FileText className="w-4 h-4 text-kuota-dodger transition-transform duration-150 group-hover:scale-110" aria-hidden="true" />
                 <span>Términos y condiciones</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setLegalModal('privacy')}
-                className="inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors"
+                onClick={() => openModal('privacy')}
+                className="group inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors duration-150"
               >
-                <Shield className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                <Shield className="w-4 h-4 text-kuota-dodger transition-transform duration-150 group-hover:scale-110" aria-hidden="true" />
                 <span>Política de privacidad</span>
               </button>
 
               <a
                 href="mailto:contacto@kuota.pe"
-                className="inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors"
+                className="group inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors duration-150"
               >
-                <Mail className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                <Mail className="w-4 h-4 text-kuota-dodger transition-transform duration-150 group-hover:scale-110" aria-hidden="true" />
                 <span>Contacto: contacto@kuota.pe</span>
               </a>
             </div>
@@ -92,13 +94,12 @@ export const CtaFooterSection: React.FC = () => {
         </div>
       </footer>
 
-      {/* Modal informativo para textos legales pendientes (PRD §9) */}
       {legalModal && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="legal-modal-title"
-          className="fixed inset-0 z-50 bg-kuota-deepnavy/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-kuota-deepnavy/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
         >
           <div className="w-full max-w-lg rounded-3xl bg-white border-2 border-kuota-deepnavy p-6 sm:p-8 shadow-navy-hard-lg">
             <div className="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-kuota-deepnavy/20">
@@ -114,7 +115,7 @@ export const CtaFooterSection: React.FC = () => {
                 type="button"
                 onClick={() => setLegalModal(null)}
                 aria-label="Cerrar ventana legal"
-                className="w-8 h-8 rounded-lg bg-kuota-palesky border border-kuota-deepnavy flex items-center justify-center text-kuota-deepnavy hover:bg-kuota-dodger hover:text-white"
+                className="w-8 h-8 rounded-lg bg-kuota-palesky border border-kuota-deepnavy flex items-center justify-center text-kuota-deepnavy hover:bg-kuota-dodger hover:text-white transition-colors"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
@@ -146,7 +147,7 @@ export const CtaFooterSection: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setLegalModal(null)}
-                className="px-5 py-2.5 rounded-xl bg-kuota-dodger text-white font-extrabold text-sm border-2 border-kuota-deepnavy shadow-navy-hard"
+                className="px-5 py-2.5 rounded-xl bg-kuota-dodger text-white font-extrabold text-sm border-2 border-kuota-deepnavy shadow-navy-hard transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
               >
                 Entendido
               </button>
