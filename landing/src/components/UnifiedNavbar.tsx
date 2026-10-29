@@ -54,13 +54,13 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-50 w-full bg-kuota-palesky/90 backdrop-blur-md border-b-2 border-kuota-deepnavy">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
         {/* Izquierda: Logo oficial Kuota + Selector único de Perfil */}
-        <div className="flex items-center gap-3 sm:gap-5">
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <a
             href="#inicio"
             aria-label="Kuota — Ir al inicio"
-            className="focus-visible:outline-none shrink-0 transition-transform duration-150 hover:scale-[1.02]"
+            className="focus-visible:outline-none shrink-0 flex items-center transition-transform duration-150 hover:scale-[1.02]"
           >
             <KuotaLogo size="md" />
           </a>
@@ -69,14 +69,14 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           <div
             role="tablist"
             aria-label="Seleccionar perfil de usuario"
-            className="inline-flex items-center p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm"
+            className="inline-flex items-center p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0"
           >
             <button
               type="button"
               role="tab"
               aria-selected={mode === 'compradores'}
               onClick={() => handleSwitchMode('compradores', 'navbar_pill')}
-              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold transition-all duration-200 ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition-all duration-200 ${
                 mode === 'compradores'
                   ? 'bg-kuota-dodger text-white shadow-sm'
                   : 'text-kuota-deepnavy hover:bg-kuota-palesky/60'
@@ -90,7 +90,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               role="tab"
               aria-selected={mode === 'proveedores'}
               onClick={() => handleSwitchMode('proveedores', 'navbar_pill')}
-              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold transition-all duration-200 ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition-all duration-200 ${
                 mode === 'proveedores'
                   ? 'bg-kuota-deepnavy text-white shadow-sm'
                   : 'text-kuota-deepnavy hover:bg-kuota-palesky/60'
@@ -105,14 +105,14 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
         {/* Centro: Navegación Desktop */}
         <nav
           aria-label="Navegación principal"
-          className="hidden md:flex items-center gap-5 lg:gap-7"
+          className="hidden lg:flex items-center gap-5 xl:gap-7 shrink-0"
         >
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
               onClick={() => handleLinkClick(link.label)}
-              className="relative text-sm font-bold text-kuota-deepnavy hover:text-kuota-dodger transition-colors duration-150 py-1 after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[2px] after:bg-kuota-dodger after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-200 after:origin-left"
+              className="relative text-sm font-bold whitespace-nowrap text-kuota-deepnavy hover:text-kuota-dodger transition-colors duration-150 py-1 after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[2px] after:bg-kuota-dodger after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-200 after:origin-left"
             >
               {link.label}
             </a>
@@ -120,7 +120,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
         </nav>
 
         {/* Derecha: Control de identidad sonora + CTA contextual + menú móvil */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 shrink-0">
           {/* Control opcional de Identidad Sonora Kuota (FASE 5 — desactivado por defecto) */}
           <div className="relative">
             <button
@@ -209,7 +209,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             )}
           </div>
 
-          <div className="hidden md:block">
+          <div className="hidden lg:block shrink-0">
             {mode === 'compradores' ? (
               <PlayStoreButton
                 section="navbar"
@@ -225,26 +225,26 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             )}
           </div>
 
-          {/* Botón hamburguesa solo en móvil (< md) */}
+          {/* Botón hamburguesa en móvil y tablet (< lg) */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-nav-menu"
             aria-label={mobileMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
-            className="md:hidden inline-flex items-center justify-center p-2 rounded-xl border-2 border-kuota-deepnavy bg-white text-kuota-deepnavy hover:bg-kuota-palesky transition-colors"
+            className="lg:hidden inline-flex items-center justify-center p-2 rounded-xl border-2 border-kuota-deepnavy bg-white text-kuota-deepnavy hover:bg-kuota-palesky transition-colors shrink-0"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
-      {/* Menú desplegable móvil */}
+      {/* Menú desplegable móvil / tablet */}
       {mobileMenuOpen && (
         <nav
           id="mobile-nav-menu"
           aria-label="Navegación móvil"
-          className="md:hidden bg-white border-b-2 border-kuota-deepnavy px-4 pt-3 pb-5 space-y-3 shadow-lg"
+          className="lg:hidden bg-white border-b-2 border-kuota-deepnavy px-4 pt-3 pb-5 space-y-3 shadow-lg"
         >
           <div className="flex flex-col space-y-1">
             {navLinks.map((link) => (
