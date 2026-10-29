@@ -78,11 +78,11 @@ export const CtaFooterSection: React.FC = () => {
               </button>
 
               <a
-                href="mailto:contacto@kuota.pe"
+                href="mailto:kuota.contact@gmail.com"
                 className="group inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors duration-150"
               >
                 <Mail className="w-4 h-4 text-kuota-dodger transition-transform duration-150 group-hover:scale-110" aria-hidden="true" />
-                <span>Contacto: contacto@kuota.pe</span>
+                <span>Contacto: kuota.contact@gmail.com</span>
               </a>
             </div>
           </div>

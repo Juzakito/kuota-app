@@ -1,5 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Menu, X, ShoppingBag, Store, Volume2, VolumeX } from 'lucide-react';
+import {
+  Menu,
+  X,
+  ShoppingBag,
+  Store,
+  Volume2,
+  VolumeX,
+  ArrowRight,
+  Mail,
+  Sparkles,
+  ShieldCheck,
+  TrendingUp,
+  Users,
+  Calculator,
+  Tag,
+} from 'lucide-react';
 import { KuotaLogo } from './KuotaLogo';
 import { PlayStoreButton } from './PlayStoreButton';
 import { ScheduleCallButton } from './supplier/ScheduleCallButton';
@@ -14,17 +29,57 @@ interface UnifiedNavbarProps {
 }
 
 const BUYER_LINKS = [
-  { label: 'Producto', href: '#producto' },
-  { label: 'Beneficios', href: '#beneficios' },
-  { label: 'Niveles', href: '#niveles' },
-  { label: 'Nosotros', href: '#confianza' },
+  {
+    label: 'Producto',
+    subtitle: 'Simulador interactivo y compra en 3 clics',
+    href: '#producto',
+    icon: Sparkles,
+  },
+  {
+    label: 'Beneficios',
+    subtitle: 'Sin papeleo, 5% de interés y formalización 0%',
+    href: '#beneficios',
+    icon: ShieldCheck,
+  },
+  {
+    label: 'Niveles',
+    subtitle: 'Escalera de crecimiento del Nivel 1 al 6',
+    href: '#niveles',
+    icon: TrendingUp,
+  },
+  {
+    label: 'Nosotros',
+    subtitle: 'Equipo fundador e instituciones que nos respaldan',
+    href: '#confianza',
+    icon: Users,
+  },
 ];
 
 const SUPPLIER_LINKS = [
-  { label: 'Producto', href: '#producto' },
-  { label: 'Calculadora', href: '#calculadora' },
-  { label: 'Precios', href: '#precios' },
-  { label: 'Nosotros', href: '#nosotros' },
+  {
+    label: 'Producto',
+    subtitle: 'Kuota QR, Kuota Link y financiamiento aKuotas!',
+    href: '#producto',
+    icon: Sparkles,
+  },
+  {
+    label: 'Calculadora',
+    subtitle: 'Calcula tu ahorro mensual frente al POS tradicional',
+    href: '#calculadora',
+    icon: Calculator,
+  },
+  {
+    label: 'Precios',
+    subtitle: 'Planes Basic, Pro y Open con 0 riesgo',
+    href: '#precios',
+    icon: Tag,
+  },
+  {
+    label: 'Nosotros',
+    subtitle: 'Equipo fundador y agenda en vivo por Calendly',
+    href: '#nosotros',
+    icon: Users,
+  },
 ];
 
 export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
@@ -33,10 +88,20 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [soundPanelOpen, setSoundPanelOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [soundState, setSoundState] = useState(() => kuotaSound.getState());
 
   useEffect(() => {
     return kuotaSound.subscribe(setSoundState);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 12);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const navLinks = mode === 'compradores' ? BUYER_LINKS : SUPPLIER_LINKS;
@@ -53,73 +118,104 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-kuota-palesky/90 backdrop-blur-md border-b-2 border-kuota-deepnavy">
+    <header
+      className={`sticky top-0 z-50 w-full border-b-2 border-kuota-deepnavy transition-all duration-300 ${
+        isScrolled
+          ? 'bg-kuota-palesky/95 backdrop-blur-md shadow-navy-hard'
+          : 'bg-kuota-palesky/90 backdrop-blur-sm'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-        {/* Izquierda: Logo oficial Kuota + Selector único de Perfil */}
+        {/* Izquierda: Logo oficial Kuota + Selector animado de Perfil */}
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <a
             href="#inicio"
             aria-label="Kuota — Ir al inicio"
-            className="focus-visible:outline-none shrink-0 flex items-center transition-transform duration-150 hover:scale-[1.02]"
+            className="focus-visible:outline-none shrink-0 flex items-center transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
           >
             <KuotaLogo size="md" />
           </a>
 
-          {/* Pill Switcher único Compradores / Proveedores */}
+          {/* Pill Switcher con indicador deslizante animado */}
           <div
             role="tablist"
             aria-label="Seleccionar perfil de usuario"
-            className="inline-flex items-center p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0"
+            className="relative inline-grid grid-cols-2 items-center p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0 overflow-hidden"
           >
+            {/* Píldora activa deslizante por GPU */}
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                mode === 'compradores'
+                  ? 'translate-x-0 bg-kuota-dodger shadow-sm'
+                  : 'translate-x-full bg-kuota-deepnavy shadow-sm'
+              }`}
+            />
+
             <button
               type="button"
               role="tab"
               aria-selected={mode === 'compradores'}
               onClick={() => handleSwitchMode('compradores', 'navbar_pill')}
-              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition-all duration-200 ${
+              className={`relative z-10 inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition-colors duration-200 ${
                 mode === 'compradores'
-                  ? 'bg-kuota-dodger text-white shadow-sm'
-                  : 'text-kuota-deepnavy hover:bg-kuota-palesky/60'
+                  ? 'text-white'
+                  : 'text-kuota-deepnavy hover:text-kuota-dodger'
               }`}
             >
-              <ShoppingBag className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              <ShoppingBag
+                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+                  mode === 'compradores' ? 'scale-110' : 'scale-100'
+                }`}
+                aria-hidden="true"
+              />
               <span>Compradores</span>
             </button>
+
             <button
               type="button"
               role="tab"
               aria-selected={mode === 'proveedores'}
               onClick={() => handleSwitchMode('proveedores', 'navbar_pill')}
-              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition-all duration-200 ${
+              className={`relative z-10 inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition-colors duration-200 ${
                 mode === 'proveedores'
-                  ? 'bg-kuota-deepnavy text-white shadow-sm'
-                  : 'text-kuota-deepnavy hover:bg-kuota-palesky/60'
+                  ? 'text-white'
+                  : 'text-kuota-deepnavy hover:text-kuota-dodger'
               }`}
             >
-              <Store className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              <Store
+                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+                  mode === 'proveedores' ? 'scale-110' : 'scale-100'
+                }`}
+                aria-hidden="true"
+              />
               <span>Proveedores</span>
             </button>
           </div>
         </div>
 
-        {/* Centro: Navegación Desktop */}
+        {/* Centro: Navegación Desktop con microinteracciones */}
         <nav
           aria-label="Navegación principal"
-          className="hidden lg:flex items-center gap-5 xl:gap-7 shrink-0"
+          className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0"
         >
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
               onClick={() => handleLinkClick(link.label)}
-              className="relative text-sm font-bold whitespace-nowrap text-kuota-deepnavy hover:text-kuota-dodger transition-colors duration-150 py-1 after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-full after:h-[2px] after:bg-kuota-dodger after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-200 after:origin-left"
+              className="group relative px-3 py-1.5 rounded-xl text-sm font-bold whitespace-nowrap text-kuota-deepnavy hover:text-kuota-dodger hover:bg-white/70 transition-all duration-200 hover:-translate-y-0.5"
             >
-              {link.label}
+              <span>{link.label}</span>
+              <span
+                aria-hidden="true"
+                className="absolute left-3 right-3 bottom-1 h-[2.5px] rounded-full bg-kuota-dodger scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left"
+              />
             </a>
           ))}
         </nav>
 
-        {/* Derecha: Control de identidad sonora + CTA contextual + menú móvil */}
+        {/* Derecha: Control de identidad sonora + CTA contextual + botón menú animado */}
         <div className="flex items-center gap-2.5 shrink-0">
           {/* Control opcional de Identidad Sonora Kuota (FASE 5 — desactivado por defecto) */}
           <div className="relative">
@@ -143,14 +239,17 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                   ? 'Sonido interactivo activo'
                   : 'Activar sonido interactivo'
               }
-              className={`w-9 h-9 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center transition-all duration-150 ${
+              className={`w-9 h-9 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
                 soundState.enabled
                   ? 'bg-kuota-deepnavy text-white shadow-sm'
                   : 'bg-white text-kuota-deepnavy hover:bg-kuota-palesky/70'
               }`}
             >
               {soundState.enabled ? (
-                <Volume2 className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                <Volume2
+                  className="w-4 h-4 text-kuota-dodger animate-pulse"
+                  aria-hidden="true"
+                />
               ) : (
                 <VolumeX className="w-4 h-4 opacity-70" aria-hidden="true" />
               )}
@@ -160,7 +259,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               <div
                 role="dialog"
                 aria-label="Control de sonido Kuota"
-                className="absolute right-0 mt-2 w-60 rounded-2xl bg-white border-2 border-kuota-deepnavy p-3.5 shadow-navy-hard z-50 space-y-3"
+                className="absolute right-0 mt-2 w-60 rounded-2xl bg-white border-2 border-kuota-deepnavy p-3.5 shadow-navy-hard z-50 space-y-3 animate-fadeIn"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-extrabold text-kuota-deepnavy">
@@ -225,58 +324,143 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             )}
           </div>
 
-          {/* Botón hamburguesa en móvil y tablet (< lg) */}
+          {/* Botón hamburguesa con rotación y escala animada (< lg) */}
           <button
             type="button"
-            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            onClick={() => {
+              kuotaSound.playSelectOption();
+              setMobileMenuOpen((prev) => !prev);
+            }}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-nav-menu"
-            aria-label={mobileMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
-            className="lg:hidden inline-flex items-center justify-center p-2 rounded-xl border-2 border-kuota-deepnavy bg-white text-kuota-deepnavy hover:bg-kuota-palesky transition-colors shrink-0"
+            aria-label={
+              mobileMenuOpen
+                ? 'Cerrar menú de navegación'
+                : 'Abrir menú de navegación'
+            }
+            className={`lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl border-2 border-kuota-deepnavy transition-all duration-200 shrink-0 hover:-translate-y-0.5 active:scale-95 ${
+              mobileMenuOpen
+                ? 'bg-kuota-deepnavy text-white shadow-sm'
+                : 'bg-white text-kuota-deepnavy hover:bg-kuota-palesky'
+            }`}
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            <span className="relative w-5 h-5 flex items-center justify-center">
+              <Menu
+                className={`w-5 h-5 absolute transition-all duration-250 ease-out ${
+                  mobileMenuOpen
+                    ? 'opacity-0 rotate-90 scale-50'
+                    : 'opacity-100 rotate-0 scale-100'
+                }`}
+                aria-hidden="true"
+              />
+              <X
+                className={`w-5 h-5 absolute transition-all duration-250 ease-out ${
+                  mobileMenuOpen
+                    ? 'opacity-100 rotate-0 scale-100'
+                    : 'opacity-0 -rotate-90 scale-50'
+                }`}
+                aria-hidden="true"
+              />
+            </span>
           </button>
         </div>
       </div>
 
-      {/* Menú desplegable móvil / tablet */}
-      {mobileMenuOpen && (
-        <nav
-          id="mobile-nav-menu"
-          aria-label="Navegación móvil"
-          className="lg:hidden bg-white border-b-2 border-kuota-deepnavy px-4 pt-3 pb-5 space-y-3 shadow-lg"
-        >
-          <div className="flex flex-col space-y-1">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => handleLinkClick(link.label)}
-                className="px-3 py-2.5 rounded-xl text-base font-bold text-kuota-deepnavy hover:bg-kuota-palesky transition-colors"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
+      {/* Menú desplegable con transición suave tipo acordeón + entrada escalonada (Staggered Reveal) */}
+      <div
+        id="mobile-nav-menu"
+        aria-hidden={!mobileMenuOpen}
+        className={`lg:hidden grid transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          mobileMenuOpen
+            ? 'grid-rows-[1fr] opacity-100 border-t-2 border-kuota-deepnavy'
+            : 'grid-rows-[0fr] opacity-0 pointer-events-none border-t-0'
+        }`}
+      >
+        <div className="overflow-hidden bg-white/95 backdrop-blur-md">
+          <nav
+            aria-label="Navegación desplegable"
+            className="max-w-7xl mx-auto px-4 sm:px-6 pt-3 pb-5 space-y-3"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {navLinks.map((link, index) => {
+                const IconComponent = link.icon;
+                return (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => handleLinkClick(link.label)}
+                    style={{
+                      transitionDelay: mobileMenuOpen ? `${index * 45}ms` : '0ms',
+                    }}
+                    className={`group flex items-center justify-between gap-3 p-3 rounded-2xl border-2 border-kuota-deepnavy/15 hover:border-kuota-deepnavy bg-kuota-palesky/25 hover:bg-kuota-palesky/70 transition-all duration-300 ease-out hover:translate-x-1 hover:shadow-navy-hard ${
+                      mobileMenuOpen
+                        ? 'translate-y-0 opacity-100'
+                        : '-translate-y-2 opacity-0'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="w-9 h-9 rounded-xl bg-white border-2 border-kuota-deepnavy flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:bg-kuota-dodger group-hover:text-white text-kuota-deepnavy">
+                        <IconComponent className="w-4 h-4" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-sm sm:text-base font-extrabold text-kuota-deepnavy group-hover:text-kuota-dodger transition-colors">
+                          {link.label}
+                        </div>
+                        <div className="text-[11px] font-semibold text-kuota-crayola truncate">
+                          {link.subtitle}
+                        </div>
+                      </div>
+                    </div>
 
-          <div className="pt-2 border-t border-kuota-deepnavy/15">
-            {mode === 'compradores' ? (
-              <PlayStoreButton
-                section="navbar"
-                size="md"
-                className="w-full"
-              />
-            ) : (
-              <ScheduleCallButton
-                section="navbar_mobile"
-                size="md"
-                className="w-full"
-                onClickExtra={() => setMobileMenuOpen(false)}
-              />
-            )}
-          </div>
-        </nav>
-      )}
+                    <ArrowRight
+                      className="w-4 h-4 text-kuota-deepnavy/50 group-hover:text-kuota-dodger shrink-0 transition-transform duration-200 group-hover:translate-x-1"
+                      aria-hidden="true"
+                    />
+                  </a>
+                );
+              })}
+            </div>
+
+            {/* Pie del menú desplegable: Correo oficial + CTA principal animado */}
+            <div
+              style={{
+                transitionDelay: mobileMenuOpen ? '190ms' : '0ms',
+              }}
+              className={`pt-3 border-t border-kuota-deepnavy/15 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 transition-all duration-300 ${
+                mobileMenuOpen
+                  ? 'translate-y-0 opacity-100'
+                  : 'translate-y-2 opacity-0'
+              }`}
+            >
+              <a
+                href="mailto:kuota.contact@gmail.com"
+                onClick={() => kuotaSound.playSelectOption()}
+                className="inline-flex items-center justify-center sm:justify-start gap-2 px-3.5 py-2.5 rounded-xl bg-kuota-palesky/60 hover:bg-kuota-palesky border border-kuota-deepnavy/30 text-xs font-extrabold text-kuota-deepnavy transition-all duration-200 hover:-translate-y-0.5"
+              >
+                <Mail className="w-4 h-4 text-kuota-dodger shrink-0" aria-hidden="true" />
+                <span>kuota.contact@gmail.com</span>
+              </a>
+
+              <div className="w-full sm:w-auto">
+                {mode === 'compradores' ? (
+                  <PlayStoreButton
+                    section="navbar"
+                    size="md"
+                    className="w-full sm:w-auto"
+                  />
+                ) : (
+                  <ScheduleCallButton
+                    section="navbar_mobile"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    onClickExtra={() => setMobileMenuOpen(false)}
+                  />
+                )}
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
     </header>
   );
 };

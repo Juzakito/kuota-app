@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Mail, FileText, Shield, Linkedin, Instagram, X } from 'lucide-react';
 import { KuotaLogo } from '../KuotaLogo';
 
@@ -24,11 +24,11 @@ export const FooterSection: React.FC = () => {
             {/* Correo de contacto, redes sociales y enlaces legales */}
             <div className="flex flex-wrap items-center gap-5 text-sm font-extrabold text-kuota-deepnavy">
               <a
-                href="mailto:proveedores@kuota.pe"
+                href="mailto:kuota.contact@gmail.com"
                 className="inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors"
               >
                 <Mail className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
-                <span>proveedores@kuota.pe</span>
+                <span>kuota.contact@gmail.com</span>
               </a>
 
               <button
