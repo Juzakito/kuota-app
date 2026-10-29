@@ -6,15 +6,16 @@ export interface PaymentMethodItem {
   name: string;
   category: 'Banco' | 'Billetera digital';
   shortCode: string;
+  logoUrl: string;
 }
 
 export const PAYMENT_METHODS: PaymentMethodItem[] = [
-  { id: 'bcp', name: 'BCP', category: 'Banco', shortCode: 'BCP' },
-  { id: 'bbva', name: 'BBVA', category: 'Banco', shortCode: 'BBVA' },
-  { id: 'interbank', name: 'Interbank', category: 'Banco', shortCode: 'IBK' },
-  { id: 'scotiabank', name: 'Scotiabank', category: 'Banco', shortCode: 'SBP' },
-  { id: 'yape', name: 'Yape', category: 'Billetera digital', shortCode: 'YAPE' },
-  { id: 'plin', name: 'Plin', category: 'Billetera digital', shortCode: 'PLIN' },
+  { id: 'bcp', name: 'BCP', category: 'Banco', shortCode: 'BCP', logoUrl: '/logos/bcp.svg' },
+  { id: 'bbva', name: 'BBVA', category: 'Banco', shortCode: 'BBVA', logoUrl: '/logos/bbva.svg' },
+  { id: 'interbank', name: 'Interbank', category: 'Banco', shortCode: 'IBK', logoUrl: '/logos/interbank.svg' },
+  { id: 'scotiabank', name: 'Scotiabank', category: 'Banco', shortCode: 'SBP', logoUrl: '/logos/scotiabank.svg' },
+  { id: 'yape', name: 'Yape', category: 'Billetera digital', shortCode: 'YAPE', logoUrl: '/logos/yape.svg' },
+  { id: 'plin', name: 'Plin', category: 'Billetera digital', shortCode: 'PLIN', logoUrl: '/logos/plin.png' },
 ];
 
 export interface ProductChipItem {

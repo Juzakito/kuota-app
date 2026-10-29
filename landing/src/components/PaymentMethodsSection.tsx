@@ -48,12 +48,19 @@ export const PaymentMethodsSection: React.FC = () => {
                 key={method.id}
                 role="listitem"
                 aria-label={`Logo ${method.name}`}
-                className="group rounded-xl bg-kuota-palesky/80 hover:bg-kuota-palesky border-2 border-kuota-deepnavy px-3 py-2.5 flex flex-col items-center justify-center text-center transition-transform hover:-translate-y-0.5"
+                className="group rounded-xl bg-white hover:bg-kuota-palesky/40 border-2 border-kuota-deepnavy px-3 py-2.5 flex flex-col items-center justify-between text-center transition-transform hover:-translate-y-0.5 shadow-sm"
               >
-                <span className="text-[10px] font-bold uppercase tracking-wider text-kuota-deepnavy/70">
-                  {method.category === 'Billetera digital' ? 'Billetera' : 'Banco'}
-                </span>
-                <span className="text-sm sm:text-base font-extrabold text-kuota-deepnavy tracking-tight mt-0.5">
+                <div className="h-9 sm:h-10 w-full flex items-center justify-center">
+                  <img
+                    src={method.logoUrl}
+                    alt={`Logo oficial de ${method.name}`}
+                    loading="lazy"
+                    className={`max-h-full max-w-full object-contain ${
+                      method.id === 'yape' ? 'rounded-md h-8 sm:h-9' : ''
+                    } ${method.id === 'plin' ? 'h-8 sm:h-9' : ''}`}
+                  />
+                </div>
+                <span className="text-[11px] font-extrabold text-kuota-deepnavy tracking-tight mt-1.5">
                   {method.name}
                 </span>
               </div>

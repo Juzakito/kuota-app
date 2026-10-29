@@ -27,7 +27,7 @@ export const SocialProofSection: React.FC = () => {
             <span>Las tarjetas que acepta 360 Pay</span>
           </h2>
           <span className="text-xs font-bold text-kuota-crayola">
-            Placeholders oficiales IMG-04 a IMG-09 (160×60)
+            Bancos y billeteras digitales oficiales
           </span>
         </div>
 
@@ -41,14 +41,20 @@ export const SocialProofSection: React.FC = () => {
             <div
               key={logo.id}
               role="listitem"
-              aria-label={`${logo.placeholderId}: Logo ${logo.name} (${logo.dimensions})`}
-              className="rounded-xl bg-kuota-palesky/75 border-2 border-kuota-deepnavy px-3 py-2.5 flex flex-col items-center justify-center text-center shadow-sm"
+              aria-label={`Logo oficial de ${logo.name}`}
+              className="rounded-xl bg-white hover:bg-kuota-palesky/40 border-2 border-kuota-deepnavy px-3 py-2.5 flex flex-col items-center justify-between text-center shadow-sm transition-transform hover:-translate-y-0.5"
             >
-              <div className="flex items-center justify-between w-full text-[9px] font-extrabold text-kuota-deepnavy/75 mb-0.5">
-                <span>{logo.placeholderId}</span>
-                <span>{logo.dimensions}</span>
+              <div className="h-9 sm:h-10 w-full flex items-center justify-center">
+                <img
+                  src={logo.logoUrl}
+                  alt={`Logo oficial de ${logo.name}`}
+                  loading="lazy"
+                  className={`max-h-full max-w-full object-contain ${
+                    logo.id === 'yape' ? 'rounded-md h-8 sm:h-9' : ''
+                  } ${logo.id === 'plin' ? 'h-8 sm:h-9' : ''}`}
+                />
               </div>
-              <span className="text-base font-extrabold text-kuota-deepnavy tracking-tight">
+              <span className="text-[11px] font-extrabold text-kuota-deepnavy tracking-tight mt-1.5">
                 {logo.name}
               </span>
             </div>
@@ -64,13 +70,19 @@ export const SocialProofSection: React.FC = () => {
             {carouselItems.map((logo, idx) => (
               <div
                 key={`${logo.id}-${idx}`}
-                className="w-36 shrink-0 rounded-xl bg-kuota-palesky/80 border-2 border-kuota-deepnavy px-3 py-2.5 flex flex-col items-center justify-center text-center"
+                className="w-36 shrink-0 rounded-xl bg-white border-2 border-kuota-deepnavy px-3 py-2.5 flex flex-col items-center justify-between text-center shadow-sm"
               >
-                <div className="flex items-center justify-between w-full text-[9px] font-extrabold text-kuota-deepnavy/75 mb-0.5">
-                  <span>{logo.placeholderId}</span>
-                  <span>{logo.dimensions}</span>
+                <div className="h-9 w-full flex items-center justify-center">
+                  <img
+                    src={logo.logoUrl}
+                    alt={`Logo oficial de ${logo.name}`}
+                    loading="lazy"
+                    className={`max-h-full max-w-full object-contain ${
+                      logo.id === 'yape' ? 'rounded-md h-8' : ''
+                    } ${logo.id === 'plin' ? 'h-8' : ''}`}
+                  />
                 </div>
-                <span className="text-sm font-extrabold text-kuota-deepnavy">
+                <span className="text-[11px] font-extrabold text-kuota-deepnavy mt-1">
                   {logo.name}
                 </span>
               </div>

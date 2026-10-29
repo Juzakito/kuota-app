@@ -40,16 +40,17 @@ export interface SocialProofLogoItem {
   name: string;
   category: 'Banco' | 'Billetera';
   dimensions: string;
+  logoUrl: string;
 }
 
 /** PRD §5.4 y §11: IMG-04 a IMG-09 (160×60 cada uno) */
 export const SOCIAL_PROOF_LOGOS: SocialProofLogoItem[] = [
-  { id: 'bcp', placeholderId: 'IMG-04', name: 'BCP', category: 'Banco', dimensions: '160×60' },
-  { id: 'bbva', placeholderId: 'IMG-05', name: 'BBVA', category: 'Banco', dimensions: '160×60' },
-  { id: 'interbank', placeholderId: 'IMG-06', name: 'Interbank', category: 'Banco', dimensions: '160×60' },
-  { id: 'scotiabank', placeholderId: 'IMG-07', name: 'Scotiabank', category: 'Banco', dimensions: '160×60' },
-  { id: 'yape', placeholderId: 'IMG-08', name: 'Yape', category: 'Billetera', dimensions: '160×60' },
-  { id: 'plin', placeholderId: 'IMG-09', name: 'Plin', category: 'Billetera', dimensions: '160×60' },
+  { id: 'bcp', placeholderId: 'IMG-04', name: 'BCP', category: 'Banco', dimensions: '160×60', logoUrl: '/logos/bcp.svg' },
+  { id: 'bbva', placeholderId: 'IMG-05', name: 'BBVA', category: 'Banco', dimensions: '160×60', logoUrl: '/logos/bbva.svg' },
+  { id: 'interbank', placeholderId: 'IMG-06', name: 'Interbank', category: 'Banco', dimensions: '160×60', logoUrl: '/logos/interbank.svg' },
+  { id: 'scotiabank', placeholderId: 'IMG-07', name: 'Scotiabank', category: 'Banco', dimensions: '160×60', logoUrl: '/logos/scotiabank.svg' },
+  { id: 'yape', placeholderId: 'IMG-08', name: 'Yape', category: 'Billetera', dimensions: '160×60', logoUrl: '/logos/yape.svg' },
+  { id: 'plin', placeholderId: 'IMG-09', name: 'Plin', category: 'Billetera', dimensions: '160×60', logoUrl: '/logos/plin.png' },
 ];
 
 export interface ProductCaptureSpec {
