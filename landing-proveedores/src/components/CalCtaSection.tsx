@@ -245,7 +245,7 @@ export const CalCtaSection: React.FC = () => {
                     }
                     className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-kuota-dodger text-white border border-white/20 text-xs font-extrabold transition-colors"
                   >
-                    <span>Agendar con José Gonzales (CTO)</span>
+                    <span>Agendar con José González (CTO)</span>
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                   </a>
                   <a

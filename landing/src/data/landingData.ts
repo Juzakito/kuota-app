@@ -198,8 +198,8 @@ export interface TeamMemberItem {
 
 export const TEAM_MEMBERS: TeamMemberItem[] = [
   {
-    id: 'jose-gonzales',
-    name: 'José Gonzales',
+    id: 'jose-gonzalez',
+    name: 'José González',
     role: 'CTO',
     placeholderId: 'IMG-TEAM-01',
     linkedinUrl: 'https://www.linkedin.com',

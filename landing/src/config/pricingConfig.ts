@@ -254,9 +254,9 @@ export interface SupplierTeamMember {
 /** PRD §5.7 y §11: IMG-17 a IMG-19 (400×400) */
 export const SUPPLIER_TEAM_MEMBERS: SupplierTeamMember[] = [
   {
-    id: 'jose-gonzales',
+    id: 'jose-gonzalez',
     placeholderId: 'IMG-17',
-    name: 'José Gonzales',
+    name: 'José González',
     role: 'CTO',
     dimensions: '400×400',
     linkedinUrl: 'https://www.linkedin.com',
@@ -304,7 +304,7 @@ export const CAL_COM_CONFIG = {
   hosts: [
     {
       id: 'jose',
-      name: 'José Gonzales',
+      name: 'José González',
       role: 'CTO · Integración y flujo operativo',
       calLink: 'https://calendly.com/jmgonzalez-contact/30min',
     },

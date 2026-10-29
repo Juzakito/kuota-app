@@ -20,7 +20,7 @@ Implementación oficial de la Landing Page de Kuota para compradores y emprended
 4. **Producto: 3 chips interactivos (`ProductChipsSection.tsx`)** — *Sin papeleo*, *Invierte más, crece más* y *Más compras*, con actualización dinámica de captura y soporte de teclado.
 5. **Crecemos junto a ti (`FormalizationSection.tsx`)** — Financiamiento de formalización con badge **0% de interés en tu formalización** y un único placeholder de imagen (`4:3`), sin gráfico de pasos.
 6. **Niveles a tu medida (`LevelsSection.tsx`)** — Switcher interactivo de 6 niveles, tarjeta central dinámica, escalera ascendente de 6 niveles y franja fija (**5% de interés SIEMPRE**, con límite flat bimestral).
-7. **Confianza (`TrustSection.tsx`)** — Equipo (José Gonzales — CTO, Josué Lovatón — CEO, Rolando Quiroz — Advisor) e instituciones (**Científica del Sur**, extensible en `src/data/landingData.ts`).
+7. **Confianza (`TrustSection.tsx`)** — Equipo (José González — CTO, Josué Lovatón — CEO, Rolando Quiroz — Advisor) e instituciones (**Científica del Sur**, extensible en `src/data/landingData.ts`).
 8. **CTA final y Pie de página (`CtaFooterSection.tsx`)** — Cierre en Deep Navy con CTA a Play Store, enlaces legales y contacto.
 
 ## Ejecución local

@@ -9,7 +9,7 @@ import {
  * PRD §5.7: Confianza – quiénes somos
  * - Título: "Quiénes somos".
  * - Cards con foto y enlace a LinkedIn:
- *   - José Gonzales – CTO (IMG-17)
+ *   - José González – CTO (IMG-17)
  *   - Josué Lovatón – CEO (IMG-18)
  *   - Rolando Quiroz – Advisor (IMG-19)
  * - Texto breve del equipo.
