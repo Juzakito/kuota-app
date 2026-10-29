@@ -1,0 +1,62 @@
+import React from 'react';
+import { CalendarCheck } from 'lucide-react';
+import { trackSupplierEvent } from '../utils/analytics';
+
+interface ScheduleCallButtonProps {
+  section: string;
+  label?: string;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'navy';
+  className?: string;
+  onClickExtra?: () => void;
+}
+
+/**
+ * PRD §4: Todos los botones "Agenda una call" llevan por ancla a la sección 9 (#agendar-call).
+ * PRD §2: Registra el clic con su sección de origen.
+ */
+export const ScheduleCallButton: React.FC<ScheduleCallButtonProps> = ({
+  section,
+  label = 'Agenda una call',
+  size = 'md',
+  variant = 'primary',
+  className = '',
+  onClickExtra,
+}) => {
+  const sizeStyles = {
+    sm: 'px-4 py-2 text-sm gap-2 rounded-xl',
+    md: 'px-6 py-3.5 text-base gap-2.5 rounded-2xl',
+    lg: 'px-7 py-4 text-base sm:text-lg gap-3 rounded-2xl',
+  }[size];
+
+  const variantStyles =
+    variant === 'primary'
+      ? 'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard hover:translate-y-[-1px] active:translate-y-[1px]'
+      : 'bg-kuota-deepnavy hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard hover:translate-y-[-1px] active:translate-y-[1px]';
+
+  const handleClick = () => {
+    trackSupplierEvent('cta_schedule_call_click', {
+      section,
+      button_label: label,
+      target_anchor: '#agendar-call',
+    });
+    if (onClickExtra) {
+      onClickExtra();
+    }
+  };
+
+  return (
+    <a
+      href="#agendar-call"
+      onClick={handleClick}
+      data-analytics-section={section}
+      className={`inline-flex items-center justify-center font-extrabold tracking-tight transition-all duration-150 ${sizeStyles} ${variantStyles} ${className}`}
+    >
+      <CalendarCheck
+        className={size === 'sm' ? 'w-4 h-4 shrink-0' : 'w-5 h-5 shrink-0'}
+        aria-hidden="true"
+      />
+      <span>{label}</span>
+    </a>
+  );
+};
