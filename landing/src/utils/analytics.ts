@@ -7,7 +7,8 @@ export interface AnalyticsEventRecord {
 
 declare global {
   interface Window {
-    dataLayer?: Array<Record<string, unknown>>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dataLayer?: any[];
     kuotaAnalyticsHistory?: AnalyticsEventRecord[];
   }
 }

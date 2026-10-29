@@ -1,7 +1,24 @@
 import React from 'react';
-import { Linkedin, UserCheck, Building2 } from 'lucide-react';
+import { UserCheck, Building2 } from 'lucide-react';
 import { TEAM_MEMBERS, TRUSTED_INSTITUTIONS } from '../data/landingData';
 import { ScrollReveal, TiltCard } from '../utils/motionSystem';
+
+const LinkedinIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect width="4" height="12" x="2" y="9" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+);
 
 /**
  * PRD §6.7 + FASE 3.F: Confianza con aparición progresiva y profundidad sutil.
@@ -94,7 +111,7 @@ export const TrustSection: React.FC = () => {
                         className="group inline-flex items-center gap-2 text-xs sm:text-sm font-extrabold text-kuota-deepnavy hover:text-kuota-dodger transition-colors duration-150"
                       >
                         <span className="w-7 h-7 rounded-lg bg-kuota-palesky border border-kuota-deepnavy flex items-center justify-center transition-transform duration-150 group-hover:scale-110">
-                          <Linkedin className="w-4 h-4 text-kuota-deepnavy" aria-hidden="true" />
+                          <LinkedinIcon className="w-4 h-4 text-kuota-deepnavy" />
                         </span>
                         <span>Ver en LinkedIn</span>
                       </a>
