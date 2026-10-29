@@ -47,6 +47,11 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     setMode(getInitialAudienceMode());
+    const handlePopState = () => {
+      setMode(getInitialAudienceMode());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const handleModeChange = (nextMode: AudienceMode, source: string) => {
@@ -55,9 +60,13 @@ export const App: React.FC = () => {
     trackEvent('switch_audience_mode', { mode: nextMode, source });
 
     if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.set('perfil', nextMode);
-      window.history.replaceState({}, '', url.toString());
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('perfil', nextMode);
+        window.history.replaceState({}, '', url.toString());
+      } catch {
+        // Ignore URL replace errors in restricted environments
+      }
     }
   };
 

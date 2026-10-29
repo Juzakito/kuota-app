@@ -13,7 +13,7 @@ import { ScrollReveal, TiltCard } from '../utils/motionSystem';
 export const HeroSection: React.FC = () => {
   return (
     <section
-      id="inicio"
+      id="hero-compradores"
       aria-labelledby="hero-heading"
       className="relative overflow-hidden pt-8 pb-14 sm:py-16 lg:py-20 border-b-2 border-kuota-deepnavy bg-grid-pattern"
     >

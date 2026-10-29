@@ -114,6 +114,8 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
 
   const handleSwitchMode = (nextMode: AudienceMode, source: string) => {
     kuotaSound.playSelectOption();
+    setMobileMenuOpen(false);
+    setSoundPanelOpen(false);
     onModeChange(nextMode, source);
   };
 
@@ -126,8 +128,8 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-        {/* Izquierda: Logo oficial Kuota + Selector animado de Perfil */}
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+        {/* Izquierda: Logo oficial Kuota + Selector de Perfil */}
+        <div className="flex items-center gap-4 sm:gap-5 shrink-0">
           <a
             href="#inicio"
             aria-label="Kuota — Ir al inicio"
@@ -136,37 +138,25 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             <KuotaLogo size="md" />
           </a>
 
-          {/* Pill Switcher con indicador deslizante animado */}
+          {/* Pill Switcher Compradores / Proveedores */}
           <div
             role="tablist"
             aria-label="Seleccionar perfil de usuario"
-            className="relative inline-grid grid-cols-2 items-center p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0 overflow-hidden"
+            className="inline-flex items-center gap-1 p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0"
           >
-            {/* Píldora activa deslizante por GPU */}
-            <span
-              aria-hidden="true"
-              className={`pointer-events-none absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                mode === 'compradores'
-                  ? 'translate-x-0 bg-kuota-dodger shadow-sm'
-                  : 'translate-x-full bg-kuota-deepnavy shadow-sm'
-              }`}
-            />
-
             <button
               type="button"
               role="tab"
               aria-selected={mode === 'compradores'}
               onClick={() => handleSwitchMode('compradores', 'navbar_pill')}
-              className={`relative z-10 inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition-colors duration-200 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-all duration-200 ease-out ${
                 mode === 'compradores'
-                  ? 'text-white'
-                  : 'text-kuota-deepnavy hover:text-kuota-dodger'
+                  ? 'bg-kuota-dodger text-white shadow-sm'
+                  : 'bg-transparent text-kuota-deepnavy hover:bg-kuota-palesky/60 hover:text-kuota-dodger'
               }`}
             >
               <ShoppingBag
-                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-                  mode === 'compradores' ? 'scale-110' : 'scale-100'
-                }`}
+                className="w-3.5 h-3.5 shrink-0"
                 aria-hidden="true"
               />
               <span>Compradores</span>
@@ -177,16 +167,14 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               role="tab"
               aria-selected={mode === 'proveedores'}
               onClick={() => handleSwitchMode('proveedores', 'navbar_pill')}
-              className={`relative z-10 inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition-colors duration-200 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-all duration-200 ease-out ${
                 mode === 'proveedores'
-                  ? 'text-white'
-                  : 'text-kuota-deepnavy hover:text-kuota-dodger'
+                  ? 'bg-kuota-deepnavy text-white shadow-sm'
+                  : 'bg-transparent text-kuota-deepnavy hover:bg-kuota-palesky/60 hover:text-kuota-dodger'
               }`}
             >
               <Store
-                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-                  mode === 'proveedores' ? 'scale-110' : 'scale-100'
-                }`}
+                className="w-3.5 h-3.5 shrink-0"
                 aria-hidden="true"
               />
               <span>Proveedores</span>
