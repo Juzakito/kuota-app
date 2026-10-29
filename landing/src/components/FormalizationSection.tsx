@@ -1,6 +1,5 @@
 import React from 'react';
-import { Award, Users } from 'lucide-react';
-import { ImagePlaceholder } from './ImagePlaceholder';
+import { Award } from 'lucide-react';
 import { ScrollReveal, TiltCard } from '../utils/motionSystem';
 
 /**
@@ -41,29 +40,20 @@ export const FormalizationSection: React.FC = () => {
             </p>
           </ScrollReveal>
 
-          {/* Columna de Imagen Única */}
+          {/* Columna de Imagen Oficial */}
           <ScrollReveal
             delayMs={120}
             direction="right"
             className="order-1 lg:order-2 lg:col-span-6"
           >
             <TiltCard maxTiltDeg={2.5}>
-              <ImagePlaceholder
-                id="IMG-FORMAL-01"
-                label="Emprendedor en mentoría o taller con expertos, o trámite de formalización"
-                aspectRatioLabel="4:3"
-                aspectClass="aspect-[4/3] w-full"
-                className="rounded-3xl border-2 border-kuota-deepnavy"
-              >
-                <div className="flex flex-col items-center max-w-xs px-4">
-                  <div className="w-16 h-16 rounded-2xl bg-kuota-palesky border-2 border-kuota-deepnavy flex items-center justify-center mb-3">
-                    <Users className="w-8 h-8 text-kuota-deepnavy" aria-hidden="true" />
-                  </div>
-                  <span className="text-sm font-extrabold text-kuota-deepnavy">
-                    Acompañamiento, mentorías y formalización RUC 10 / RUC 20
-                  </span>
-                </div>
-              </ImagePlaceholder>
+              <div className="relative rounded-3xl overflow-hidden border-2 border-kuota-deepnavy bg-white shadow-navy-hard aspect-[4/3] w-full">
+                <img
+                  src="/images/formalizacion-kuota.jpg"
+                  alt="Emprendedores en taller de mentoría y formalización RUC 10 / RUC 20 con Kuota"
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </TiltCard>
           </ScrollReveal>
         </div>
