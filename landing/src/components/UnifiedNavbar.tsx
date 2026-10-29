@@ -118,9 +118,9 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
         <div className="flex items-center gap-2">
           <div className="hidden md:block">
             {mode === 'compradores' ? (
-              <PlayStoreButton location="navbar" size="sm" />
+              <PlayStoreButton section="navbar" size="sm" />
             ) : (
-              <ScheduleCallButton location="navbar" size="sm" />
+              <ScheduleCallButton section="navbar" size="sm" />
             )}
           </div>
 
@@ -219,16 +219,16 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           <div className="pt-2 border-t border-kuota-deepnavy/15">
             {mode === 'compradores' ? (
               <PlayStoreButton
-                location="navbar"
+                section="navbar"
                 size="md"
                 className="w-full"
               />
             ) : (
               <ScheduleCallButton
-                location="navbar_mobile"
+                section="navbar_mobile"
                 size="md"
                 className="w-full"
-                onClickAfter={() => setMobileMenuOpen(false)}
+                onClickExtra={() => setMobileMenuOpen(false)}
               />
             )}
           </div>
