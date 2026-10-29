@@ -1,7 +1,6 @@
 import React from 'react';
-import { ShieldCheck, Sparkles, Store, Smartphone, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Sparkles, Smartphone, CheckCircle2 } from 'lucide-react';
 import { PlayStoreButton } from './PlayStoreButton';
-import { ImagePlaceholder } from './ImagePlaceholder';
 import { ScrollReveal, TiltCard } from '../utils/motionSystem';
 
 /**
@@ -90,25 +89,13 @@ export const HeroSection: React.FC = () => {
           {/* Columna Visual: Profundidad 3D + Tarjeta financiera flotante */}
           <ScrollReveal delayMs={160} direction="scale" className="lg:col-span-6 relative">
             <TiltCard maxTiltDeg={2.5}>
-              <ImagePlaceholder
-                id="IMG-HERO-01"
-                label="Emprendedor en su negocio (tienda, bodega o puesto)"
-                aspectRatioLabel="4:3"
-                aspectClass="aspect-[4/3] w-full"
-                className="bg-white/90"
-              >
-                <div className="flex flex-col items-center max-w-xs px-3">
-                  <div className="w-16 h-16 rounded-2xl bg-kuota-palesky border-2 border-kuota-deepnavy flex items-center justify-center mb-3 shadow-sm">
-                    <Store className="w-8 h-8 text-kuota-deepnavy" aria-hidden="true" />
-                  </div>
-                  <span className="text-sm font-extrabold text-kuota-deepnavy">
-                    Fotografía principal del emprendedor
-                  </span>
-                  <span className="text-xs font-semibold text-kuota-crayola mt-1">
-                    Bodega, tienda o puesto abastecido de mercadería
-                  </span>
-                </div>
-              </ImagePlaceholder>
+              <div className="relative rounded-3xl overflow-hidden border-2 border-kuota-deepnavy bg-white shadow-navy-hard aspect-[4/3] w-full">
+                <img
+                  src="/images/hero-negocio-kuota.jpg"
+                  alt="Emprendedor en su negocio abastecido con Kuota"
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </TiltCard>
 
             {/* Tarjeta digital con movimiento flotante suave y profundidad (FASE 3.A) */}

@@ -1,7 +1,6 @@
-﻿import React from 'react';
-import { ArrowRight, Store, ShieldCheck, Clock } from 'lucide-react';
+import React from 'react';
+import { ArrowRight, ShieldCheck, Clock } from 'lucide-react';
 import { ScheduleCallButton } from './ScheduleCallButton';
-import { ImagePlaceholder } from '../ImagePlaceholder';
 import { PRICING_CONFIG, formatPercentEs } from '../../config/pricingConfig';
 import { trackSupplierEvent } from '../../utils/analytics';
 
@@ -90,24 +89,13 @@ export const HeroSection: React.FC = () => {
 
           {/* Columna Derecha (Debajo en móvil): Imagen IMG-01 + Tarjeta flotante "POS 3,5% → Kuota 2%" */}
           <div className="lg:col-span-6 relative">
-            <ImagePlaceholder
-              id="IMG-01"
-              label="Dueño de negocio cobrando en su mostrador con un celular en la mano"
-              dimensionsLabel="1200×900"
-              aspectClass="aspect-[4/3] w-full"
-            >
-              <div className="flex flex-col items-center max-w-xs px-3">
-                <div className="w-16 h-16 rounded-2xl bg-kuota-palesky border-2 border-kuota-deepnavy flex items-center justify-center mb-3 shadow-sm">
-                  <Store className="w-8 h-8 text-kuota-deepnavy" aria-hidden="true" />
-                </div>
-                <span className="text-sm font-extrabold text-kuota-deepnavy">
-                  Dueño de negocio cobrando en mostrador con celular
-                </span>
-                <span className="text-xs font-semibold text-kuota-crayola mt-1">
-                  Cobro inmediato con QR o Link sin equipo POS físico
-                </span>
-              </div>
-            </ImagePlaceholder>
+            <div className="relative rounded-3xl overflow-hidden border-2 border-kuota-deepnavy bg-white shadow-navy-hard aspect-[4/3] w-full">
+              <img
+                src="/images/hero-negocio-kuota.jpg"
+                alt="Dueño de negocio cobrando en su mostrador con Kuota QR y celular"
+                className="w-full h-full object-cover"
+              />
+            </div>
 
             {/* Tarjeta flotante sobre la imagen (se mantiene en móvil y desktop — PRD §5.2) */}
             <div className="absolute -bottom-5 left-4 right-4 sm:left-auto sm:right-6 sm:w-auto z-20 flex justify-center">
