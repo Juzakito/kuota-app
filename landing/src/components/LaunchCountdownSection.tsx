@@ -199,15 +199,17 @@ export const LaunchCountdownSection: React.FC<LaunchCountdownSectionProps> = ({
                     role="timer"
                     aria-live="polite"
                     aria-atomic="true"
+                    suppressHydrationWarning
                     aria-label={`Cuenta regresiva al lanzamiento: ${snapshot.days} días, ${snapshot.hours} horas, ${snapshot.minutes} minutos y ${snapshot.seconds} segundos`}
                     className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4 items-center"
                   >
                     {timeUnits.map((unit, index) => (
                       <div key={unit.key} className="relative flex items-center">
                         <div className="w-full rounded-xl bg-kuota-deepnavy/90 border border-white/15 px-2 py-4 sm:px-4 sm:py-5 text-center shadow-inner">
-                          <div className="overflow-hidden">
+                          <div className="overflow-hidden" suppressHydrationWarning>
                             <span
                               key={`${unit.key}-${unit.value}`}
+                              suppressHydrationWarning
                               className="block font-sans font-extrabold tabular-nums tracking-tight text-2xl sm:text-4xl md:text-5xl text-white leading-none animate-digitSlide"
                             >
                               {unit.value}

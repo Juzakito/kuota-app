@@ -41,9 +41,13 @@ function getInitialAudienceMode(): AudienceMode {
 }
 
 export const App: React.FC = () => {
-  const [mode, setMode] = useState<AudienceMode>(getInitialAudienceMode);
+  const [mode, setMode] = useState<AudienceMode>('compradores');
   const milestonesTracked = useRef<Set<number>>(new Set());
   const levelsSectionTracked = useRef<boolean>(false);
+
+  useEffect(() => {
+    setMode(getInitialAudienceMode());
+  }, []);
 
   const handleModeChange = (nextMode: AudienceMode, source: string) => {
     if (nextMode === mode) return;
