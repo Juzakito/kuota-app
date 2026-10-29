@@ -11,49 +11,49 @@ export const KuotaLogo: React.FC<KuotaLogoProps> = ({
   variant = 'default',
   className = '',
 }) => {
-  const dimensions = {
-    sm: { box: 'w-8 h-8 rounded-lg', text: 'text-xl' },
-    md: { box: 'w-9 h-9 rounded-xl', text: 'text-2xl' },
-    lg: { box: 'w-11 h-11 rounded-2xl', text: 'text-3xl' },
+  const heightClasses = {
+    sm: 'h-7 sm:h-8',
+    md: 'h-8 sm:h-9',
+    lg: 'h-10 sm:h-11',
   }[size];
 
-  const isInverted = variant === 'inverted';
+  const iconSizes = {
+    sm: 'w-7 h-7 sm:w-8 sm:h-8',
+    md: 'w-8 h-8 sm:w-9 sm:h-9',
+    lg: 'w-10 h-10 sm:w-11 sm:h-11',
+  }[size];
+
+  const wordmarkHeights = {
+    sm: 'h-5 sm:h-5',
+    md: 'h-5 sm:h-6',
+    lg: 'h-6 sm:h-7',
+  }[size];
+
+  if (variant === 'inverted') {
+    return (
+      <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
+        <img
+          src="/logos/kuota-icon.png"
+          alt=""
+          aria-hidden="true"
+          className={`${iconSizes} object-contain shrink-0 drop-shadow-sm`}
+        />
+        <img
+          src="/logos/kuota-wordmark-white.png"
+          alt="Kuota"
+          className={`${wordmarkHeights} w-auto object-contain`}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
-      <div
-        className={`${dimensions.box} flex items-center justify-center border-2 ${
-          isInverted
-            ? 'bg-kuota-dodger border-kuota-palesky'
-            : 'bg-kuota-deepnavy border-kuota-deepnavy'
-        } shadow-sm`}
-        aria-hidden="true"
-      >
-        <svg
-          viewBox="0 0 32 32"
-          className="w-5 h-5"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M8 7H12.5V14.5L19.5 7H25L16.8 15.5L25.5 25H19.8L12.5 17V25H8V7Z"
-            fill={isInverted ? '#FFFFFF' : '#0391FD'}
-          />
-          <circle
-            cx="23.5"
-            cy="8.5"
-            r="2.5"
-            fill="#CBE5FE"
-          />
-        </svg>
-      </div>
-      <span
-        className={`${dimensions.text} font-extrabold tracking-tight ${
-          isInverted ? 'text-white' : 'text-kuota-deepnavy'
-        }`}
-      >
-        kuota
-      </span>
+    <div className={`inline-flex items-center select-none ${className}`}>
+      <img
+        src="/logos/kuota-logo-horizontal.png"
+        alt="Kuota"
+        className={`${heightClasses} w-auto object-contain`}
+      />
     </div>
   );
 };
