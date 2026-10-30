@@ -2,17 +2,22 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Menu, X, Sparkles, Shield, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, Menu, X, Sparkles, Shield, ArrowUpRight, CheckCircle2, Layers, ShoppingBag, Store } from 'lucide-react';
 import { KuotaLogo } from '../KuotaLogo';
+import { AudienceMode } from '../UnifiedNavbar';
 
 interface NavbarCapsuleProps {
   onOpenEvaluationModal: () => void;
   activeSection?: string;
+  mode?: AudienceMode;
+  onModeChange?: (mode: AudienceMode, source: string) => void;
 }
 
 export const NavbarCapsule: React.FC<NavbarCapsuleProps> = ({
   onOpenEvaluationModal,
   activeSection = 'inicio',
+  mode = 'ecosistema',
+  onModeChange,
 }) => {
   const [activeTab, setActiveTab] = useState<string>('plataforma');
   const [simuladorOpen, setSimuladorOpen] = useState(false);
@@ -64,7 +69,7 @@ export const NavbarCapsule: React.FC<NavbarCapsuleProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* LOGO KUOTA */}
+        {/* LOGO KUOTA + SELECTOR DE PERFIL TRIPARTITO */}
         <div className="flex items-center gap-3">
           <a
             href="#inicio"
@@ -72,12 +77,78 @@ export const NavbarCapsule: React.FC<NavbarCapsuleProps> = ({
               e.preventDefault();
               scrollTo('#inicio', 'plataforma');
             }}
-            className="flex items-center gap-2.5 group focus:outline-none"
+            className="flex items-center gap-2.5 group focus:outline-none shrink-0"
           >
             <div className="relative flex items-center">
               <KuotaLogo variant="inverted" className="h-7 w-auto object-contain" />
             </div>
           </a>
+
+          {/* Capsule Switcher Tripartito (High-Contrast Dark Fintech) */}
+          {onModeChange && (
+            <div
+              role="tablist"
+              aria-label="Seleccionar perfil del ecosistema"
+              className="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-[#161B22]/90 border border-white/10 shadow-inner shrink-0"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'ecosistema'}
+                onClick={() => onModeChange('ecosistema', 'navbar_capsule')}
+                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 select-none ${
+                  mode === 'ecosistema'
+                    ? 'bg-white text-[#070A0F] shadow-sm'
+                    : 'bg-transparent text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Layers
+                  className={`w-3.5 h-3.5 shrink-0 ${
+                    mode === 'ecosistema' ? 'text-[#10B981]' : 'text-slate-400'
+                  }`}
+                />
+                <span>Ecosistema</span>
+              </button>
+
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'compradores'}
+                onClick={() => onModeChange('compradores', 'navbar_capsule')}
+                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 select-none ${
+                  mode === 'compradores'
+                    ? 'bg-[#0391FD] text-white shadow-sm'
+                    : 'bg-transparent text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <ShoppingBag
+                  className={`w-3.5 h-3.5 shrink-0 ${
+                    mode === 'compradores' ? 'text-white' : 'text-slate-400'
+                  }`}
+                />
+                <span>Compradores</span>
+              </button>
+
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'comercios'}
+                onClick={() => onModeChange('comercios', 'navbar_capsule')}
+                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 select-none ${
+                  mode === 'comercios'
+                    ? 'bg-[#10B981] text-[#070A0F] font-extrabold shadow-sm'
+                    : 'bg-transparent text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Store
+                  className={`w-3.5 h-3.5 shrink-0 ${
+                    mode === 'comercios' ? 'text-[#070A0F]' : 'text-slate-400'
+                  }`}
+                />
+                <span>Comercios</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* CENTRAL CAPSULE (DESKTOP) */}
@@ -338,6 +409,69 @@ export const NavbarCapsule: React.FC<NavbarCapsuleProps> = ({
             exit={{ opacity: 0, height: 0 }}
             className="lg:hidden bg-[#0A0E17] border-b border-white/10 px-6 py-6 overflow-hidden"
           >
+            {/* Selector de perfil para móviles */}
+            {onModeChange && (
+              <div className="p-1 rounded-2xl bg-white/5 border border-white/10 grid grid-cols-3 gap-1 mb-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onModeChange('ecosistema', 'mobile_drawer');
+                  }}
+                  className={`py-2 px-1 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                    mode === 'ecosistema'
+                      ? 'bg-white text-[#070A0F] shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Layers
+                    className={`w-4 h-4 ${
+                      mode === 'ecosistema' ? 'text-[#10B981]' : 'text-slate-400'
+                    }`}
+                  />
+                  <span>Ecosistema</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onModeChange('compradores', 'mobile_drawer');
+                  }}
+                  className={`py-2 px-1 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                    mode === 'compradores'
+                      ? 'bg-[#0391FD] text-white shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <ShoppingBag
+                    className={`w-4 h-4 ${
+                      mode === 'compradores' ? 'text-white' : 'text-slate-400'
+                    }`}
+                  />
+                  <span>Compradores</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onModeChange('comercios', 'mobile_drawer');
+                  }}
+                  className={`py-2 px-1 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                    mode === 'comercios'
+                      ? 'bg-[#10B981] text-[#070A0F] font-extrabold shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Store
+                    className={`w-4 h-4 ${
+                      mode === 'comercios' ? 'text-[#070A0F]' : 'text-slate-400'
+                    }`}
+                  />
+                  <span>Comercios</span>
+                </button>
+              </div>
+            )}
+
             <div className="space-y-3">
               <button
                 onClick={() => scrollTo('#niveles', 'niveles')}

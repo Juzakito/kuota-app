@@ -310,8 +310,8 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               onClick={() => handleSwitchMode('comercios', 'navbar_pill')}
               className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 select-none active:scale-95 ${
                 activeModeNormalized === 'comercios'
-                  ? 'bg-[#10B981] text-white shadow-sm'
-                  : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-white/70'
+                  ? 'bg-[#059669] text-white shadow-sm'
+                  : 'bg-transparent text-slate-700 hover:text-slate-950 hover:bg-white/80'
               }`}
             >
               <Store
@@ -513,6 +513,46 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
         }`}
       >
         <div className="overflow-hidden bg-white/98 backdrop-blur-md p-4 space-y-3">
+          {/* Selector de perfil para móviles */}
+          <div className="p-1 rounded-2xl bg-slate-100 border border-slate-200/90 grid grid-cols-3 gap-1 mb-2">
+            <button
+              type="button"
+              onClick={() => handleSwitchMode('ecosistema', 'mobile_drawer')}
+              className={`py-2 px-1 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                activeModeNormalized === 'ecosistema'
+                  ? 'bg-[#070A0F] text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Layers className={`w-4 h-4 ${activeModeNormalized === 'ecosistema' ? 'text-[#10B981]' : 'text-slate-500'}`} />
+              <span>Ecosistema</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchMode('compradores', 'mobile_drawer')}
+              className={`py-2 px-1 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                activeModeNormalized === 'compradores'
+                  ? 'bg-[#0391FD] text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <ShoppingBag className={`w-4 h-4 ${activeModeNormalized === 'compradores' ? 'text-white' : 'text-slate-500'}`} />
+              <span>Compradores</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchMode('comercios', 'mobile_drawer')}
+              className={`py-2 px-1 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                activeModeNormalized === 'comercios'
+                  ? 'bg-[#059669] text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Store className={`w-4 h-4 ${activeModeNormalized === 'comercios' ? 'text-white' : 'text-slate-500'}`} />
+              <span>Comercios</span>
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {navLinks.map((link) => {
               const Icon = link.icon;

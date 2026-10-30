@@ -174,6 +174,8 @@ export const App: React.FC = () => {
 
           {/* SECCIÓN 1: NAVBAR FIJO CON CÁPSULA CENTRAL */}
           <NavbarCapsule
+            mode={mode}
+            onModeChange={handleModeChange}
             onOpenEvaluationModal={() => setEvaluationModalOpen(true)}
           />
 

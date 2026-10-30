@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, Store, ArrowRight, Sparkles, Calculator, CheckCircle2 } from 'lucide-react';
+import { ShoppingBag, Store, ArrowRight, Sparkles, Calculator, CheckCircle2, Layers } from 'lucide-react';
 import { AudienceMode } from './UnifiedNavbar';
 import { PRICING_CONFIG, formatPercentEs } from '../config/pricingConfig';
 import { smoothScrollToAnchor } from '../utils/motionSystem';
@@ -235,32 +235,50 @@ export const CrossAudienceBanner: React.FC<EcosystemProps> = ({ mode, onModeChan
  * Pastilla flotante inferior derecha para cambiar de vista en cualquier momento del scroll.
  */
 export const FloatingAudienceSwitch: React.FC<EcosystemProps> = ({ mode, onModeChange }) => {
+  const isEcosystem = mode === 'ecosistema';
+  const isBuyer = mode === 'compradores';
+  const isMerchant = mode === 'comercios' || mode === 'proveedores';
+
   return (
     <div className="fixed bottom-4 right-4 z-40 hidden sm:flex items-center">
-      <div className="rounded-full bg-white/95 backdrop-blur-md border-2 border-kuota-deepnavy p-1 shadow-navy-hard flex items-center gap-1">
+      <div className="rounded-full bg-white/95 backdrop-blur-md border border-slate-200/90 p-1 shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onModeChange('ecosistema', 'floating_switch')}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all select-none ${
+            isEcosystem
+              ? 'bg-[#070A0F] text-white shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Layers className={`w-3.5 h-3.5 ${isEcosystem ? 'text-[#10B981]' : 'text-slate-500'}`} aria-hidden="true" />
+          <span>Ecosistema</span>
+        </button>
+
         <button
           type="button"
           onClick={() => onModeChange('compradores', 'floating_switch')}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-extrabold transition-all ${
-            mode === 'compradores'
-              ? 'bg-kuota-dodger text-white'
-              : 'text-kuota-deepnavy hover:bg-kuota-palesky/60'
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all select-none ${
+            isBuyer
+              ? 'bg-[#0391FD] text-white shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <ShoppingBag className="w-3.5 h-3.5" aria-hidden="true" />
+          <ShoppingBag className={`w-3.5 h-3.5 ${isBuyer ? 'text-white' : 'text-slate-500'}`} aria-hidden="true" />
           <span>Compradores</span>
         </button>
+
         <button
           type="button"
-          onClick={() => onModeChange('proveedores', 'floating_switch')}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-extrabold transition-all ${
-            mode === 'proveedores'
-              ? 'bg-kuota-deepnavy text-white'
-              : 'text-kuota-deepnavy hover:bg-kuota-palesky/60'
+          onClick={() => onModeChange('comercios', 'floating_switch')}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all select-none ${
+            isMerchant
+              ? 'bg-[#059669] text-white shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
-          <Store className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>Proveedores</span>
+          <Store className={`w-3.5 h-3.5 ${isMerchant ? 'text-white' : 'text-slate-500'}`} aria-hidden="true" />
+          <span>Comercios</span>
         </button>
       </div>
     </div>
