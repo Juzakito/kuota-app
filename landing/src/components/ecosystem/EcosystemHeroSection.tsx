@@ -20,7 +20,7 @@ export const EcosystemHeroSection: React.FC<EcosystemHeroSectionProps> = ({
     <section
       id="hero-ecosistema"
       aria-labelledby="ecosystem-hero-title"
-      className="relative pt-8 sm:pt-12 pb-16 sm:pb-24 overflow-hidden border-b-2 border-kuota-deepnavy bg-gradient-to-b from-kuota-palesky via-kuota-palesky/70 to-white/60"
+      className="relative pt-8 sm:pt-14 pb-16 sm:pb-24 overflow-hidden border-b border-slate-200/80 bg-gradient-to-b from-slate-50 via-sky-50/20 to-white"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
@@ -28,8 +28,8 @@ export const EcosystemHeroSection: React.FC<EcosystemHeroSectionProps> = ({
           {/* Columna Izquierda: Mensaje y Conversión Inmediata (< 5s) */}
           <div className="lg:col-span-7 space-y-6">
             <ScrollReveal delayMs={0} direction="up">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider shadow-sm">
-                <Sparkles className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/90 text-xs font-bold text-[#0A192F] uppercase tracking-wider shadow-xs">
+                <Sparkles className="w-3.5 h-3.5 text-[#0391FD]" aria-hidden="true" />
                 <span>Ecosistema Fintech de Compras en Cuotas</span>
               </div>
             </ScrollReveal>
@@ -37,10 +37,10 @@ export const EcosystemHeroSection: React.FC<EcosystemHeroSectionProps> = ({
             <ScrollReveal delayMs={80} direction="up">
               <h1
                 id="ecosystem-hero-title"
-                className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-kuota-deepnavy tracking-tight leading-[1.08]"
+                className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#0A192F] tracking-tight leading-[1.08]"
               >
                 Conectamos oportunidades para{' '}
-                <span className="text-kuota-dodger underline decoration-kuota-deepnavy decoration-4 underline-offset-4">
+                <span className="text-[#0391FD]">
                   comprar y vender
                 </span>{' '}
                 en cuotas.
@@ -48,7 +48,7 @@ export const EcosystemHeroSection: React.FC<EcosystemHeroSectionProps> = ({
             </ScrollReveal>
 
             <ScrollReveal delayMs={140} direction="up">
-              <p className="text-base sm:text-xl font-semibold text-kuota-crayola max-w-2xl leading-relaxed">
+              <p className="text-base sm:text-xl font-normal text-slate-600 max-w-2xl leading-relaxed">
                 KUOTA conecta compradores y comercios a través de una experiencia digital que facilita nuevas oportunidades de compra, venta y gestión de pagos.
               </p>
             </ScrollReveal>
@@ -105,17 +105,17 @@ export const EcosystemHeroSection: React.FC<EcosystemHeroSectionProps> = ({
 
             {/* Badges de Confianza Rápida */}
             <ScrollReveal delayMs={260} direction="up">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-4 border-t border-kuota-deepnavy/15 text-xs font-bold text-kuota-deepnavy">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-200/80 text-xs font-bold text-slate-700">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-kuota-dodger shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#0391FD] shrink-0" />
                   <span>3 partes conectadas</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-kuota-dodger shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#0391FD] shrink-0" />
                   <span>Control de colocaciones</span>
                 </div>
                 <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
-                  <TrendingUp className="w-4 h-4 text-kuota-dodger shrink-0" />
+                  <TrendingUp className="w-4 h-4 text-[#0391FD] shrink-0" />
                   <span>Recaudación trazable</span>
                 </div>
               </div>
@@ -134,12 +134,12 @@ export const EcosystemHeroSection: React.FC<EcosystemHeroSectionProps> = ({
                     alt="Emprendedor y comerciante peruano abasteciendo su negocio"
                     sizeClassName="w-60 h-60 sm:w-72 sm:h-72"
                     topBadge={
-                      <div className="px-3 py-1 rounded-full bg-white border-2 border-kuota-deepnavy text-[11px] font-extrabold text-kuota-deepnavy shadow-sm">
+                      <div className="px-3.5 py-1.5 rounded-full bg-white border border-slate-200/90 text-[11px] font-bold text-[#0A192F] shadow-md">
                         Comercio Participante ✓
                       </div>
                     }
                     bottomBadge={
-                      <div className="px-3 py-1 rounded-full bg-kuota-dodger text-white text-[11px] font-extrabold border-2 border-kuota-deepnavy shadow-sm">
+                      <div className="px-3.5 py-1.5 rounded-full bg-[#0391FD] text-white text-[11px] font-bold shadow-md">
                         Venta en cuotas activa
                       </div>
                     }

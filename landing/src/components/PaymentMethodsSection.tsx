@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, Shield } from 'lucide-react';
+import { CreditCard, ShieldCheck } from 'lucide-react';
 import { PAYMENT_METHODS } from '../data/landingData';
 import { ScrollReveal } from '../utils/motionSystem';
 
@@ -11,26 +11,26 @@ export const PaymentMethodsSection: React.FC = () => {
     <section
       id="medios-de-pago"
       aria-labelledby="payment-methods-heading"
-      className="w-full bg-white/80 border-b-2 border-kuota-deepnavy py-7 sm:py-9"
+      className="w-full bg-white border-b border-slate-200/80 py-8 sm:py-10"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           {/* Título y Subtexto */}
           <ScrollReveal delayMs={0} direction="left">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 lg:max-w-md">
-              <div className="w-11 h-11 rounded-2xl bg-kuota-palesky border-2 border-kuota-deepnavy flex items-center justify-center shrink-0">
-                <CreditCard className="w-5 h-5 text-kuota-deepnavy" aria-hidden="true" />
+              <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center shrink-0 shadow-xs">
+                <CreditCard className="w-6 h-6 text-[#0391FD]" aria-hidden="true" />
               </div>
               <div>
                 <h2
                   id="payment-methods-heading"
-                  className="text-lg sm:text-xl font-extrabold text-kuota-deepnavy leading-snug"
+                  className="text-lg sm:text-xl font-extrabold text-[#0A192F] leading-snug"
                 >
                   Pagas por tu método de pago favorito
                 </h2>
-                <p className="text-sm font-bold text-kuota-crayola flex items-center gap-1.5 mt-0.5">
-                  <Shield className="w-3.5 h-3.5 text-kuota-dodger shrink-0" aria-hidden="true" />
-                  <span>Las tarjetas que acepta 360 pay.</span>
+                <p className="text-xs sm:text-sm font-medium text-slate-500 flex items-center gap-1.5 mt-0.5">
+                  <ShieldCheck className="w-4 h-4 text-[#10B981] shrink-0" aria-hidden="true" />
+                  <span>Compatibilidad con tarjetas, Yape, Plin y transferencias bancarias.</span>
                 </p>
               </div>
             </div>
@@ -51,7 +51,7 @@ export const PaymentMethodsSection: React.FC = () => {
                 <div
                   role="listitem"
                   aria-label={`Logo ${method.name}`}
-                  className="group rounded-xl bg-white hover:bg-kuota-palesky/40 border-2 border-kuota-deepnavy px-3 py-2.5 flex flex-col items-center justify-between text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-navy-hard active:scale-95 shadow-sm"
+                  className="group rounded-2xl bg-slate-50 hover:bg-white border border-slate-200/80 px-3 py-3 flex flex-col items-center justify-between text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-[#0391FD]/40 active:scale-95 shadow-xs"
                 >
                   <div className="h-9 sm:h-10 w-full flex items-center justify-center">
                     <img
@@ -63,7 +63,7 @@ export const PaymentMethodsSection: React.FC = () => {
                       } ${method.id === 'plin' ? 'h-8 sm:h-9' : ''}`}
                     />
                   </div>
-                  <span className="text-[11px] font-extrabold text-kuota-deepnavy tracking-tight mt-1.5">
+                  <span className="text-[11px] font-bold text-slate-700 tracking-tight mt-1.5">
                     {method.name}
                   </span>
                 </div>

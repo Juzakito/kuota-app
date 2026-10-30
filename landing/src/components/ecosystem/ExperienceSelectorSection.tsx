@@ -20,20 +20,20 @@ export const ExperienceSelectorSection: React.FC<ExperienceSelectorSectionProps>
     <section
       id="selector"
       aria-labelledby="selector-heading"
-      className="py-16 sm:py-24 bg-white border-b-2 border-kuota-deepnavy"
+      className="py-16 sm:py-24 bg-white border-b border-slate-200/80"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <ScrollReveal delayMs={0} direction="up" className="text-center max-w-3xl mx-auto">
-          <span className="inline-block px-3.5 py-1 rounded-full bg-kuota-palesky border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider mb-3">
+          <span className="inline-block px-3.5 py-1 rounded-full bg-sky-50 border border-sky-200/80 text-xs font-bold text-[#0391FD] uppercase tracking-wider mb-3">
             Audiencias y Participantes
           </span>
           <h2
             id="selector-heading"
-            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-kuota-deepnavy tracking-tight"
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0A192F] tracking-tight"
           >
             KUOTA conecta diferentes oportunidades
           </h2>
-          <p className="mt-3 text-base sm:text-lg font-semibold text-kuota-crayola">
+          <p className="mt-3 text-base sm:text-lg font-normal text-slate-600">
             Identifica tu rol en el ecosistema y accede a la experiencia diseñada para ti.
           </p>
         </ScrollReveal>
@@ -105,7 +105,7 @@ export const ExperienceSelectorSection: React.FC<ExperienceSelectorSectionProps>
             <motion.div
               whileHover={{ y: -8 }}
               transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="h-full rounded-[28px] border-2 border-[#059669]/30 bg-white p-6 sm:p-8 flex flex-col justify-between shadow-xl hover:shadow-2xl transition-shadow relative overflow-hidden group"
+              className="h-full rounded-[28px] border border-[#059669]/40 bg-white p-6 sm:p-8 flex flex-col justify-between shadow-xl hover:shadow-2xl transition-shadow relative overflow-hidden group"
             >
               <span className="absolute top-4 right-4 px-3 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
                 Piloto Activo

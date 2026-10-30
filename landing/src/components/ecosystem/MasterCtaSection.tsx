@@ -20,7 +20,7 @@ export const MasterCtaSection: React.FC<MasterCtaSectionProps> = ({
     <section
       id="cta-final"
       aria-labelledby="master-cta-heading"
-      className="py-16 sm:py-24 bg-gradient-to-b from-white to-kuota-palesky/70 border-b-2 border-kuota-deepnavy"
+      className="py-16 sm:py-24 bg-gradient-to-b from-white to-slate-50 border-b border-slate-200/80"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal delayMs={0} direction="up">

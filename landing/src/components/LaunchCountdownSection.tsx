@@ -125,10 +125,10 @@ export const LaunchCountdownSection: React.FC<LaunchCountdownSectionProps> = ({
     <section
       id="lanzamiento-oficial"
       aria-labelledby="launch-countdown-heading"
-      className="w-full py-10 sm:py-12 border-b-2 border-kuota-deepnavy bg-white/60"
+      className="w-full py-10 sm:py-12 border-b border-slate-200/80 bg-white/60"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-kuota-deepnavy text-white border-2 border-kuota-deepnavy shadow-navy-hard-lg p-6 sm:p-8 lg:p-10">
+        <div className="rounded-[32px] bg-[#0A192F] text-white border border-white/10 shadow-2xl p-6 sm:p-8 lg:p-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
             {/* Columna izquierda: Jerarquía editorial y CTAs */}
             <div className="lg:col-span-5 space-y-4 text-left">

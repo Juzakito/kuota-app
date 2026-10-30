@@ -57,22 +57,22 @@ export const LevelsSection: React.FC = () => {
     <section
       id="niveles"
       aria-labelledby="levels-heading"
-      className="py-14 sm:py-20 border-b-2 border-kuota-deepnavy"
+      className="py-16 sm:py-24 bg-white border-b border-slate-200/80"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <ScrollReveal delayMs={0} direction="up">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider mb-3">
-              <TrendingUp className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
+          <div className="text-center max-w-2xl mx-auto">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-sky-50 border border-sky-200/80 text-xs font-bold text-[#0391FD] uppercase tracking-wider mb-3 shadow-xs">
+              <TrendingUp className="w-3.5 h-3.5 text-[#0391FD]" aria-hidden="true" />
               Escalera de crecimiento
             </span>
             <h2
               id="levels-heading"
-              className="text-3xl sm:text-4xl font-extrabold text-kuota-deepnavy tracking-tight mb-3"
+              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0A192F] tracking-tight mb-3"
             >
               Niveles a tu medida
             </h2>
-            <p className="text-base sm:text-lg font-semibold text-kuota-crayola">
+            <p className="text-base sm:text-lg font-normal text-slate-600">
               Explora cómo mejoran tus condiciones conforme avanzas del Nivel 1 al Nivel 6.
             </p>
           </div>
@@ -83,7 +83,7 @@ export const LevelsSection: React.FC = () => {
           <div
             role="tablist"
             aria-label="Seleccionar nivel de crédito Kuota"
-            className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 max-w-3xl mx-auto mb-6"
+            className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 max-w-3xl mx-auto"
           >
             {LANDING_CREDIT_LEVELS.map((item, idx) => {
               const isActive = item.level === currentLevel.level;
@@ -97,16 +97,16 @@ export const LevelsSection: React.FC = () => {
                   aria-controls="level-active-panel"
                   onClick={() => handleSelectLevel(item)}
                   onKeyDown={(e) => handleKeyDown(e, idx)}
-                  className={`py-3 px-3 rounded-2xl border-2 border-kuota-deepnavy font-extrabold text-sm sm:text-base transition-all duration-200 flex flex-col items-center justify-center active:scale-95 ${
+                  className={`py-3 px-3 rounded-2xl border font-bold text-sm sm:text-base transition-all duration-200 flex flex-col items-center justify-center cursor-pointer active:scale-95 ${
                     isActive
-                      ? 'bg-kuota-dodger text-white shadow-navy-hard -translate-y-0.5'
-                      : 'bg-white/85 hover:bg-white text-kuota-deepnavy'
+                      ? 'bg-[#0391FD] text-white border-[#0391FD] shadow-md -translate-y-0.5'
+                      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/90'
                   }`}
                 >
-                  <span className="text-[11px] uppercase tracking-wider opacity-85">
+                  <span className="text-[11px] uppercase tracking-wider opacity-80">
                     Nivel
                   </span>
-                  <span className="text-lg sm:text-xl leading-none mt-0.5 tabular-nums">
+                  <span className="text-lg sm:text-xl leading-none mt-0.5 tabular-nums font-extrabold">
                     {item.level}
                   </span>
                 </button>
@@ -115,19 +115,19 @@ export const LevelsSection: React.FC = () => {
           </div>
         </ScrollReveal>
 
-        {/* Franja fija bajo el switcher (PRD §6.6) */}
+        {/* Franja fija bajo el switcher */}
         <ScrollReveal delayMs={120} direction="up">
-          <div className="max-w-3xl mx-auto mb-8 rounded-2xl bg-kuota-deepnavy text-white border-2 border-kuota-deepnavy px-5 py-3.5 shadow-navy-hard flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+          <div className="max-w-3xl mx-auto rounded-2xl bg-[#0A192F] text-white border border-white/10 px-5 py-3.5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-kuota-dodger shrink-0" aria-hidden="true" />
-              <span className="text-sm sm:text-base font-medium">
-                <strong className="font-extrabold text-kuota-palesky">
-                  5% de interés SIEMPRE
+              <Sparkles className="w-5 h-5 text-[#38BDF8] shrink-0" aria-hidden="true" />
+              <span className="text-xs sm:text-sm font-medium">
+                <strong className="font-extrabold text-[#38BDF8]">
+                  ~5% de interés flat bimestral
                 </strong>
-                , con límite flat bimestral.
+                , transparente y sin penalidades ocultas.
               </span>
             </div>
-            <span className="text-sm sm:text-base font-bold italic text-kuota-palesky">
+            <span className="text-xs sm:text-sm font-bold text-slate-300">
               Tú eliges en cuántas kuotas pagar.
             </span>
           </div>
@@ -138,18 +138,18 @@ export const LevelsSection: React.FC = () => {
           id="level-active-panel"
           role="tabpanel"
           aria-labelledby={`level-tab-${currentLevel.level}`}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch pt-2"
         >
           {/* Card central que cambia según el nivel */}
           <ScrollReveal delayMs={150} direction="left" className="lg:col-span-6">
-            <div className="h-full rounded-3xl bg-white border-2 border-kuota-deepnavy p-6 sm:p-8 shadow-navy-hard-lg flex flex-col justify-between">
+            <div className="h-full rounded-[28px] bg-white border border-slate-200/90 p-6 sm:p-8 shadow-xl flex flex-col justify-between">
               <div key={currentLevel.level} className="animate-fadeIn">
-                <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b-2 border-kuota-palesky">
+                <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
                   <div>
-                    <span className="text-xs font-extrabold uppercase tracking-wider text-kuota-crayola">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                       Condiciones del nivel seleccionado
                     </span>
-                    <h3 className="text-2xl sm:text-3xl font-extrabold text-kuota-deepnavy">
+                    <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0A192F]">
                       Nivel {currentLevel.level}
                     </h3>
                   </div>
@@ -158,76 +158,76 @@ export const LevelsSection: React.FC = () => {
                       backgroundColor: currentLevel.badgeBgHex,
                       color: currentLevel.badgeTextHex,
                     }}
-                    className="px-3.5 py-1.5 rounded-xl border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold transition-colors duration-300"
+                    className="px-3.5 py-1.5 rounded-full border border-slate-200/80 text-xs sm:text-sm font-bold transition-colors duration-300 shadow-xs"
                   >
                     Nivel {currentLevel.level} de 6
                   </span>
                 </div>
 
                 {/* 3 indicadores clave */}
-                <div className="space-y-5">
-                  <div className="rounded-2xl bg-kuota-palesky/70 border-2 border-kuota-deepnavy p-4">
+                <div className="space-y-4">
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-4">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-kuota-deepnavy">
-                        <Wallet className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">
+                        <Wallet className="w-4 h-4 text-[#0391FD]" aria-hidden="true" />
                         Monto de compras
                       </span>
-                      <span className="text-xs font-bold text-kuota-crayola">
+                      <span className="text-xs font-medium text-slate-500">
                         Línea de mercadería
                       </span>
                     </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-kuota-deepnavy tracking-tight tabular-nums">
+                    <div className="text-2xl sm:text-3xl font-extrabold text-[#0A192F] tracking-tight tabular-nums">
                       {currentLevel.purchaseAmount}
                     </div>
                   </div>
 
-                  <div className="rounded-2xl bg-white border-2 border-kuota-deepnavy p-4">
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-4">
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-kuota-deepnavy">
-                        <Percent className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">
+                        <Percent className="w-4 h-4 text-[#0391FD]" aria-hidden="true" />
                         Cuota inicial
                       </span>
-                      <span className="text-2xl font-extrabold text-kuota-deepnavy tabular-nums">
+                      <span className="text-xl sm:text-2xl font-extrabold text-[#0A192F] tabular-nums">
                         {currentLevel.downPayment}
                       </span>
                     </div>
-                    <div className="w-full h-3 rounded-full bg-kuota-palesky border border-kuota-deepnavy overflow-hidden">
+                    <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
                       <div
-                        className="h-full bg-kuota-crayola transition-all duration-500"
+                        className="h-full bg-[#0391FD] transition-all duration-500"
                         style={{ width: `${currentLevel.downPaymentPercent}%` }}
                       />
                     </div>
-                    <p className="text-xs font-bold text-kuota-crayola mt-1.5">
+                    <p className="text-xs font-medium text-slate-500 mt-1.5">
                       {currentLevel.downPaymentPercent === 0
                         ? '¡Sin cuota inicial en el Nivel 6!'
                         : 'Disminuye 10% en cada nivel que subes'}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl bg-white border-2 border-kuota-deepnavy p-4">
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-4">
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-kuota-deepnavy">
-                        <Calendar className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">
+                        <Calendar className="w-4 h-4 text-[#0391FD]" aria-hidden="true" />
                         Plazo para pagar
                       </span>
-                      <span className="text-xl sm:text-2xl font-extrabold text-kuota-dodger tabular-nums">
+                      <span className="text-xl sm:text-2xl font-extrabold text-[#0391FD] tabular-nums">
                         {currentLevel.maxTerm}
                       </span>
                     </div>
-                    <div className="w-full h-3 rounded-full bg-kuota-palesky border border-kuota-deepnavy overflow-hidden">
+                    <div className="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
                       <div
-                        className="h-full bg-kuota-dodger transition-all duration-500"
+                        className="h-full bg-[#10B981] transition-all duration-500"
                         style={{ width: `${termBarWidthPercent}%` }}
                       />
                     </div>
-                    <p className="text-xs font-bold text-kuota-crayola mt-1.5">
+                    <p className="text-xs font-medium text-slate-500 mt-1.5">
                       Más tiempo para vender tu mercadería y pagar con holgura
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-kuota-deepnavy/15 text-xs sm:text-sm font-bold text-kuota-deepnavy">
+              <div className="mt-6 pt-4 border-t border-slate-100 text-xs sm:text-sm font-semibold text-slate-600">
                 {currentLevel.summaryTag}
               </div>
             </div>
@@ -235,25 +235,25 @@ export const LevelsSection: React.FC = () => {
 
           {/* Gráfico de escalera ascendente de 6 niveles */}
           <ScrollReveal delayMs={220} direction="right" className="lg:col-span-6">
-            <div className="h-full rounded-3xl bg-white border-2 border-kuota-deepnavy p-6 sm:p-8 shadow-navy-hard-lg flex flex-col justify-between">
+            <div className="h-full rounded-[28px] bg-white border border-slate-200/90 p-6 sm:p-8 shadow-xl flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <h3 className="text-lg sm:text-xl font-extrabold text-kuota-deepnavy">
+                  <h3 className="text-lg sm:text-xl font-extrabold text-[#0A192F]">
                     Escalera ascendente de 6 niveles
                   </h3>
-                  <span className="text-xs font-bold text-kuota-crayola">
+                  <span className="text-xs font-medium text-slate-500">
                     Toca cualquier peldaño
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm font-semibold text-kuota-crayola mb-6">
-                  Cada nivel tiene su propio tono azul de marca. Al subir de nivel, tu cuota inicial baja y tu plazo crece.
+                <p className="text-xs sm:text-sm font-normal text-slate-600 mb-6">
+                  Cada nivel desbloquea mayor cupo comercial: tu cuota inicial disminuye y tu plazo de pago se amplía.
                 </p>
               </div>
 
               <div
                 role="group"
                 aria-label="Gráfico de escalera de niveles 1 a 6"
-                className="h-64 sm:h-72 grid grid-cols-6 gap-2.5 sm:gap-3.5 items-end pt-6 pb-2 px-2 rounded-2xl bg-kuota-palesky/55 border-2 border-kuota-deepnavy"
+                className="h-64 sm:h-72 grid grid-cols-6 gap-2 sm:gap-3 items-end pt-6 pb-2 px-2 rounded-2xl bg-slate-50 border border-slate-200/80"
               >
                 {LANDING_CREDIT_LEVELS.map((stepItem) => {
                   const isStepActive = stepItem.level === currentLevel.level;
@@ -264,17 +264,17 @@ export const LevelsSection: React.FC = () => {
                       onClick={() => handleSelectLevel(stepItem)}
                       aria-label={`Nivel ${stepItem.level}: ${stepItem.purchaseAmount}, inicial ${stepItem.downPayment}, plazo ${stepItem.maxTerm}`}
                       aria-pressed={isStepActive}
-                      className="h-full flex flex-col justify-end items-center group focus:outline-none"
+                      className="h-full flex flex-col justify-end items-center group focus:outline-none cursor-pointer"
                     >
                       <span
-                        className={`text-[10px] sm:text-xs font-extrabold mb-1.5 text-center leading-tight transition-transform duration-200 ${
+                        className={`text-[10px] sm:text-xs font-bold mb-1.5 text-center leading-tight transition-transform duration-200 ${
                           isStepActive
-                            ? 'text-kuota-deepnavy scale-110'
-                            : 'text-kuota-deepnavy/75'
+                            ? 'text-[#0391FD] scale-110 font-extrabold'
+                            : 'text-slate-500'
                         }`}
                       >
                         {stepItem.downPayment}
-                        <span className="block text-[9px] font-bold opacity-80">
+                        <span className="block text-[9px] font-normal opacity-75">
                           inic.
                         </span>
                       </span>
@@ -284,15 +284,15 @@ export const LevelsSection: React.FC = () => {
                           height: `${stepItem.stepHeightPercent}%`,
                           backgroundColor: stepItem.barColorHex,
                         }}
-                        className={`w-full rounded-t-xl border-2 border-kuota-deepnavy transition-all duration-300 flex flex-col items-center justify-between py-2 ${
+                        className={`w-full rounded-t-xl transition-all duration-300 flex flex-col items-center justify-between py-2 ${
                           isStepActive
-                            ? 'ring-4 ring-kuota-dodger/45 -translate-y-1 shadow-navy-hard'
-                            : 'opacity-80 hover:opacity-100'
+                            ? 'ring-4 ring-[#0391FD]/30 -translate-y-1 shadow-md'
+                            : 'opacity-85 hover:opacity-100'
                         }`}
                       >
                         <span
                           className={`text-xs sm:text-sm font-extrabold ${
-                            stepItem.level >= 3 ? 'text-white' : 'text-kuota-deepnavy'
+                            stepItem.level >= 3 ? 'text-white' : 'text-[#0A192F]'
                           }`}
                         >
                           N{stepItem.level}
@@ -300,8 +300,8 @@ export const LevelsSection: React.FC = () => {
                         <span
                           className={`text-[9px] sm:text-[10px] font-bold px-1 text-center leading-none ${
                             stepItem.level >= 3
-                              ? 'text-kuota-palesky'
-                              : 'text-kuota-deepnavy'
+                              ? 'text-sky-200'
+                              : 'text-slate-700'
                           }`}
                         >
                           {stepItem.maxTermDays}d
@@ -312,17 +312,17 @@ export const LevelsSection: React.FC = () => {
                 })}
               </div>
 
-              <div className="mt-6 overflow-x-auto rounded-2xl border-2 border-kuota-deepnavy">
+              <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200/90">
                 <table className="w-full text-left border-collapse text-xs sm:text-sm">
                   <thead>
-                    <tr className="bg-kuota-deepnavy text-white font-extrabold">
+                    <tr className="bg-[#0A192F] text-white font-bold">
                       <th className="py-2.5 px-3">Nivel</th>
                       <th className="py-2.5 px-3">Monto de compras</th>
                       <th className="py-2.5 px-3">Cuota inicial</th>
                       <th className="py-2.5 px-3">Plazo para pagar</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-kuota-deepnavy/20 bg-white">
+                  <tbody className="divide-y divide-slate-100 bg-white">
                     {LANDING_CREDIT_LEVELS.map((row) => {
                       const isRowActive = row.level === currentLevel.level;
                       return (
@@ -331,8 +331,8 @@ export const LevelsSection: React.FC = () => {
                           onClick={() => handleSelectLevel(row)}
                           className={`cursor-pointer transition-colors duration-150 ${
                             isRowActive
-                              ? 'bg-kuota-palesky font-extrabold text-kuota-deepnavy'
-                              : 'hover:bg-kuota-palesky/40 font-semibold text-kuota-deepnavy/85'
+                              ? 'bg-sky-50 font-bold text-[#0391FD]'
+                              : 'hover:bg-slate-50 font-medium text-slate-700'
                           }`}
                         >
                           <td className="py-2 px-3">{row.level}</td>

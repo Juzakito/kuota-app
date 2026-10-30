@@ -109,20 +109,20 @@ export const EcosystemFlowDiagram: React.FC = () => {
     <section
       id="diagrama"
       aria-labelledby="diagram-heading"
-      className="py-16 sm:py-24 bg-kuota-palesky/35 border-b-2 border-kuota-deepnavy"
+      className="py-16 sm:py-24 bg-slate-50/70 border-b border-slate-200/80"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <ScrollReveal delayMs={0} direction="up" className="text-center max-w-3xl mx-auto">
-          <span className="inline-block px-3.5 py-1 rounded-full bg-white border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider mb-3">
+          <span className="inline-block px-3.5 py-1 rounded-full bg-white border border-slate-200/90 text-xs font-bold text-[#0A192F] uppercase tracking-wider mb-3 shadow-xs">
             Arquitectura Operativa
           </span>
           <h2
             id="diagram-heading"
-            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-kuota-deepnavy tracking-tight"
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0A192F] tracking-tight"
           >
             Cómo funciona el Ecosistema KUOTA
           </h2>
-          <p className="mt-3 text-base sm:text-lg font-semibold text-kuota-crayola">
+          <p className="mt-3 text-base sm:text-lg font-normal text-slate-600">
             KUOTA no es solo una app de pagos: es la plataforma que articula la relación comercial y financiera entre compradores y comercios.
           </p>
         </ScrollReveal>

@@ -24,20 +24,20 @@ export const ColocacionesRecaudacionSection: React.FC = () => {
     <section
       id="colocaciones"
       aria-labelledby="colocaciones-heading"
-      className="py-16 sm:py-24 bg-white border-b-2 border-kuota-deepnavy"
+      className="py-16 sm:py-24 bg-white border-b border-slate-200/80"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <ScrollReveal delayMs={0} direction="up" className="text-center max-w-3xl mx-auto">
-          <span className="inline-block px-3.5 py-1 rounded-full bg-kuota-palesky border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider mb-3">
+          <span className="inline-block px-3.5 py-1 rounded-full bg-sky-50 border border-sky-200/80 text-xs font-bold text-[#0391FD] uppercase tracking-wider mb-3">
             Operación Financiera y Gestión
           </span>
           <h2
             id="colocaciones-heading"
-            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-kuota-deepnavy tracking-tight"
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0A192F] tracking-tight"
           >
             Colocaciones y Recaudación Trazable
           </h2>
-          <p className="mt-3 text-base sm:text-lg font-semibold text-kuota-crayola">
+          <p className="mt-3 text-base sm:text-lg font-normal text-slate-600">
             El motor de KUOTA organiza el ciclo completo: desde el registro del financiamiento comercial hasta la conciliación de cada cuota.
           </p>
         </ScrollReveal>

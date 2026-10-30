@@ -92,20 +92,20 @@ export const MerchantOperationDemo: React.FC<MerchantOperationDemoProps> = ({
     <section
       id="operacion-comercio"
       aria-labelledby="merchant-op-heading"
-      className="py-16 sm:py-24 bg-kuota-palesky/40 border-b-2 border-kuota-deepnavy"
+      className="py-16 sm:py-24 bg-slate-50/70 border-b border-slate-200/80"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <ScrollReveal delayMs={0} direction="up" className="max-w-3xl">
-          <span className="inline-block px-3.5 py-1 rounded-full bg-white border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white border border-slate-200/80 text-xs font-bold text-[#0A192F] uppercase tracking-wider mb-3 shadow-xs">
             Para Comercios y Emprendedores
           </span>
           <h2
             id="merchant-op-heading"
-            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-kuota-deepnavy tracking-tight"
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0A192F] tracking-tight"
           >
             Así opera KUOTA en el día a día de tu negocio
           </h2>
-          <p className="mt-3 text-base sm:text-lg font-semibold text-kuota-crayola">
+          <p className="mt-3 text-base sm:text-lg font-normal text-slate-600">
             Desde la atención en mostrador hasta la conciliación final de cada cuota.
           </p>
         </ScrollReveal>

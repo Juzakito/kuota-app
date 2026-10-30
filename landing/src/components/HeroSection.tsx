@@ -134,7 +134,7 @@ export const HeroSection: React.FC = () => {
     <section
       id="hero-compradores"
       aria-labelledby="hero-heading"
-      className="relative overflow-hidden pt-8 pb-16 sm:py-16 lg:py-20 border-b-2 border-kuota-deepnavy bg-grid-pattern"
+      className="relative overflow-hidden pt-8 pb-16 sm:py-16 lg:py-20 border-b border-slate-200/80 bg-grid-pattern"
     >
       {/* Iluminación ambiental discreta */}
       <div
@@ -147,12 +147,12 @@ export const HeroSection: React.FC = () => {
           {/* Columna Izquierda: Copy de alto impacto y CTAs con aparición progresiva */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
             <ScrollReveal delayMs={0} direction="up">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm mb-5">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 border border-slate-200/80 shadow-sm mb-5 backdrop-blur-sm">
                 <span
-                  className="w-2.5 h-2.5 rounded-full bg-kuota-dodger animate-pulse"
+                  className="w-2.5 h-2.5 rounded-full bg-[#0391FD] animate-pulse"
                   aria-hidden="true"
                 />
-                <span className="text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider">
+                <span className="text-xs font-bold text-[#0A192F] uppercase tracking-wider">
                   Kuota para Emprendedores y Negocios
                 </span>
               </div>
@@ -161,19 +161,19 @@ export const HeroSection: React.FC = () => {
             <ScrollReveal delayMs={80} direction="up">
               <h1
                 id="hero-heading"
-                className="text-4xl sm:text-5xl lg:text-[3.4rem] font-extrabold text-kuota-deepnavy tracking-tight leading-[1.06] mb-5"
+                className="text-4xl sm:text-5xl lg:text-[3.4rem] font-black text-[#0A192F] tracking-tight leading-[1.06] mb-5"
               >
                 Financia tu crecimiento{' '}
-                <span className="text-kuota-dodger underline decoration-kuota-deepnavy decoration-4 underline-offset-4">
+                <span className="text-[#0391FD] underline decoration-[#0A192F]/20 decoration-4 underline-offset-4">
                   sin apuros
                 </span>
               </h1>
             </ScrollReveal>
 
             <ScrollReveal delayMs={160} direction="up">
-              <p className="text-lg sm:text-xl font-semibold text-kuota-crayola leading-relaxed mb-6 max-w-xl">
+              <p className="text-base sm:text-lg font-medium text-slate-600 leading-relaxed mb-6 max-w-xl">
                 Confiamos en ti, emprendedor, que cada día con esfuerzo saca adelante a su familia.{' '}
-                <strong className="text-kuota-deepnavy font-extrabold">
+                <strong className="text-[#0A192F] font-bold">
                   Justos somos más.
                 </strong>{' '}
                 Crece tu negocio con Kuota.
@@ -183,16 +183,16 @@ export const HeroSection: React.FC = () => {
             {/* Píldoras de propuesta de valor */}
             <ScrollReveal delayMs={230} direction="up">
               <div className="flex flex-wrap gap-2 mb-7">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold text-kuota-deepnavy shadow-sm">
-                  <Sparkles className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs sm:text-sm font-bold text-slate-800 shadow-sm">
+                  <Sparkles className="w-4 h-4 text-[#0391FD]" aria-hidden="true" />
                   En 3 clics
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold text-kuota-deepnavy shadow-sm">
-                  <ShieldCheck className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
-                  5% de interés
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs sm:text-sm font-bold text-slate-800 shadow-sm">
+                  <ShieldCheck className="w-4 h-4 text-[#10B981]" aria-hidden="true" />
+                  ~5% de interés
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold text-kuota-deepnavy shadow-sm">
-                  <CheckCircle2 className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs sm:text-sm font-bold text-slate-800 shadow-sm">
+                  <CheckCircle2 className="w-4 h-4 text-[#0391FD]" aria-hidden="true" />
                   Sin papeleo ni Infocorp
                 </span>
               </div>
@@ -232,27 +232,27 @@ export const HeroSection: React.FC = () => {
                 sizeClassName="w-60 h-60 sm:w-80 sm:h-80 lg:w-[21rem] lg:h-[21rem]"
                 objectPosition="center center"
                 topBadge={
-                  <div className="rounded-2xl border-2 border-kuota-deepnavy bg-white px-3 py-1.5 sm:px-3.5 sm:py-2 shadow-navy-hard flex items-center gap-2">
-                    <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-kuota-dodger text-white flex items-center justify-center shrink-0">
+                  <div className="rounded-2xl border border-slate-200/80 bg-white/95 px-3 py-1.5 sm:px-3.5 sm:py-2 shadow-lg backdrop-blur-md flex items-center gap-2">
+                    <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-[#0391FD] text-white flex items-center justify-center shrink-0">
                       <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
                     </span>
                     <div className="text-left">
-                      <span className="block text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-kuota-crayola">
+                      <span className="block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500">
                         Compra financiada
                       </span>
-                      <span className="text-[11px] sm:text-sm font-extrabold text-kuota-deepnavy">
-                        3 kuotas · 5% flat
+                      <span className="text-[11px] sm:text-sm font-bold text-[#0A192F]">
+                        3 kuotas · ~5% flat
                       </span>
                     </div>
                   </div>
                 }
                 floatingRightBadge={
-                  <div className="rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white px-3 py-1.5 sm:px-3.5 sm:py-2.5 shadow-navy-hard">
-                    <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-kuota-palesky">
-                      <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-kuota-dodger" aria-hidden="true" />
+                  <div className="rounded-2xl border border-white/10 bg-[#0A192F]/95 text-white px-3 py-1.5 sm:px-3.5 sm:py-2.5 shadow-xl backdrop-blur-md">
+                    <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-300">
+                      <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#0391FD]" aria-hidden="true" />
                       <span>Calendario claro</span>
                     </div>
-                    <div className="text-[11px] sm:text-sm font-extrabold text-white mt-0.5 tabular-nums">
+                    <div className="text-[11px] sm:text-sm font-bold text-white mt-0.5 tabular-nums">
                       Día 20 · Día 40 · Día 60
                     </div>
                   </div>
@@ -269,41 +269,41 @@ export const HeroSection: React.FC = () => {
                   <div
                     onTouchStart={handleTouchStart}
                     onTouchEnd={handleTouchEnd}
-                    className="h-full rounded-2xl border-2 border-kuota-deepnavy bg-white p-4 shadow-navy-hard-lg flex flex-col justify-between"
+                    className="h-full rounded-[24px] border border-slate-200/80 bg-white p-4 sm:p-5 shadow-lg flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1.5 mb-2">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-kuota-palesky border border-kuota-deepnavy text-[10px] font-extrabold uppercase text-kuota-deepnavy">
-                          <Layers className="w-3 h-3 text-kuota-dodger" aria-hidden="true" />
-                          Datos demostrativos
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 border border-sky-200/80 text-[10px] font-bold uppercase text-[#0391FD]">
+                          <Layers className="w-3 h-3 text-[#0391FD]" aria-hidden="true" />
+                          Demostrativo
                         </span>
-                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-kuota-dodger text-white">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#0391FD] text-white">
                           {currentNarrative.statusBadge}
                         </span>
                       </div>
 
                       <div key={currentNarrative.step} className="animate-fadeIn">
-                        <span className="block text-[11px] font-extrabold uppercase tracking-wider text-kuota-crayola">
+                        <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
                           {currentNarrative.tag}
                         </span>
-                        <h2 className="text-sm sm:text-base font-extrabold text-kuota-deepnavy leading-snug mt-0.5">
+                        <h2 className="text-sm sm:text-base font-bold text-[#0A192F] leading-snug mt-0.5">
                           {currentNarrative.title}
                         </h2>
-                        <p className="text-xs font-semibold text-kuota-deepnavy/75 mt-0.5">
+                        <p className="text-xs font-normal text-slate-500 mt-0.5">
                           {currentNarrative.detail}
                         </p>
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-2.5 border-t border-kuota-deepnavy/15">
+                    <div className="mt-3 pt-2.5 border-t border-slate-100">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[11px] font-bold text-kuota-crayola truncate">
+                        <span className="text-[11px] font-medium text-slate-500 truncate">
                           {currentNarrative.installmentText}
                         </span>
                         <AnimatedNumber
                           value={currentNarrative.amountSoles}
                           prefix="S/ "
-                          className="text-base sm:text-lg font-extrabold text-kuota-deepnavy shrink-0"
+                          className="text-base sm:text-lg font-black text-[#0A192F] shrink-0"
                         />
                       </div>
 
@@ -323,10 +323,10 @@ export const HeroSection: React.FC = () => {
                               aria-selected={isActive}
                               aria-label={item.tag}
                               onClick={() => handleSelectNarrativeStep(idx)}
-                              className={`min-h-[32px] rounded-lg border text-xs font-extrabold touch-manipulation transition-all duration-200 active:scale-95 ${
+                              className={`min-h-[32px] rounded-xl border text-xs font-bold touch-manipulation transition-all duration-200 active:scale-95 cursor-pointer ${
                                 isActive
-                                  ? 'bg-kuota-dodger text-white border-kuota-deepnavy shadow-sm'
-                                  : 'bg-kuota-palesky/60 text-kuota-deepnavy border-kuota-deepnavy/30 hover:bg-kuota-palesky'
+                                  ? 'bg-[#0391FD] text-white border-[#0391FD] shadow-sm'
+                                  : 'bg-slate-50 text-slate-600 border-slate-200/80 hover:bg-slate-100'
                               }`}
                             >
                               {item.step}
@@ -341,33 +341,33 @@ export const HeroSection: React.FC = () => {
                 {/* Tarjeta de Nivel Kuota (IMG-HERO-02 preservada) */}
                 <FinancialCardMotion
                   maxTiltDeg={2.2}
-                  className="sm:col-span-5 rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white p-3.5 shadow-navy-hard-lg flex flex-col justify-between"
+                  className="sm:col-span-5 rounded-[24px] border border-white/10 bg-[#0A192F] text-white p-4 shadow-xl flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-2">
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/10 text-white text-[10px] font-bold uppercase">
-                        <Smartphone className="w-3 h-3 text-kuota-dodger" aria-hidden="true" />
-                        IMG-HERO-02
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-white text-[10px] font-bold uppercase">
+                        <Smartphone className="w-3 h-3 text-[#0391FD]" aria-hidden="true" />
+                        Niveles
                       </span>
-                      <span className="text-[10px] font-extrabold text-kuota-deepnavy bg-kuota-palesky px-1.5 py-0.5 rounded">
-                        Nivel activo
+                      <span className="text-[10px] font-bold text-[#0A192F] bg-white px-2 py-0.5 rounded-full">
+                        Activo
                       </span>
                     </div>
 
-                    <div className="text-[11px] text-kuota-palesky font-semibold">
-                      Tarjeta de Nivel Kuota
+                    <div className="text-[11px] text-slate-300 font-medium">
+                      Línea Comercial
                     </div>
-                    <div className="text-sm sm:text-base font-extrabold tracking-tight tabular-nums text-white mt-0.5">
+                    <div className="text-sm sm:text-base font-black tracking-tight tabular-nums text-white mt-0.5">
                       S/300 – S/1,000
                     </div>
 
-                    <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden my-2">
-                      <div className="h-full w-3/4 rounded-full bg-kuota-dodger transition-all duration-500" />
+                    <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden my-2.5">
+                      <div className="h-full w-3/4 rounded-full bg-[#0391FD] transition-all duration-500" />
                     </div>
                   </div>
 
-                  <p className="text-[10px] font-bold text-kuota-palesky leading-tight">
-                    Financia en 3 clics · Subes hasta S/ 30,000 (Nivel 6)
+                  <p className="text-[10px] font-medium text-slate-300 leading-tight">
+                    Hasta S/ 30,000 en Nivel 6 con cumplimiento récord.
                   </p>
                 </FinancialCardMotion>
               </div>

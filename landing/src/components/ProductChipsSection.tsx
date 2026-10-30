@@ -833,19 +833,19 @@ export const ProductChipsSection: React.FC = () => {
         <ScrollReveal delayMs={100} direction="up">
           <div
             id="compra-en-kuotas"
-            className="rounded-3xl bg-white border-2 border-kuota-deepnavy p-6 sm:p-8 lg:p-10 shadow-navy-hard-lg"
+            className="rounded-[32px] bg-white border border-slate-200/90 p-6 sm:p-8 lg:p-10 shadow-xl"
           >
             {/* Cabecera + Selector de monto demostrativo + Reproductor de escenas */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 pb-6 border-b-2 border-kuota-palesky">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 pb-6 border-b border-slate-100">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-kuota-palesky border border-kuota-deepnavy text-[11px] font-extrabold uppercase tracking-wider text-kuota-deepnavy mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-[11px] font-bold uppercase tracking-wider text-[#0391FD] mb-2 shadow-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-[#0391FD]" aria-hidden="true" />
                   <span>Sección: Compra en Kuotas · 6 Escenas · Datos demostrativos</span>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-kuota-deepnavy tracking-tight">
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0A192F] tracking-tight">
                   Así funciona una compra financiada paso a paso
                 </h3>
-                <p className="text-sm sm:text-base font-semibold text-kuota-crayola mt-1">
+                <p className="text-sm sm:text-base font-normal text-slate-600 mt-1">
                   Recorre las 6 escenas o cambia el monto demostrativo para ver cómo se calculan tus kuotas en tiempo real.
                 </p>
               </div>
@@ -855,7 +855,7 @@ export const ProductChipsSection: React.FC = () => {
                 <div
                   role="group"
                   aria-label="Monto de lote demostrativo"
-                  className="inline-flex items-center rounded-xl bg-kuota-palesky/70 border-2 border-kuota-deepnavy p-1 gap-1"
+                  className="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 p-1 gap-1"
                 >
                   {DEMO_LOT_AMOUNTS.map((amt) => {
                     const isAmtActive = demoAmountSoles === amt;
@@ -882,7 +882,7 @@ export const ProductChipsSection: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleStartAutoDemo}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-kuota-dodger hover:bg-kuota-crayola text-white font-extrabold text-xs sm:text-sm border-2 border-kuota-deepnavy shadow-navy-hard transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0391FD] hover:bg-[#0277D4] text-white font-bold text-xs sm:text-sm shadow-xs transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                 >
                   <Play className="w-4 h-4" aria-hidden="true" />
                   <span>{isAutoPlaying ? 'Reproduciendo 6 escenas...' : 'Simular las 6 escenas'}</span>
@@ -891,7 +891,7 @@ export const ProductChipsSection: React.FC = () => {
                   type="button"
                   onClick={() => handleSelectScene(1)}
                   aria-label="Reiniciar demostración a la escena 1"
-                  className="p-2.5 rounded-xl bg-kuota-palesky/70 hover:bg-kuota-palesky text-kuota-deepnavy border-2 border-kuota-deepnavy transition-colors"
+                  className="p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" aria-hidden="true" />
                 </button>
@@ -915,17 +915,17 @@ export const ProductChipsSection: React.FC = () => {
                       role="tab"
                       aria-selected={isCurrent}
                       onClick={() => handleSelectScene(item.scene)}
-                      className={`text-left px-3 py-2.5 rounded-xl border-2 font-extrabold text-xs transition-all duration-200 flex items-center justify-between gap-1.5 ${
+                      className={`text-left px-3.5 py-2.5 rounded-2xl border font-bold text-xs transition-all duration-200 flex items-center justify-between gap-1.5 cursor-pointer ${
                         isCurrent
-                          ? 'bg-kuota-deepnavy text-white border-kuota-deepnavy shadow-sm -translate-y-0.5'
+                          ? 'bg-[#0A192F] text-white border-[#0A192F] shadow-sm -translate-y-0.5'
                           : isCompleted
-                            ? 'bg-kuota-palesky text-kuota-deepnavy border-kuota-deepnavy'
-                            : 'bg-white hover:bg-kuota-palesky/40 text-kuota-deepnavy/75 border-kuota-deepnavy/35'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80'
+                            : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200/80'
                       }`}
                     >
                       <span className="truncate">{item.label}</span>
                       {isCompleted && (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-kuota-dodger shrink-0" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
                       )}
                     </button>
                   );
@@ -950,7 +950,7 @@ export const ProductChipsSection: React.FC = () => {
               className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch"
             >
               {/* Columna Izquierda: Tarjeta de operación + desglose animado */}
-              <div className="lg:col-span-5 rounded-2xl bg-kuota-deepnavy text-white p-5 sm:p-6 flex flex-col justify-between border-2 border-kuota-deepnavy">
+              <div className="lg:col-span-5 rounded-[24px] bg-[#0A192F] text-white p-5 sm:p-6 flex flex-col justify-between border border-white/10 shadow-xl">
                 <div>
                   <div className="flex items-center justify-between gap-2 text-xs font-bold text-kuota-palesky mb-3">
                     <span className="inline-flex items-center gap-1.5">
@@ -1038,14 +1038,14 @@ export const ProductChipsSection: React.FC = () => {
               </div>
 
               {/* Columna Derecha: Calendario de Kuotas (`InstallmentTimeline`) + Seguimiento */}
-              <div className="lg:col-span-7 rounded-2xl bg-kuota-palesky/45 border-2 border-kuota-deepnavy p-5 sm:p-6 flex flex-col justify-between">
+              <div className="lg:col-span-7 rounded-[24px] bg-slate-50 border border-slate-200/90 p-5 sm:p-6 flex flex-col justify-between shadow-xs">
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-kuota-deepnavy uppercase tracking-wider">
-                      <Calendar className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                    <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#0A192F] uppercase tracking-wider">
+                      <Calendar className="w-4 h-4 text-[#0391FD]" aria-hidden="true" />
                       Calendario y seguimiento de kuotas
                     </span>
-                    <span className="text-xs font-extrabold px-2.5 py-1 rounded-full bg-white border border-kuota-deepnavy text-kuota-deepnavy">
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 shadow-xs">
                       Plazo hasta 60 días · Nivel 3
                     </span>
                   </div>
@@ -1058,7 +1058,7 @@ export const ProductChipsSection: React.FC = () => {
                   />
 
                   {/* Barra de seguimiento de pagos (destacada en Escena 6) */}
-                  <div className="mt-4 rounded-xl bg-white border-2 border-kuota-deepnavy p-3.5">
+                  <div className="mt-4 rounded-xl bg-white border border-slate-200/90 p-3.5 shadow-xs">
                     <PaymentProgress
                       label="Progreso de cumplimiento del lote"
                       currentStep={demoScene === 6 ? 3 : demoScene >= 5 ? 1 : 0}
@@ -1075,7 +1075,7 @@ export const ProductChipsSection: React.FC = () => {
                 </div>
 
                 {/* Pie explicativo del simulador */}
-                <div className="mt-5 pt-3.5 border-t border-kuota-deepnavy/15 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-kuota-deepnavy">
+                <div className="mt-5 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-slate-600">
                   <span>
                     * Datos demostrativos referenciales para un lote de S/ {demoAmountSoles.toLocaleString('es-PE')} en Nivel 3.
                   </span>
@@ -1086,7 +1086,7 @@ export const ProductChipsSection: React.FC = () => {
                         demoScene < INSTALLMENT_SCENES.length ? demoScene + 1 : 1
                       )
                     }
-                    className="inline-flex items-center gap-1 text-kuota-dodger hover:text-kuota-deepnavy font-extrabold transition-colors"
+                    className="inline-flex items-center gap-1 text-[#0391FD] hover:text-[#0A192F] font-bold transition-colors cursor-pointer"
                   >
                     <span>
                       {demoScene < INSTALLMENT_SCENES.length
@@ -1103,15 +1103,15 @@ export const ProductChipsSection: React.FC = () => {
 
         {/* BLOQUE 3 (§5): SECCIÓN BENEFICIOS PARA COMPRADORES — COMPOSICIÓN EDITORIAL DE 2 COLUMNAS (Escenas A–E) */}
         <ScrollReveal delayMs={120} direction="up">
-          <div className="rounded-3xl bg-white/85 border-2 border-kuota-deepnavy p-6 sm:p-8 lg:p-10 shadow-navy-hard-lg">
+          <div className="rounded-[32px] bg-white border border-slate-200/80 p-6 sm:p-8 lg:p-10 shadow-xl">
             {/* Selector superior de Escenas Editoriales A–E */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b-2 border-kuota-palesky">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-100">
               <div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-kuota-deepnavy text-white text-[11px] font-extrabold uppercase tracking-wider mb-2">
-                  <Layers className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0A192F] text-white text-[11px] font-bold uppercase tracking-wider mb-2">
+                  <Layers className="w-3.5 h-3.5 text-[#0391FD]" aria-hidden="true" />
                   Experiencia para Compradores · 5 Escenas Editoriales
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-kuota-deepnavy tracking-tight">
+                <h3 className="text-2xl sm:text-3xl font-black text-[#0A192F] tracking-tight">
                   Beneficios pensados para el ritmo real de tu negocio
                 </h3>
               </div>
@@ -1130,10 +1130,10 @@ export const ProductChipsSection: React.FC = () => {
                       role="tab"
                       aria-selected={isSelected}
                       onClick={() => handleSelectEditorial(scene.id)}
-                      className={`px-3.5 py-2 rounded-xl border-2 border-kuota-deepnavy text-xs font-extrabold transition-all duration-200 ${
+                      className={`px-4 py-2 rounded-full border text-xs font-bold transition-all duration-200 cursor-pointer ${
                         isSelected
-                          ? 'bg-kuota-dodger text-white shadow-navy-hard -translate-y-0.5'
-                          : 'bg-kuota-palesky/60 hover:bg-kuota-palesky text-kuota-deepnavy'
+                          ? 'bg-[#0391FD] text-white border-[#0391FD] shadow-sm -translate-y-0.5'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200/80'
                       }`}
                     >
                       Escena {scene.id}
@@ -1152,18 +1152,18 @@ export const ProductChipsSection: React.FC = () => {
             >
               {/* Lado Izquierdo: Titular grande, descripción breve y CTA correspondiente */}
               <div className="lg:col-span-6 flex flex-col items-start text-left">
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-kuota-palesky border border-kuota-deepnavy text-xs font-extrabold uppercase tracking-wider text-kuota-deepnavy mb-4">
+                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-50 border border-sky-200/80 text-xs font-bold uppercase tracking-wider text-[#0391FD] mb-4">
                   {activeEditorial.code}
                 </span>
 
-                <h4 className="text-3xl sm:text-4xl lg:text-[2.65rem] font-extrabold text-kuota-deepnavy tracking-tight leading-[1.08] mb-4">
+                <h4 className="text-3xl sm:text-4xl lg:text-[2.65rem] font-black text-[#0A192F] tracking-tight leading-[1.08] mb-4">
                   {activeEditorial.headline}{' '}
-                  <span className="text-kuota-dodger underline decoration-kuota-deepnavy decoration-4 underline-offset-4">
+                  <span className="text-[#0391FD] underline decoration-[#0A192F]/20 decoration-4 underline-offset-4">
                     {activeEditorial.highlight}
                   </span>
                 </h4>
 
-                <p className="text-base sm:text-lg font-semibold text-kuota-crayola leading-relaxed mb-7">
+                <p className="text-base sm:text-lg font-normal text-slate-600 leading-relaxed mb-7">
                   {activeEditorial.description}
                 </p>
 
@@ -1191,21 +1191,21 @@ export const ProductChipsSection: React.FC = () => {
                   sizeClassName="w-56 h-56 sm:w-72 sm:h-72"
                   objectPosition={activeEditorial.imagePosition}
                   topBadge={
-                    <div className="rounded-2xl border-2 border-kuota-deepnavy bg-white px-3.5 py-2 shadow-navy-hard">
-                      <span className="block text-[10px] font-extrabold uppercase tracking-wider text-kuota-crayola">
+                    <div className="rounded-2xl border border-slate-200/80 bg-white/95 px-3.5 py-2 shadow-lg backdrop-blur-md">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                         {activeEditorial.badgeTopTitle}
                       </span>
-                      <span className="text-xs sm:text-sm font-extrabold text-kuota-deepnavy">
+                      <span className="text-xs sm:text-sm font-bold text-[#0A192F]">
                         {activeEditorial.badgeTopValue}
                       </span>
                     </div>
                   }
                   floatingRightBadge={
-                    <div className="rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white px-3.5 py-2 shadow-navy-hard">
-                      <span className="block text-[10px] font-extrabold uppercase tracking-wider text-kuota-palesky">
+                    <div className="rounded-2xl border border-white/10 bg-[#0A192F]/95 text-white px-3.5 py-2 shadow-xl backdrop-blur-md">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-300">
                         {activeEditorial.badgeRightTitle}
                       </span>
-                      <span className="text-xs sm:text-sm font-extrabold text-white">
+                      <span className="text-xs sm:text-sm font-bold text-white">
                         {activeEditorial.badgeRightValue}
                       </span>
                     </div>
@@ -1215,7 +1215,7 @@ export const ProductChipsSection: React.FC = () => {
                 {/* Componente financiero animado único por cada escena A–E (§5) */}
                 <FinancialCardMotion
                   maxTiltDeg={2.4}
-                  className="w-full max-w-md mt-6 rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white p-4 sm:p-5 shadow-navy-hard-lg"
+                  className="w-full max-w-md mt-6 rounded-[24px] border border-white/10 bg-[#0A192F] text-white p-5 shadow-xl"
                 >
                   {activeEditorial.id === 'A' && (
                     <div className="space-y-3">

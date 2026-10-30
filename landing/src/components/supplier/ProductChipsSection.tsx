@@ -49,7 +49,7 @@ const PERUVIAN_MERCHANT_SECTORS: PeruvianMerchantSector[] = [
     name: 'Bodegas',
     contextTitle: 'Bodegas y abarrotes de barrio',
     contextDescription:
-      'Cobra con QR en mostrador con solo 2% de comisión y elimina el cuaderno de fiados ofreciendo aKuotas! sin riesgo para tu caja.',
+      'Cobra con QR en mostrador con solo 1% de comisión oficial de Kuota Payments y elimina el cuaderno de fiados cobrando al 100% al contado sin riesgo para tu caja.',
     demoProductLabel: 'Pedido de abarrotes y bebidas (Demostrativo)',
     demoTicketSoles: 450,
     imageSrc: '/images/hero-negocio-kuota.jpg',
@@ -202,17 +202,17 @@ export const ProductChipsSection: React.FC = () => {
     <section
       id="producto"
       aria-labelledby="supplier-product-heading"
-      className="py-16 sm:py-20 border-b-2 border-kuota-deepnavy"
+      className="py-16 sm:py-24 border-b border-slate-200/80 bg-white"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         <ScrollReveal delayMs={0} direction="up">
           <div className="max-w-2xl">
-            <span className="inline-block px-3.5 py-1 rounded-full bg-white border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider mb-3">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-sky-50 border border-sky-200/80 text-xs font-bold text-[#0391FD] uppercase tracking-wider mb-3 shadow-xs">
               Modalidades de cobro
             </span>
             <h2
               id="supplier-product-heading"
-              className="text-3xl sm:text-4xl font-extrabold text-kuota-deepnavy tracking-tight"
+              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0A192F] tracking-tight"
             >
               Tres formas de cobrar, todas desde tu celular
             </h2>
@@ -324,10 +324,10 @@ export const ProductChipsSection: React.FC = () => {
                 return (
                   <ScrollReveal key={chip.id} delayMs={idx * 90} direction="right">
                     <div
-                      className={`rounded-2xl border-2 border-kuota-deepnavy transition-all duration-200 ${
+                      className={`rounded-[24px] border transition-all duration-200 ${
                         isSelected
-                          ? 'bg-white shadow-navy-hard-lg'
-                          : 'bg-white/65 hover:bg-white/95 shadow-sm'
+                          ? 'bg-white border-[#0391FD] shadow-xl ring-2 ring-[#0391FD]/20'
+                          : 'bg-slate-50/70 hover:bg-white border-slate-200/80 shadow-xs'
                       }`}
                     >
                       <button
@@ -338,19 +338,19 @@ export const ProductChipsSection: React.FC = () => {
                         aria-controls={`supplier-panel-${chip.id}`}
                         onClick={() => handleSelectChip(chip)}
                         onKeyDown={(e) => handleKeyDown(e, idx)}
-                        className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-3"
+                        className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-3 cursor-pointer"
                       >
                         <div className="flex flex-wrap items-center gap-3">
                           <span
-                            className={`w-9 h-9 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center text-sm font-extrabold shrink-0 ${
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${
                               isSelected
-                                ? 'bg-kuota-dodger text-white'
-                                : 'bg-kuota-palesky text-kuota-deepnavy'
+                                ? 'bg-[#0391FD] text-white shadow-xs'
+                                : 'bg-slate-200 text-slate-700'
                             }`}
                           >
                             {chip.index}
                           </span>
-                          <span className="text-xl sm:text-2xl font-extrabold text-kuota-deepnavy">
+                          <span className="text-xl sm:text-2xl font-extrabold text-[#0A192F]">
                             {chip.title}
                           </span>
                           {chip.badge && (
@@ -374,9 +374,9 @@ export const ProductChipsSection: React.FC = () => {
                           id={`supplier-panel-${chip.id}`}
                           role="tabpanel"
                           aria-labelledby={`supplier-tab-${chip.id}`}
-                          className="px-5 sm:px-6 pb-6 pt-2 border-t border-kuota-deepnavy/15 space-y-3 animate-fadeIn"
+                          className="px-5 sm:px-6 pb-6 pt-2 border-t border-slate-100 space-y-3 animate-fadeIn"
                         >
-                          <p className="text-base sm:text-lg font-bold text-kuota-deepnavy/90 leading-relaxed">
+                          <p className="text-base sm:text-lg font-medium text-slate-700 leading-relaxed">
                             {chip.description}
                           </p>
 
@@ -410,10 +410,10 @@ export const ProductChipsSection: React.FC = () => {
               })}
             </div>
 
-            {/* Badge fijo bajo los chips (PRD §5.5) */}
-            <div className="rounded-2xl bg-kuota-deepnavy text-white border-2 border-kuota-deepnavy px-5 py-4 shadow-navy-hard flex items-center gap-3">
-              <Clock className="w-6 h-6 text-kuota-dodger shrink-0" aria-hidden="true" />
-              <span className="text-sm sm:text-base font-extrabold tracking-tight">
+            {/* Badge fijo bajo los chips */}
+            <div className="rounded-2xl bg-[#0A192F] text-white border border-white/10 px-5 py-4 shadow-xl flex items-center gap-3">
+              <Clock className="w-5 h-5 text-[#38BDF8] shrink-0" aria-hidden="true" />
+              <span className="text-xs sm:text-sm font-bold tracking-tight">
                 Liquidación en {PRICING_CONFIG.settlementBusinessHours} horas hábiles en todas las modalidades
               </span>
             </div>
@@ -422,16 +422,16 @@ export const ProductChipsSection: React.FC = () => {
 
         {/* BLOQUE 2 (§6): EXPERIENCIA VISUAL PARA COMERCIOS PERUANOS + 5 DEMOSTRACIONES OPERATIVAS */}
         <ScrollReveal delayMs={110} direction="up">
-          <div className="rounded-3xl bg-white border-2 border-kuota-deepnavy p-6 sm:p-8 lg:p-10 shadow-navy-hard-lg">
-            {/* Cabecera y selector de rubros del comercio peruano (§6) */}
-            <div className="pb-6 border-b-2 border-kuota-palesky space-y-4">
+          <div className="rounded-[32px] bg-white border border-slate-200/90 p-6 sm:p-8 lg:p-10 shadow-xl">
+            {/* Cabecera y selector de rubros del comercio peruano */}
+            <div className="pb-6 border-b border-slate-100 space-y-4">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                 <div>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-kuota-palesky border border-kuota-deepnavy text-[11px] font-extrabold uppercase tracking-wider text-kuota-deepnavy mb-2">
-                    <Store className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-[11px] font-bold uppercase tracking-wider text-[#0391FD] mb-2 shadow-xs">
+                    <Store className="w-3.5 h-3.5 text-[#0391FD]" aria-hidden="true" />
                     Experiencia Visual para Comercios · Datos demostrativos
                   </span>
-                  <h3 className="text-2xl sm:text-3xl font-extrabold text-kuota-deepnavy tracking-tight">
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0A192F] tracking-tight">
                     Adaptado a la realidad del comercio peruano
                   </h3>
                   <p className="text-sm sm:text-base font-semibold text-kuota-crayola mt-1">
@@ -468,10 +468,10 @@ export const ProductChipsSection: React.FC = () => {
                           sector_id: sector.id,
                         });
                       }}
-                      className={`px-3.5 py-2 rounded-xl border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold transition-all duration-200 ${
+                      className={`px-4 py-2 rounded-full border text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
                         isSectorActive
-                          ? 'bg-kuota-dodger text-white shadow-navy-hard -translate-y-0.5'
-                          : 'bg-kuota-palesky/55 hover:bg-kuota-palesky text-kuota-deepnavy'
+                          ? 'bg-[#0391FD] text-white border-[#0391FD] shadow-xs -translate-y-0.5'
+                          : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 border-slate-200'
                       }`}
                     >
                       {sector.name}
@@ -492,18 +492,18 @@ export const ProductChipsSection: React.FC = () => {
                     sizeClassName="w-56 h-56 sm:w-64 sm:h-64"
                     objectPosition={activeSector.imagePosition}
                     topBadge={
-                      <div className="rounded-2xl border-2 border-kuota-deepnavy bg-white px-3 py-1.5 shadow-navy-hard text-left">
-                        <span className="block text-[10px] font-extrabold uppercase text-kuota-crayola">
+                      <div className="rounded-2xl border border-slate-200/90 bg-white px-3.5 py-2 shadow-md text-left">
+                        <span className="block text-[10px] font-bold uppercase text-slate-500">
                           Rubro activo
                         </span>
-                        <span className="text-xs font-extrabold text-kuota-deepnavy">
+                        <span className="text-xs font-bold text-[#0A192F]">
                           {activeSector.name}
                         </span>
                       </div>
                     }
                     floatingRightBadge={
-                      <div className="rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white px-3 py-1.5 shadow-navy-hard text-left">
-                        <span className="block text-[10px] font-extrabold uppercase text-kuota-palesky">
+                      <div className="rounded-2xl border border-white/10 bg-[#0A192F] text-white px-3.5 py-2 shadow-md text-left">
+                        <span className="block text-[10px] font-bold uppercase text-slate-300">
                           Ticket demostrativo
                         </span>
                         <AnimatedNumber
@@ -516,10 +516,10 @@ export const ProductChipsSection: React.FC = () => {
                   />
                 </div>
 
-                <h4 className="text-xl sm:text-2xl font-extrabold text-kuota-deepnavy">
+                <h4 className="text-xl sm:text-2xl font-extrabold text-[#0A192F]">
                   {activeSector.contextTitle}
                 </h4>
-                <p className="text-sm sm:text-base font-semibold text-kuota-crayola mt-2 leading-relaxed">
+                <p className="text-sm sm:text-base font-normal text-slate-600 mt-2 leading-relaxed">
                   {activeSector.contextDescription}
                 </p>
               </div>
@@ -543,18 +543,18 @@ export const ProductChipsSection: React.FC = () => {
                           kuotaSound.playSelectOption();
                           setActiveDemoTab(tab.id);
                         }}
-                        className={`p-2.5 rounded-xl border-2 text-left transition-all ${
+                        className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
                           isTabActive
-                            ? 'bg-kuota-deepnavy text-white border-kuota-deepnavy shadow-sm'
-                            : 'bg-kuota-palesky/45 hover:bg-kuota-palesky text-kuota-deepnavy border-kuota-deepnavy/35'
+                            ? 'bg-[#0A192F] text-white border-[#0A192F] shadow-sm'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/80'
                         }`}
                       >
-                        <span className="block text-[11px] font-extrabold leading-tight">
+                        <span className="block text-[11px] font-bold leading-tight">
                           {tab.label}
                         </span>
                         <span
-                          className={`block text-[10px] font-semibold mt-0.5 ${
-                            isTabActive ? 'text-kuota-palesky' : 'text-kuota-crayola'
+                          className={`block text-[10px] font-medium mt-0.5 ${
+                            isTabActive ? 'text-slate-300' : 'text-slate-500'
                           }`}
                         >
                           {tab.shortTitle}
@@ -567,7 +567,7 @@ export const ProductChipsSection: React.FC = () => {
                 {/* Panel de la demostración gráfica activa */}
                 <FinancialCardMotion
                   maxTiltDeg={2}
-                  className="rounded-2xl bg-kuota-deepnavy text-white border-2 border-kuota-deepnavy p-5 sm:p-6 shadow-navy-hard-lg"
+                  className="rounded-2xl bg-[#0A192F] text-white border border-white/10 p-5 sm:p-6 shadow-xl"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-white/15">
                     <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-kuota-palesky">

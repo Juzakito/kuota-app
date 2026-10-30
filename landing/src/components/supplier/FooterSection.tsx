@@ -37,49 +37,50 @@ const InstagramIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4'
 );
 
 /**
- * PRD §5.10: Footer
- * - Logo, correo de contacto, redes sociales y enlaces legales (términos y política de privacidad).
+ * PRD §5.10: Footer para Proveedores y Comercios
  */
 export const FooterSection: React.FC = () => {
   const [legalModal, setLegalModal] = useState<'terms' | 'privacy' | null>(null);
 
   return (
     <>
-      <footer className="bg-white/80 py-10 border-t border-kuota-deepnavy/20">
+      <footer className="bg-white py-12 border-t border-slate-200/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-kuota-deepnavy/20">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-slate-100">
             <div>
               <KuotaLogo size="md" />
-              <p className="text-xs sm:text-sm font-semibold text-kuota-deepnavy/80 mt-2 max-w-sm">
-                Soluciones de cobro con tarjeta, QR, Link y ventas en kuotas con 0 riesgo para negocios proveedores.
+              <p className="text-xs sm:text-sm font-normal text-slate-500 mt-2 max-w-sm">
+                Soluciones de cobro con tarjeta, QR, Link y ventas en cuotas con 0 riesgo para negocios proveedores.
               </p>
             </div>
 
             {/* Correo de contacto, redes sociales y enlaces legales */}
-            <div className="flex flex-wrap items-center gap-5 text-sm font-extrabold text-kuota-deepnavy">
+            <div className="flex flex-wrap items-center gap-5 text-xs sm:text-sm font-semibold text-slate-700">
               <a
                 href="mailto:kuota.contact@gmail.com"
-                className="inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors"
+                className="inline-flex items-center gap-1.5 hover:text-[#0391FD] transition-colors"
               >
-                <Mail className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                <Mail className="w-4 h-4 text-[#0391FD]" aria-hidden="true" />
                 <span>kuota.contact@gmail.com</span>
               </a>
 
               <button
                 type="button"
                 onClick={() => setLegalModal('terms')}
-                className="inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors"
+                style={{ background: 'transparent', border: 'none', padding: 0 }}
+                className="appearance-none !bg-transparent !border-0 text-slate-700 hover:text-[#0391FD] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
               >
-                <FileText className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                <FileText className="w-4 h-4 text-[#0391FD]" aria-hidden="true" />
                 <span>Términos y condiciones</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setLegalModal('privacy')}
-                className="inline-flex items-center gap-1.5 hover:text-kuota-dodger transition-colors"
+                style={{ background: 'transparent', border: 'none', padding: 0 }}
+                className="appearance-none !bg-transparent !border-0 text-slate-700 hover:text-[#0391FD] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
               >
-                <Shield className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                <Shield className="w-4 h-4 text-[#0391FD]" aria-hidden="true" />
                 <span>Política de privacidad</span>
               </button>
 
@@ -89,24 +90,24 @@ export const FooterSection: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn de Kuota"
-                  className="w-9 h-9 rounded-xl bg-kuota-palesky border border-kuota-deepnavy flex items-center justify-center text-kuota-deepnavy hover:bg-kuota-dodger hover:text-white transition-colors"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#0391FD] hover:text-white border border-slate-200 flex items-center justify-center text-slate-700 transition-colors"
                 >
-                  <LinkedinIcon className="w-4 h-4" />
+                  <LinkedinIcon className="w-3.5 h-3.5" />
                 </a>
                 <a
                   href="https://www.instagram.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram de Kuota"
-                  className="w-9 h-9 rounded-xl bg-kuota-palesky border border-kuota-deepnavy flex items-center justify-center text-kuota-deepnavy hover:bg-kuota-dodger hover:text-white transition-colors"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#0391FD] hover:text-white border border-slate-200 flex items-center justify-center text-slate-700 transition-colors"
                 >
-                  <InstagramIcon className="w-4 h-4" />
+                  <InstagramIcon className="w-3.5 h-3.5" />
                 </a>
               </div>
             </div>
           </div>
 
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-bold text-kuota-deepnavy/75">
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-medium text-slate-500">
             <span>© {new Date().getFullYear()} Kuota. Todos los derechos reservados.</span>
             <span>Liquidación en 48 horas hábiles · 0 riesgo de impago para el proveedor.</span>
           </div>
@@ -118,13 +119,13 @@ export const FooterSection: React.FC = () => {
           role="dialog"
           aria-modal="true"
           aria-labelledby="supplier-legal-title"
-          className="fixed inset-0 z-50 bg-kuota-deepnavy/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
         >
-          <div className="w-full max-w-lg rounded-3xl bg-white border-2 border-kuota-deepnavy p-6 sm:p-8 shadow-navy-hard-lg">
-            <div className="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-kuota-deepnavy/20">
+          <div className="w-full max-w-lg rounded-[28px] bg-white border border-slate-200/90 p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+            <div className="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-100">
               <h3
                 id="supplier-legal-title"
-                className="text-xl font-extrabold text-kuota-deepnavy"
+                className="text-xl font-extrabold text-[#0A192F]"
               >
                 {legalModal === 'terms'
                   ? 'Términos Comerciales para Proveedores'
@@ -134,13 +135,13 @@ export const FooterSection: React.FC = () => {
                 type="button"
                 onClick={() => setLegalModal(null)}
                 aria-label="Cerrar"
-                className="w-8 h-8 rounded-lg bg-kuota-palesky border border-kuota-deepnavy flex items-center justify-center text-kuota-deepnavy"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
-            <div className="text-sm font-semibold text-kuota-deepnavy/90 space-y-3 leading-relaxed">
+            <div className="text-xs sm:text-sm font-normal text-slate-600 space-y-3 leading-relaxed">
               {legalModal === 'terms' ? (
                 <>
                   <p>
@@ -163,7 +164,7 @@ export const FooterSection: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setLegalModal(null)}
-                className="px-5 py-2.5 rounded-xl bg-kuota-dodger text-white font-extrabold text-sm border-2 border-kuota-deepnavy shadow-navy-hard"
+                className="px-6 py-2.5 rounded-full bg-[#0A192F] hover:bg-[#0391FD] text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
               >
                 Entendido
               </button>
@@ -174,4 +175,3 @@ export const FooterSection: React.FC = () => {
     </>
   );
 };
-

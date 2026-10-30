@@ -33,16 +33,16 @@ export const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
     <div
       role="img"
       aria-label={`${id}: ${label}`}
-      className={`relative overflow-hidden rounded-2xl border-2 border-kuota-deepnavy bg-white/90 placeholder-stripes flex flex-col justify-between p-4 sm:p-5 shadow-navy-hard ${aspectClass} ${className}`}
+      className={`relative overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/95 placeholder-stripes flex flex-col justify-between p-4 sm:p-5 shadow-lg ${aspectClass} ${className}`}
     >
       {/* Cabecera de metadatos del placeholder */}
       <div className="flex items-center justify-between gap-2 z-10">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-kuota-deepnavy text-white text-xs font-bold tracking-wide uppercase">
-          <ImageIcon className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0A192F] text-white text-xs font-bold tracking-wide uppercase">
+          <ImageIcon className="w-3.5 h-3.5 text-[#0391FD]" aria-hidden="true" />
           Placeholder · {id}
         </span>
         {badgeRight && (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-kuota-palesky border border-kuota-deepnavy text-kuota-deepnavy text-xs font-extrabold">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200/80 text-slate-700 text-xs font-bold">
             {badgeRight}
           </span>
         )}
@@ -53,15 +53,15 @@ export const ImagePlaceholder: React.FC<ImagePlaceholderProps> = ({
         {children ? (
           children
         ) : (
-          <div className="w-12 h-12 rounded-2xl bg-kuota-palesky border-2 border-kuota-deepnavy flex items-center justify-center mb-2">
-            <ImageIcon className="w-6 h-6 text-kuota-deepnavy" aria-hidden="true" />
+          <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center mb-2">
+            <ImageIcon className="w-6 h-6 text-[#0391FD]" aria-hidden="true" />
           </div>
         )}
       </div>
 
       {/* Etiqueta descriptiva en la base */}
-      <div className="z-10 bg-kuota-palesky/95 border border-kuota-deepnavy rounded-xl px-3.5 py-2.5 text-left">
-        <p className="text-xs sm:text-sm font-bold text-kuota-deepnavy leading-snug">
+      <div className="z-10 bg-slate-50/95 border border-slate-200/80 rounded-2xl px-3.5 py-2.5 text-left">
+        <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
           {label}
         </p>
       </div>

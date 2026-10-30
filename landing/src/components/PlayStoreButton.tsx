@@ -19,15 +19,15 @@ export const PlayStoreButton: React.FC<PlayStoreButtonProps> = ({
   className = '',
 }) => {
   const sizeStyles = {
-    sm: 'px-4 py-2 text-sm gap-2 rounded-xl',
-    md: 'px-6 py-3.5 text-base gap-2.5 rounded-2xl',
-    lg: 'px-7 py-4 text-base sm:text-lg gap-3 rounded-2xl',
+    sm: 'px-4 py-2 text-xs sm:text-sm gap-2 rounded-full',
+    md: 'px-6 py-3 text-sm sm:text-base gap-2.5 rounded-full',
+    lg: 'px-7 py-3.5 text-base sm:text-lg gap-3 rounded-full',
   }[size];
 
   const variantStyles =
     variant === 'primary'
-      ? 'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98]'
-      : 'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-palesky shadow-dodger-glow hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98]';
+      ? 'bg-[#0391FD] hover:bg-[#0277D4] text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]'
+      : 'bg-[#0A192F] hover:bg-[#0391FD] text-white border border-white/15 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]';
 
   const handleClick = () => {
     kuotaSound.playCtaClick();
