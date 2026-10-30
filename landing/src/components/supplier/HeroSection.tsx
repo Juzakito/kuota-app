@@ -3,6 +3,8 @@ import { ArrowRight, ShieldCheck, Clock } from 'lucide-react';
 import { ScheduleCallButton } from './ScheduleCallButton';
 import { PRICING_CONFIG, formatPercentEs } from '../../config/pricingConfig';
 import { trackSupplierEvent } from '../../utils/analytics';
+import { smoothScrollToAnchor } from '../../utils/motionSystem';
+import { kuotaSound } from '../../utils/soundSystem';
 
 /**
  * PRD §5.2: Hero
@@ -73,13 +75,16 @@ export const HeroSection: React.FC = () => {
 
               <a
                 href="#producto"
-                onClick={() =>
+                onClick={(e) => {
+                  e.preventDefault();
+                  kuotaSound.playSelectOption();
                   trackSupplierEvent('cta_secondary_click', {
                     section: 'hero',
                     target: '#producto',
-                  })
-                }
-                className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white hover:bg-kuota-palesky text-kuota-deepnavy font-extrabold text-base sm:text-lg border-2 border-kuota-deepnavy shadow-navy-hard transition-all"
+                  });
+                  smoothScrollToAnchor('#producto');
+                }}
+                className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white hover:bg-kuota-palesky text-kuota-deepnavy font-extrabold text-base sm:text-lg border-2 border-kuota-deepnavy shadow-navy-hard transition-all hover:-translate-y-0.5 active:scale-95"
               >
                 <span>Ver cómo funciona</span>
                 <ArrowRight className="w-5 h-5 text-kuota-dodger" aria-hidden="true" />

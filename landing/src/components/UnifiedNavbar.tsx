@@ -20,6 +20,7 @@ import { PlayStoreButton } from './PlayStoreButton';
 import { ScheduleCallButton } from './supplier/ScheduleCallButton';
 import { trackEvent } from '../utils/analytics';
 import { kuotaSound } from '../utils/soundSystem';
+import { smoothScrollToAnchor } from '../utils/motionSystem';
 
 export type AudienceMode = 'compradores' | 'proveedores';
 
@@ -101,29 +102,71 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
     ready: boolean;
   }>({ left: 4, width: 132, ready: false });
 
+  const navLinks = mode === 'compradores' ? BUYER_LINKS : SUPPLIER_LINKS;
+
+  const navItemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const [activeNavHref, setActiveNavHref] = useState<string>(navLinks[0].href);
+  const [hoveredNavHref, setHoveredNavHref] = useState<string | null>(null);
+  const [navPillBounds, setNavPillBounds] = useState<{
+    left: number;
+    width: number;
+    ready: boolean;
+  }>({ left: 0, width: 0, ready: false });
+
+  useEffect(() => {
+    setActiveNavHref(( mode === 'compradores' ? BUYER_LINKS : SUPPLIER_LINKS )[0].href);
+    setHoveredNavHref(null);
+  }, [mode]);
+
   useEffect(() => {
     return kuotaSound.subscribe(setSoundState);
   }, []);
 
   useEffect(() => {
+    const links = mode === 'compradores' ? BUYER_LINKS : SUPPLIER_LINKS;
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 12);
+
+      // ScrollSpy: detectar qué sección está activa en el viewport
+      const spyOffset = 180;
+      let currentActive = links[0].href;
+      for (const item of links) {
+        const el = document.querySelector(item.href);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= spyOffset) {
+            currentActive = item.href;
+          }
+        }
+      }
+      setActiveNavHref(currentActive);
     };
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     const updatePillBounds = () => {
       const activeBtn =
         mode === 'compradores' ? buyerTabRef.current : supplierTabRef.current;
-      if (!activeBtn) return;
-      setPillBounds({
-        left: activeBtn.offsetLeft,
-        width: activeBtn.offsetWidth,
-        ready: true,
-      });
+      if (activeBtn) {
+        setPillBounds({
+          left: activeBtn.offsetLeft,
+          width: activeBtn.offsetWidth,
+          ready: true,
+        });
+      }
+
+      const targetHref = hoveredNavHref || activeNavHref;
+      const activeNavEl = navItemRefs.current[targetHref];
+      if (activeNavEl) {
+        setNavPillBounds({
+          left: activeNavEl.offsetLeft,
+          width: activeNavEl.offsetWidth,
+          ready: true,
+        });
+      }
     };
 
     updatePillBounds();
@@ -132,14 +175,26 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
       document.fonts.ready.then(updatePillBounds).catch(() => {});
     }
     return () => window.removeEventListener('resize', updatePillBounds);
-  }, [mode]);
+  }, [mode, activeNavHref, hoveredNavHref]);
 
-  const navLinks = mode === 'compradores' ? BUYER_LINKS : SUPPLIER_LINKS;
-
-  const handleLinkClick = (label: string) => {
+  const handleLinkClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    label: string,
+    href: string
+  ) => {
+    e.preventDefault();
     kuotaSound.playSelectOption();
+    setActiveNavHref(href);
     trackEvent('click_nav_link', { section: label.toLowerCase(), audience: mode });
     setMobileMenuOpen(false);
+    smoothScrollToAnchor(href);
+  };
+
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    kuotaSound.playSelectOption();
+    setMobileMenuOpen(false);
+    smoothScrollToAnchor('#inicio');
   };
 
   const handleSwitchMode = (nextMode: AudienceMode, source: string) => {
@@ -148,6 +203,8 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
     setSoundPanelOpen(false);
     onModeChange(nextMode, source);
   };
+
+  const highlightedNavHref = hoveredNavHref || activeNavHref;
 
   return (
     <header
@@ -162,6 +219,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
         <div className="flex items-center gap-4 sm:gap-5 shrink-0">
           <a
             href="#inicio"
+            onClick={handleLogoClick}
             aria-label="Kuota — Ir al inicio"
             className="focus-visible:outline-none shrink-0 flex items-center transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
           >
@@ -237,9 +295,10 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           </div>
         </div>
 
-        {/* Centro: Navegación Desktop con transición al cambiar de modo */}
+        {/* Centro: Navegación Desktop con cápsula deslizante y barra activa animada */}
         <nav
           aria-label="Navegación principal"
+          onMouseLeave={() => setHoveredNavHref(null)}
           style={{
             opacity: isSwitching ? 0.25 : 1,
             transform: isSwitching
@@ -248,22 +307,54 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             transition:
               'opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
           }}
-          className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0"
+          className="relative hidden lg:flex items-center gap-1 xl:gap-1.5 p-1 rounded-2xl shrink-0"
         >
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => handleLinkClick(link.label)}
-              className="group relative px-3 py-1.5 rounded-xl text-sm font-bold whitespace-nowrap text-kuota-deepnavy hover:text-kuota-dodger hover:bg-white/70 transition-all duration-200 hover:-translate-y-0.5"
+          {/* Cápsula flotante y barra inferior que se deslizan entre Producto, Beneficios, Niveles y Nosotros */}
+          {navPillBounds.ready && (
+            <span
+              aria-hidden="true"
+              style={{
+                left: `${navPillBounds.left}px`,
+                width: `${navPillBounds.width}px`,
+                transition:
+                  'left 340ms cubic-bezier(0.22, 1, 0.36, 1), width 340ms cubic-bezier(0.22, 1, 0.36, 1)',
+              }}
+              className="pointer-events-none absolute top-1 bottom-1 rounded-xl bg-white/85 border border-kuota-deepnavy/20 shadow-sm z-0 flex items-end justify-center overflow-hidden"
             >
-              <span>{link.label}</span>
-              <span
-                aria-hidden="true"
-                className="absolute left-3 right-3 bottom-1 h-[2.5px] rounded-full bg-kuota-dodger scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left"
-              />
-            </a>
-          ))}
+              <span className="w-7 h-[3px] rounded-full bg-kuota-dodger mb-0.5" />
+            </span>
+          )}
+
+          {navLinks.map((link) => {
+            const IconComponent = link.icon;
+            const isHighlighted = highlightedNavHref === link.href;
+            return (
+              <a
+                key={link.href}
+                ref={(el) => {
+                  navItemRefs.current[link.href] = el;
+                }}
+                href={link.href}
+                onMouseEnter={() => setHoveredNavHref(link.href)}
+                onClick={(e) => handleLinkClick(e, link.label, link.href)}
+                className={`relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-extrabold whitespace-nowrap transition-all duration-250 active:scale-95 ${
+                  isHighlighted
+                    ? 'text-kuota-dodger -translate-y-[1px]'
+                    : 'text-kuota-deepnavy hover:text-kuota-dodger'
+                }`}
+              >
+                <IconComponent
+                  className={`w-3.5 h-3.5 shrink-0 transition-all duration-300 ${
+                    isHighlighted
+                      ? 'text-kuota-dodger scale-110 -rotate-6'
+                      : 'text-kuota-deepnavy/60 scale-95'
+                  }`}
+                  aria-hidden="true"
+                />
+                <span>{link.label}</span>
+              </a>
+            );
+          })}
         </nav>
 
         {/* Derecha: Control de identidad sonora + CTA contextual + botón menú animado */}
@@ -449,7 +540,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                   <a
                     key={link.href}
                     href={link.href}
-                    onClick={() => handleLinkClick(link.label)}
+                    onClick={(e) => handleLinkClick(e, link.label, link.href)}
                     style={{
                       transitionDelay: mobileMenuOpen ? `${index * 45}ms` : '0ms',
                     }}

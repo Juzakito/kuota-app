@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Smartphone, Clock, ChevronRight, ShieldCheck } from 'lucide-react';
 import {
   SUPPLIER_PRODUCT_CHIPS,
@@ -6,6 +6,7 @@ import {
   PRICING_CONFIG,
 } from '../../config/pricingConfig';
 import { trackSupplierEvent } from '../../utils/analytics';
+import { kuotaSound } from '../../utils/soundSystem';
 
 /**
  * PRD §5.5: Producto – tres chips
@@ -26,6 +27,7 @@ export const ProductChipsSection: React.FC = () => {
     SUPPLIER_PRODUCT_CHIPS[0];
 
   const handleSelectChip = (chip: SupplierProductChipItem) => {
+    kuotaSound.playSelectOption();
     setActiveChipId(chip.id);
     setActiveCaptureIdx(0);
     trackSupplierEvent('supplier_product_chip_change', {
@@ -118,12 +120,13 @@ export const ProductChipsSection: React.FC = () => {
                 })}
               </div>
 
-              {/* Mockup esquemático de la captura 390×800 */}
+              {/* Mockup esquemático de la captura 390×800 con transición animada */}
               <div
+                key={`${activeChip.id}-${activeCaptureIdx}`}
                 role="img"
                 aria-label={`${currentCapture.placeholderId}: ${currentCapture.description}`}
                 aria-live="polite"
-                className="rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white p-5 mb-4"
+                className="rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white p-5 mb-4 kuota-section-arrive"
               >
                 <div className="flex items-center justify-between text-xs text-kuota-palesky font-bold pb-2.5 mb-3 border-b border-white/15">
                   <span>{currentCapture.mockHeader}</span>

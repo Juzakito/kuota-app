@@ -1,6 +1,8 @@
-﻿import React from 'react';
+import React from 'react';
 import { CalendarCheck } from 'lucide-react';
 import { trackSupplierEvent } from '../../utils/analytics';
+import { smoothScrollToAnchor } from '../../utils/motionSystem';
+import { kuotaSound } from '../../utils/soundSystem';
 
 interface ScheduleCallButtonProps {
   section: string;
@@ -34,7 +36,9 @@ export const ScheduleCallButton: React.FC<ScheduleCallButtonProps> = ({
       ? 'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard hover:translate-y-[-1px] active:translate-y-[1px]'
       : 'bg-kuota-deepnavy hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard hover:translate-y-[-1px] active:translate-y-[1px]';
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    kuotaSound.playCtaClick();
     trackSupplierEvent('cta_schedule_call_click', {
       section,
       button_label: label,
@@ -43,6 +47,7 @@ export const ScheduleCallButton: React.FC<ScheduleCallButtonProps> = ({
     if (onClickExtra) {
       onClickExtra();
     }
+    smoothScrollToAnchor('#agendar-call');
   };
 
   return (

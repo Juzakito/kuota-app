@@ -17,19 +17,94 @@ export const MOTION_TOKENS = {
 } as const;
 
 export function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState<boolean>(false);
+  return false;
+}
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReduced(mediaQuery.matches);
-    const handler = (event: MediaQueryListEvent) => setReduced(event.matches);
+let activeScrollRafId: number | null = null;
 
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+/**
+ * Desplazamiento suave por hardware (requestAnimationFrame) hacia una sección
+ * por su selector (`#producto`, `#beneficios`, `#niveles`, `#confianza`, etc.),
+ * compensando la altura de la barra de navegación fija e iniciando una animación
+ * de llegada en la sección destino. Funciona incluso cuando el sistema operativo
+ * desactiva el `scroll-behavior: smooth` nativo del navegador.
+ */
+export function smoothScrollToAnchor(href: string): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  return reduced;
+  if (activeScrollRafId !== null) {
+    window.cancelAnimationFrame(activeScrollRafId);
+    activeScrollRafId = null;
+  }
+
+  const isTop = href === '#inicio' || href === '#';
+  const targetEl = isTop
+    ? document.getElementById('inicio')
+    : (document.querySelector(href) as HTMLElement | null);
+
+  if (!targetEl && !isTop) return;
+
+  const headerEl = document.querySelector('header');
+  const headerOffset = headerEl ? headerEl.getBoundingClientRect().height : 76;
+
+  const startY = window.scrollY || window.pageYOffset;
+  const rawTargetY = isTop
+    ? 0
+    : startY + targetEl!.getBoundingClientRect().top - headerOffset + 2;
+  const maxScrollY = Math.max(
+    0,
+    document.documentElement.scrollHeight - window.innerHeight
+  );
+  const destinationY = Math.max(0, Math.min(rawTargetY, maxScrollY));
+  const distance = destinationY - startY;
+
+  try {
+    const url = new URL(window.location.href);
+    url.hash = isTop ? '' : href;
+    window.history.replaceState({}, '', url.toString());
+  } catch {
+    // Ignorar errores de historial en entornos restringidos
+  }
+
+  // Activar animación de llegada en el contenedor interno de la sección destino
+  if (!isTop && targetEl) {
+    const innerContainer =
+      (targetEl.querySelector(':scope > div') as HTMLElement | null) || targetEl;
+    innerContainer.classList.remove('kuota-section-arrive');
+    // Forzar reflow para reiniciar la animación si el usuario vuelve a hacer clic
+    void innerContainer.offsetWidth;
+    innerContainer.classList.add('kuota-section-arrive');
+    window.setTimeout(() => {
+      innerContainer.classList.remove('kuota-section-arrive');
+    }, 750);
+  }
+
+  if (Math.abs(distance) < 4) {
+    window.scrollTo(0, destinationY);
+    return;
+  }
+
+  const durationMs = Math.min(780, Math.max(460, Math.abs(distance) * 0.38));
+  const startTime = performance.now();
+
+  // Curva easeOutQuart suave y precisa
+  const easeOutQuart = (t: number): number => 1 - Math.pow(1 - t, 4);
+
+  const step = (now: number) => {
+    const elapsed = now - startTime;
+    const progress = Math.min(1, elapsed / durationMs);
+    const eased = easeOutQuart(progress);
+
+    window.scrollTo(0, Math.round(startY + distance * eased));
+
+    if (progress < 1) {
+      activeScrollRafId = window.requestAnimationFrame(step);
+    } else {
+      activeScrollRafId = null;
+    }
+  };
+
+  activeScrollRafId = window.requestAnimationFrame(step);
 }
 
 interface ScrollRevealProps {

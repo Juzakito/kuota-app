@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingBag, Store, ArrowRight, Sparkles, Calculator, CheckCircle2 } from 'lucide-react';
 import { AudienceMode } from './UnifiedNavbar';
 import { PRICING_CONFIG, formatPercentEs } from '../config/pricingConfig';
+import { smoothScrollToAnchor } from '../utils/motionSystem';
 
 interface EcosystemProps {
   mode: AudienceMode;
@@ -161,7 +162,7 @@ export const CrossAudienceBanner: React.FC<EcosystemProps> = ({ mode, onModeChan
                 type="button"
                 onClick={() => {
                   onModeChange('proveedores', 'cross_banner_primary');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  smoothScrollToAnchor('#inicio');
                 }}
                 className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-kuota-dodger hover:bg-kuota-crayola text-white font-extrabold text-base border-2 border-white shadow-dodger-glow transition-all hover:-translate-y-0.5"
               >
@@ -173,9 +174,9 @@ export const CrossAudienceBanner: React.FC<EcosystemProps> = ({ mode, onModeChan
                 type="button"
                 onClick={() => {
                   onModeChange('proveedores', 'cross_banner_calculator');
-                  setTimeout(() => {
-                    document.getElementById('calculadora')?.scrollIntoView({ behavior: 'smooth' });
-                  }, 100);
+                  window.setTimeout(() => {
+                    smoothScrollToAnchor('#calculadora');
+                  }, 210);
                 }}
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-kuota-palesky/40 transition-colors"
               >
@@ -214,7 +215,7 @@ export const CrossAudienceBanner: React.FC<EcosystemProps> = ({ mode, onModeChan
             type="button"
             onClick={() => {
               onModeChange('compradores', 'cross_banner_primary');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              smoothScrollToAnchor('#inicio');
             }}
             className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-kuota-dodger hover:bg-kuota-crayola text-white font-extrabold text-base border-2 border-kuota-deepnavy shadow-navy-hard transition-all hover:-translate-y-0.5 shrink-0"
           >
