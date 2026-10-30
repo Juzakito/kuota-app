@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Menu,
   X,
@@ -25,6 +25,7 @@ export type AudienceMode = 'compradores' | 'proveedores';
 
 interface UnifiedNavbarProps {
   mode: AudienceMode;
+  isSwitching?: boolean;
   onModeChange: (mode: AudienceMode, source: string) => void;
 }
 
@@ -84,12 +85,21 @@ const SUPPLIER_LINKS = [
 
 export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
   mode,
+  isSwitching = false,
   onModeChange,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [soundPanelOpen, setSoundPanelOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [soundState, setSoundState] = useState(() => kuotaSound.getState());
+
+  const buyerTabRef = useRef<HTMLButtonElement | null>(null);
+  const supplierTabRef = useRef<HTMLButtonElement | null>(null);
+  const [pillBounds, setPillBounds] = useState<{
+    left: number;
+    width: number;
+    ready: boolean;
+  }>({ left: 4, width: 132, ready: false });
 
   useEffect(() => {
     return kuotaSound.subscribe(setSoundState);
@@ -103,6 +113,26 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const updatePillBounds = () => {
+      const activeBtn =
+        mode === 'compradores' ? buyerTabRef.current : supplierTabRef.current;
+      if (!activeBtn) return;
+      setPillBounds({
+        left: activeBtn.offsetLeft,
+        width: activeBtn.offsetWidth,
+        ready: true,
+      });
+    };
+
+    updatePillBounds();
+    window.addEventListener('resize', updatePillBounds);
+    if (typeof document !== 'undefined' && 'fonts' in document) {
+      document.fonts.ready.then(updatePillBounds).catch(() => {});
+    }
+    return () => window.removeEventListener('resize', updatePillBounds);
+  }, [mode]);
 
   const navLinks = mode === 'compradores' ? BUYER_LINKS : SUPPLIER_LINKS;
 
@@ -128,7 +158,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-        {/* Izquierda: Logo oficial Kuota + Selector de Perfil */}
+        {/* Izquierda: Logo oficial Kuota + Selector de Perfil con píldora deslizante medida al píxel */}
         <div className="flex items-center gap-4 sm:gap-5 shrink-0">
           <a
             href="#inicio"
@@ -138,43 +168,68 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             <KuotaLogo size="md" />
           </a>
 
-          {/* Pill Switcher Compradores / Proveedores */}
+          {/* Pill Switcher Compradores / Proveedores con animación fluida */}
           <div
             role="tablist"
             aria-label="Seleccionar perfil de usuario"
-            className="inline-flex items-center gap-1 p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0"
+            className="relative inline-flex items-center gap-1 p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0"
           >
+            {pillBounds.ready && (
+              <span
+                aria-hidden="true"
+                style={{
+                  left: `${pillBounds.left}px`,
+                  width: `${pillBounds.width}px`,
+                  backgroundColor:
+                    mode === 'compradores' ? '#0391FD' : '#00235C',
+                  transition:
+                    'left 380ms cubic-bezier(0.22, 1, 0.36, 1), width 380ms cubic-bezier(0.22, 1, 0.36, 1), background-color 380ms cubic-bezier(0.22, 1, 0.36, 1)',
+                }}
+                className="pointer-events-none absolute top-1 bottom-1 rounded-full shadow-sm z-0"
+              />
+            )}
+
             <button
+              ref={buyerTabRef}
               type="button"
               role="tab"
               aria-selected={mode === 'compradores'}
               onClick={() => handleSwitchMode('compradores', 'navbar_pill')}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-all duration-200 ease-out ${
+              className={`relative z-10 inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-colors duration-250 ease-out active:scale-95 ${
                 mode === 'compradores'
-                  ? 'bg-kuota-dodger text-white shadow-sm'
-                  : 'bg-transparent text-kuota-deepnavy hover:bg-kuota-palesky/60 hover:text-kuota-dodger'
+                  ? pillBounds.ready
+                    ? 'text-white'
+                    : 'bg-kuota-dodger text-white shadow-sm'
+                  : 'bg-transparent text-kuota-deepnavy hover:text-kuota-dodger'
               }`}
             >
               <ShoppingBag
-                className="w-3.5 h-3.5 shrink-0"
+                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-300 ${
+                  mode === 'compradores' ? 'scale-110' : 'scale-100'
+                }`}
                 aria-hidden="true"
               />
               <span>Compradores</span>
             </button>
 
             <button
+              ref={supplierTabRef}
               type="button"
               role="tab"
               aria-selected={mode === 'proveedores'}
               onClick={() => handleSwitchMode('proveedores', 'navbar_pill')}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-all duration-200 ease-out ${
+              className={`relative z-10 inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-colors duration-250 ease-out active:scale-95 ${
                 mode === 'proveedores'
-                  ? 'bg-kuota-deepnavy text-white shadow-sm'
-                  : 'bg-transparent text-kuota-deepnavy hover:bg-kuota-palesky/60 hover:text-kuota-dodger'
+                  ? pillBounds.ready
+                    ? 'text-white'
+                    : 'bg-kuota-deepnavy text-white shadow-sm'
+                  : 'bg-transparent text-kuota-deepnavy hover:text-kuota-dodger'
               }`}
             >
               <Store
-                className="w-3.5 h-3.5 shrink-0"
+                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-300 ${
+                  mode === 'proveedores' ? 'scale-110' : 'scale-100'
+                }`}
                 aria-hidden="true"
               />
               <span>Proveedores</span>
@@ -182,9 +237,17 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           </div>
         </div>
 
-        {/* Centro: Navegación Desktop con microinteracciones */}
+        {/* Centro: Navegación Desktop con transición al cambiar de modo */}
         <nav
           aria-label="Navegación principal"
+          style={{
+            opacity: isSwitching ? 0.25 : 1,
+            transform: isSwitching
+              ? 'translate3d(0, -4px, 0)'
+              : 'translate3d(0, 0, 0)',
+            transition:
+              'opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+          }}
           className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0"
         >
           {navLinks.map((link) => (
@@ -296,7 +359,17 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             )}
           </div>
 
-          <div className="hidden lg:block shrink-0">
+          <div
+            style={{
+              opacity: isSwitching ? 0.3 : 1,
+              transform: isSwitching
+                ? 'translate3d(0, -3px, 0) scale(0.97)'
+                : 'translate3d(0, 0, 0) scale(1)',
+              transition:
+                'opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+            }}
+            className="hidden lg:block shrink-0"
+          >
             {mode === 'compradores' ? (
               <PlayStoreButton
                 section="navbar"

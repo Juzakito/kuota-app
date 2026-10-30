@@ -42,20 +42,51 @@ function getInitialAudienceMode(): AudienceMode {
 
 export const App: React.FC = () => {
   const [mode, setMode] = useState<AudienceMode>('compradores');
+  const [renderedMode, setRenderedMode] = useState<AudienceMode>('compradores');
+  const [transitionStage, setTransitionStage] = useState<
+    'idle' | 'out' | 'in-prep'
+  >('idle');
+  const [slideDir, setSlideDir] = useState<1 | -1>(1);
+
+  const stageTimerRef = useRef<number | null>(null);
+  const enterTimerRef = useRef<number | null>(null);
   const milestonesTracked = useRef<Set<number>>(new Set());
   const levelsSectionTracked = useRef<boolean>(false);
 
+  const clearTransitionTimers = () => {
+    if (stageTimerRef.current !== null) {
+      window.clearTimeout(stageTimerRef.current);
+      stageTimerRef.current = null;
+    }
+    if (enterTimerRef.current !== null) {
+      window.clearTimeout(enterTimerRef.current);
+      enterTimerRef.current = null;
+    }
+  };
+
   useEffect(() => {
-    setMode(getInitialAudienceMode());
+    const initial = getInitialAudienceMode();
+    setMode(initial);
+    setRenderedMode(initial);
+
     const handlePopState = () => {
-      setMode(getInitialAudienceMode());
+      const next = getInitialAudienceMode();
+      setMode(next);
+      setRenderedMode(next);
+      setTransitionStage('idle');
     };
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      clearTransitionTimers();
+    };
   }, []);
 
   const handleModeChange = (nextMode: AudienceMode, source: string) => {
-    if (nextMode === mode) return;
+    if (nextMode === mode && transitionStage === 'idle') return;
+
+    const direction: 1 | -1 = nextMode === 'proveedores' ? 1 : -1;
+    setSlideDir(direction);
     setMode(nextMode);
     trackEvent('switch_audience_mode', { mode: nextMode, source });
 
@@ -68,6 +99,18 @@ export const App: React.FC = () => {
         // Ignore URL replace errors in restricted environments
       }
     }
+
+    clearTransitionTimers();
+    setTransitionStage('out');
+
+    stageTimerRef.current = window.setTimeout(() => {
+      setRenderedMode(nextMode);
+      setTransitionStage('in-prep');
+
+      enterTimerRef.current = window.setTimeout(() => {
+        setTransitionStage('idle');
+      }, 28);
+    }, 170);
   };
 
   useEffect(() => {
@@ -113,17 +156,51 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [mode]);
 
+  const mainTransitionStyle: React.CSSProperties =
+    transitionStage === 'out'
+      ? {
+          opacity: 0,
+          transform: `translate3d(${slideDir * -26}px, 6px, 0) scale(0.992)`,
+          filter: 'blur(2px)',
+          transition:
+            'opacity 170ms cubic-bezier(0.4, 0, 0.2, 1), transform 170ms cubic-bezier(0.4, 0, 0.2, 1), filter 170ms cubic-bezier(0.4, 0, 0.2, 1)',
+          willChange: 'opacity, transform, filter',
+        }
+      : transitionStage === 'in-prep'
+      ? {
+          opacity: 0,
+          transform: `translate3d(${slideDir * 26}px, 10px, 0) scale(0.992)`,
+          filter: 'blur(2px)',
+          transition: 'none',
+          willChange: 'opacity, transform, filter',
+        }
+      : {
+          opacity: 1,
+          transform: 'translate3d(0, 0, 0) scale(1)',
+          filter: 'blur(0px)',
+          transition:
+            'opacity 380ms cubic-bezier(0.16, 1, 0.3, 1), transform 380ms cubic-bezier(0.16, 1, 0.3, 1), filter 380ms cubic-bezier(0.16, 1, 0.3, 1)',
+        };
+
   return (
     <div
       id="inicio"
-      className="min-h-screen flex flex-col bg-kuota-palesky text-kuota-crayola font-sans"
+      className="min-h-screen flex flex-col bg-kuota-palesky text-kuota-crayola font-sans overflow-x-hidden"
     >
-      {/* 1. Navbar unificada con selector único de perfil Compradores / Proveedores */}
-      <UnifiedNavbar mode={mode} onModeChange={handleModeChange} />
+      {/* 1. Navbar unificada con selector animado de perfil Compradores / Proveedores */}
+      <UnifiedNavbar
+        mode={mode}
+        isSwitching={transitionStage !== 'idle'}
+        onModeChange={handleModeChange}
+      />
 
-      {/* 2. Contenido principal según el perfil activo */}
-      <main key={mode} className="flex-1 animate-fadeIn">
-        {mode === 'compradores' ? (
+      {/* 2. Contenido principal con transición direccional suave entre ambos perfiles */}
+      <main
+        key={renderedMode}
+        style={mainTransitionStyle}
+        className="flex-1"
+      >
+        {renderedMode === 'compradores' ? (
           <>
             <BuyerHeroSection />
             <LaunchCountdownSection mode="compradores" />
