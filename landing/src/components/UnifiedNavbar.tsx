@@ -260,7 +260,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           <div
             role="tablist"
             aria-label="Seleccionar perfil del ecosistema"
-            className="inline-flex items-center gap-1 p-1 rounded-full bg-slate-100 border border-slate-200/90 shadow-inner shrink-0"
+            className="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-slate-100 border border-slate-200/90 shadow-inner shrink-0"
           >
             {/* Pestaña 1: Ecosistema */}
             <button
@@ -506,54 +506,54 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
       <div
         id="mobile-nav-menu"
         aria-hidden={!mobileMenuOpen}
-        className={`lg:hidden absolute top-full left-0 right-0 z-50 grid transition-all duration-300 ${
+        className={`lg:hidden fixed top-16 inset-x-0 bottom-0 z-50 bg-[#070E1A]/95 backdrop-blur-xl border-t border-white/10 transition-all duration-300 overflow-y-auto ${
           mobileMenuOpen
-            ? 'grid-rows-[1fr] opacity-100 border-t-2 border-b-2 border-kuota-deepnavy shadow-navy-hard-lg'
-            : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="overflow-hidden bg-white/98 backdrop-blur-md p-4 space-y-3">
-          {/* Selector de perfil para móviles */}
-          <div className="p-1 rounded-2xl bg-slate-100 border border-slate-200/90 grid grid-cols-3 gap-1 mb-2">
+        <div className="p-5 space-y-4 max-w-lg mx-auto">
+          {/* Selector de perfil para móviles (High Contrast Fintech Capsule) */}
+          <div className="p-1.5 rounded-2xl bg-white/5 border border-white/10 grid grid-cols-3 gap-1.5 shadow-inner">
             <button
               type="button"
               onClick={() => handleSwitchMode('ecosistema', 'mobile_drawer')}
-              className={`py-2 px-1 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+              className={`py-2.5 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${
                 activeModeNormalized === 'ecosistema'
-                  ? 'bg-[#070A0F] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-[#070A0F] shadow-sm font-extrabold'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              <Layers className={`w-4 h-4 ${activeModeNormalized === 'ecosistema' ? 'text-[#10B981]' : 'text-slate-500'}`} />
+              <Layers className={`w-4 h-4 ${activeModeNormalized === 'ecosistema' ? 'text-[#10B981]' : 'text-slate-400'}`} />
               <span>Ecosistema</span>
             </button>
             <button
               type="button"
               onClick={() => handleSwitchMode('compradores', 'mobile_drawer')}
-              className={`py-2 px-1 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+              className={`py-2.5 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${
                 activeModeNormalized === 'compradores'
-                  ? 'bg-[#0391FD] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#0391FD] text-white shadow-sm font-extrabold'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              <ShoppingBag className={`w-4 h-4 ${activeModeNormalized === 'compradores' ? 'text-white' : 'text-slate-500'}`} />
+              <ShoppingBag className={`w-4 h-4 ${activeModeNormalized === 'compradores' ? 'text-white' : 'text-slate-400'}`} />
               <span>Compradores</span>
             </button>
             <button
               type="button"
               onClick={() => handleSwitchMode('comercios', 'mobile_drawer')}
-              className={`py-2 px-1 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+              className={`py-2.5 px-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${
                 activeModeNormalized === 'comercios'
-                  ? 'bg-[#059669] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#059669] text-white shadow-sm font-extrabold'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              <Store className={`w-4 h-4 ${activeModeNormalized === 'comercios' ? 'text-white' : 'text-slate-500'}`} />
+              <Store className={`w-4 h-4 ${activeModeNormalized === 'comercios' ? 'text-white' : 'text-slate-400'}`} />
               <span>Comercios</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
             {navLinks.map((link) => {
               const Icon = link.icon;
               return (
@@ -561,25 +561,27 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                   key={link.href}
                   href={link.href}
                   onClick={(e) => handleLinkClick(e, link.label, link.href)}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-kuota-palesky/30 border border-kuota-deepnavy/20 active:bg-kuota-palesky/70 text-xs font-extrabold text-kuota-deepnavy"
+                  className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/10 active:bg-white/15 text-white transition-colors"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 text-kuota-dodger" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-[#38BDF8]" />
+                    </div>
                     <div>
-                      <div className="text-sm font-extrabold">{link.label}</div>
-                      <div className="text-[10px] font-semibold text-kuota-crayola">{link.subtitle}</div>
+                      <div className="text-sm font-bold text-white">{link.label}</div>
+                      <div className="text-[11px] text-slate-400">{link.subtitle}</div>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 opacity-60" />
+                  <ArrowRight className="w-4 h-4 text-slate-500" />
                 </a>
               );
             })}
           </div>
 
-          <div className="pt-2 border-t border-kuota-deepnavy/15 flex flex-col gap-2">
+          <div className="pt-4 border-t border-white/10 flex flex-col gap-2.5">
             <a
               href="mailto:kuota.contact@gmail.com"
-              className="text-center py-2 rounded-xl bg-kuota-palesky/50 border border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy"
+              className="text-center py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
             >
               kuota.contact@gmail.com
             </a>
@@ -592,7 +594,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                   setMobileMenuOpen(false);
                   if (onOpenMerchantAffiliation) onOpenMerchantAffiliation();
                 }}
-                className="w-full py-3 rounded-xl bg-kuota-dodger text-white font-extrabold text-sm border-2 border-kuota-deepnavy shadow-navy-hard"
+                className="w-full py-3.5 rounded-xl bg-[#0391FD] hover:bg-[#0277D4] text-white font-bold text-sm shadow-md transition-all active:scale-[0.98]"
               >
                 Afiliar mi comercio
               </button>

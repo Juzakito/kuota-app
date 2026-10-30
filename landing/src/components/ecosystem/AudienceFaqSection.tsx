@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HelpCircle, ChevronDown, ShoppingBag, Store, Handshake, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, ShoppingBag, Store, Handshake, HelpCircle } from 'lucide-react';
 import { ScrollReveal } from '../../utils/motionSystem';
 import { trackEvent } from '../../utils/analytics';
 import { kuotaSound } from '../../utils/soundSystem';
@@ -87,7 +87,7 @@ const PARTNER_FAQS: FaqItem[] = [
     id: 'p-2',
     question: '¿Qué oportunidades de integración existen?',
     answer:
-      'Integración de pasarelas de pago, homologación de catálogos mayoristas para colocación de mercadería, provisión de infraestructura de conciliación y programas de formalización para microempresarios.',
+      'Integración de pasarelas de pago, homologación de catallogos mayoristas para colocación de mercadería, provisión de infraestructura de conciliación y programas de formalización para microempresarios.',
   },
   {
     id: 'p-3',
@@ -132,40 +132,41 @@ export const AudienceFaqSection: React.FC = () => {
     <section
       id="faq"
       aria-labelledby="faq-heading"
-      className="py-16 sm:py-24 bg-kuota-palesky/35 border-b-2 border-kuota-deepnavy"
+      className="py-16 sm:py-24 bg-[#F8FAFC] border-b border-slate-200/80"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <ScrollReveal delayMs={0} direction="up" className="text-center">
-          <span className="inline-block px-3.5 py-1 rounded-full bg-white border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider mb-3">
-            Resolución de Dudas
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white border border-slate-200 text-xs font-bold text-slate-800 uppercase tracking-wider mb-3 shadow-xs">
+            <HelpCircle className="w-3.5 h-3.5 text-[#0391FD]" />
+            <span>Resolución de Dudas</span>
           </span>
           <h2
             id="faq-heading"
-            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-kuota-deepnavy tracking-tight"
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0A192F] tracking-tight"
           >
             Preguntas Frecuentes
           </h2>
-          <p className="mt-3 text-base sm:text-lg font-semibold text-kuota-crayola">
-            Respuestas claras y fundamentadas según tu perfil en el ecosistema.
+          <p className="mt-2 text-sm sm:text-base font-normal text-slate-600 max-w-xl mx-auto">
+            Respuestas directas y transparentes según tu rol en el ecosistema Kuota.
           </p>
         </ScrollReveal>
 
-        {/* Selector de Pestañas de Audiencia */}
+        {/* Selector de Pestañas de Audiencia (High Contrast Fintech Capsule) */}
         <div className="flex justify-center">
           <div
             role="tablist"
             aria-label="Pestañas de preguntas frecuentes"
-            className="inline-flex p-1.5 rounded-2xl bg-white border-2 border-kuota-deepnavy gap-1 shadow-sm"
+            className="inline-flex p-1 rounded-full bg-slate-200/80 border border-slate-300/80 gap-1 shadow-inner"
           >
             <button
               type="button"
               role="tab"
               aria-selected={activeAudience === 'compradores'}
               onClick={() => handleAudienceTabChange('compradores')}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-1.5 ${
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-150 flex items-center gap-1.5 ${
                 activeAudience === 'compradores'
-                  ? 'bg-kuota-dodger text-white shadow-sm'
-                  : 'text-kuota-deepnavy hover:bg-kuota-palesky/50'
+                  ? 'bg-[#0391FD] text-white shadow-sm'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
               }`}
             >
               <ShoppingBag className="w-3.5 h-3.5" />
@@ -177,13 +178,13 @@ export const AudienceFaqSection: React.FC = () => {
               role="tab"
               aria-selected={activeAudience === 'comercios'}
               onClick={() => handleAudienceTabChange('comercios')}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-1.5 ${
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-150 flex items-center gap-1.5 ${
                 activeAudience === 'comercios'
-                  ? 'bg-kuota-deepnavy text-white shadow-sm'
-                  : 'text-kuota-deepnavy hover:bg-kuota-palesky/50'
+                  ? 'bg-[#059669] text-white shadow-sm'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
               }`}
             >
-              <Store className="w-3.5 h-3.5 text-kuota-palesky" />
+              <Store className="w-3.5 h-3.5" />
               <span>Comercios</span>
             </button>
 
@@ -192,10 +193,10 @@ export const AudienceFaqSection: React.FC = () => {
               role="tab"
               aria-selected={activeAudience === 'aliados'}
               onClick={() => handleAudienceTabChange('aliados')}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-1.5 ${
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-150 flex items-center gap-1.5 ${
                 activeAudience === 'aliados'
-                  ? 'bg-kuota-crayola text-white shadow-sm'
-                  : 'text-kuota-deepnavy hover:bg-kuota-palesky/50'
+                  ? 'bg-[#0A192F] text-white shadow-sm'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
               }`}
             >
               <Handshake className="w-3.5 h-3.5" />
@@ -204,38 +205,39 @@ export const AudienceFaqSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Acordeones de Preguntas */}
-        <div className="space-y-3">
+        {/* Acordeones de Preguntas (Estilo Moderno Fintech) */}
+        <div className="space-y-3 pt-2">
           {currentFaqs.map((faq) => {
             const isOpen = openFaqId === faq.id;
             return (
               <div
                 key={faq.id}
-                className={`rounded-2xl border-2 transition-all duration-200 bg-white ${
+                className={`rounded-2xl border transition-all duration-200 bg-white overflow-hidden ${
                   isOpen
-                    ? 'border-kuota-deepnavy shadow-navy-hard -translate-y-0.5'
-                    : 'border-kuota-deepnavy/25 hover:border-kuota-deepnavy shadow-sm'
+                    ? 'border-[#0391FD]/50 shadow-md ring-1 ring-[#0391FD]/20'
+                    : 'border-slate-200/90 hover:border-slate-300 shadow-xs'
                 }`}
               >
                 <button
                   type="button"
                   aria-expanded={isOpen}
                   onClick={() => handleToggleFaq(faq.id, faq.question)}
-                  className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-extrabold text-base sm:text-lg text-kuota-deepnavy"
+                  className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-[#0A192F] hover:text-[#0391FD] transition-colors"
                 >
-                  <span className="flex items-center gap-3">
-                    <HelpCircle className="w-5 h-5 text-kuota-dodger shrink-0" />
-                    <span>{faq.question}</span>
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-kuota-deepnavy shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-kuota-dodger' : ''
+                  <span className="leading-snug pr-2">{faq.question}</span>
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
+                      isOpen
+                        ? 'bg-[#0391FD] text-white rotate-180'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                     }`}
-                  />
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
                 </button>
 
                 {isOpen && (
-                  <div className="px-5 pb-5 pt-1 border-t border-kuota-deepnavy/10 text-xs sm:text-sm font-semibold text-kuota-crayola leading-relaxed animate-fadeIn">
+                  <div className="px-5 sm:px-6 pb-6 pt-0 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 mt-1 pt-4 animate-fadeIn">
                     <p>{faq.answer}</p>
                   </div>
                 )}
