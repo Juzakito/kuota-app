@@ -225,6 +225,8 @@ export const ProductChipsSection: React.FC = () => {
   const [demoAmountSoles, setDemoAmountSoles] = useState<number>(1200);
   const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(false);
   const [activeEditorialId, setActiveEditorialId] = useState<'A' | 'B' | 'C' | 'D' | 'E'>('A');
+  const sceneTouchStartX = React.useRef<number | null>(null);
+  const editorialTouchStartX = React.useRef<number | null>(null);
 
   const activeChip: ProductChipItem =
     PRODUCT_CHIPS.find((c) => c.id === activeChipId) || PRODUCT_CHIPS[0];
@@ -371,6 +373,52 @@ export const ProductChipsSection: React.FC = () => {
     kuotaSound.playSelectOption();
     setActiveEditorialId(id);
     trackEvent('editorial_benefit_scene_select', { scene_id: id });
+  };
+
+  const handleSceneSwipeStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 1) {
+      sceneTouchStartX.current = e.touches[0].clientX;
+    }
+  };
+
+  const handleSceneSwipeEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (sceneTouchStartX.current === null || e.changedTouches.length === 0) return;
+    const deltaX = e.changedTouches[0].clientX - sceneTouchStartX.current;
+    sceneTouchStartX.current = null;
+    if (Math.abs(deltaX) > 42) {
+      const nextScene =
+        deltaX < 0
+          ? demoScene < INSTALLMENT_SCENES.length
+            ? demoScene + 1
+            : 1
+          : demoScene > 1
+            ? demoScene - 1
+            : INSTALLMENT_SCENES.length;
+      handleSelectScene(nextScene);
+    }
+  };
+
+  const handleEditorialSwipeStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 1) {
+      editorialTouchStartX.current = e.touches[0].clientX;
+    }
+  };
+
+  const handleEditorialSwipeEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (editorialTouchStartX.current === null || e.changedTouches.length === 0) return;
+    const deltaX = e.changedTouches[0].clientX - editorialTouchStartX.current;
+    editorialTouchStartX.current = null;
+    if (Math.abs(deltaX) > 42) {
+      const currentIdx = EDITORIAL_BENEFIT_SCENES.findIndex(
+        (s) => s.id === activeEditorialId
+      );
+      const nextIdx =
+        deltaX < 0
+          ? (currentIdx + 1) % EDITORIAL_BENEFIT_SCENES.length
+          : (currentIdx - 1 + EDITORIAL_BENEFIT_SCENES.length) %
+            EDITORIAL_BENEFIT_SCENES.length;
+      handleSelectEditorial(EDITORIAL_BENEFIT_SCENES[nextIdx].id);
+    }
   };
 
   return (
@@ -731,7 +779,11 @@ export const ProductChipsSection: React.FC = () => {
             </div>
 
             {/* Panel visual de la compra y línea de tiempo de kuotas */}
-            <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div
+              onTouchStart={handleSceneSwipeStart}
+              onTouchEnd={handleSceneSwipeEnd}
+              className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch"
+            >
               {/* Columna Izquierda: Tarjeta de operación + desglose animado */}
               <div className="lg:col-span-5 rounded-2xl bg-kuota-deepnavy text-white p-5 sm:p-6 flex flex-col justify-between border-2 border-kuota-deepnavy">
                 <div>
@@ -929,6 +981,8 @@ export const ProductChipsSection: React.FC = () => {
             {/* Composición Editorial de Dos Columnas (§5): Izquierda Titular + Descripción + CTA / Derecha Fotografía Circular + Componente Financiero Animado */}
             <div
               key={activeEditorial.id}
+              onTouchStart={handleEditorialSwipeStart}
+              onTouchEnd={handleEditorialSwipeEnd}
               className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center kuota-section-arrive"
             >
               {/* Lado Izquierdo: Titular grande, descripción breve y CTA correspondiente */}

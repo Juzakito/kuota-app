@@ -7,6 +7,45 @@
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     background-color: #CBE5FE;
     color: #2F7AEF;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Optimización táctil móvil: elimina retraso de 300ms y mejora respuesta al toque */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="tab"],
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(3, 145, 253, 0.14);
+  }
+
+  /* Slider táctil cómodo en pantallas móviles */
+  input[type="range"] {
+    touch-action: pan-y;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    background: #0391FD;
+    border: 2px solid #00235C;
+    cursor: pointer;
+    -webkit-appearance: none;
+    box-shadow: 2px 2px 0px 0px #00235C;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    background: #0391FD;
+    border: 2px solid #00235C;
+    cursor: pointer;
+    box-shadow: 2px 2px 0px 0px #00235C;
   }
 
   /* Accesibilidad: estados de foco visibles en Deep Navy y Dodger Blue (PRD §7) */

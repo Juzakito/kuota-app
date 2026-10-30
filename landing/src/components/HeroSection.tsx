@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ShieldCheck,
   Sparkles,
@@ -83,11 +83,12 @@ const HERO_NARRATIVE_STEPS: HeroNarrativeStep[] = [
  * - CTA con microinteracciones táctiles y sonoras.
  * - Composición visual circular del emprendedor (`CircularImageReveal`) + tarjetas
  *   financieras flotantes en capas (`FinancialCardMotion`).
- * - Narrativa sincronizada de compra financiada en 5 pasos (Datos demostrativos).
+ * - Narrativa sincronizada de compra financiada en 5 pasos (con soporte táctil de toque y swipe).
  */
 export const HeroSection: React.FC = () => {
   const [activeStepIdx, setActiveStepIdx] = useState<number>(2);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const touchStartXRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (isPaused) return;
@@ -106,6 +107,26 @@ export const HeroSection: React.FC = () => {
       kuotaSound.playConfirmOperation();
     } else {
       kuotaSound.playSelectOption();
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 1) {
+      touchStartXRef.current = e.touches[0].clientX;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartXRef.current === null || e.changedTouches.length === 0) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    touchStartXRef.current = null;
+    if (Math.abs(deltaX) > 36) {
+      const nextIdx =
+        deltaX < 0
+          ? (activeStepIdx + 1) % HERO_NARRATIVE_STEPS.length
+          : (activeStepIdx - 1 + HERO_NARRATIVE_STEPS.length) %
+            HERO_NARRATIVE_STEPS.length;
+      handleSelectNarrativeStep(nextIdx);
     }
   };
 
@@ -159,18 +180,18 @@ export const HeroSection: React.FC = () => {
               </p>
             </ScrollReveal>
 
-            {/* Píldoras de propuesta de valor con microinteracciones */}
+            {/* Píldoras de propuesta de valor */}
             <ScrollReveal delayMs={230} direction="up">
               <div className="flex flex-wrap gap-2 mb-7">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold text-kuota-deepnavy shadow-sm transition-transform duration-150 hover:-translate-y-0.5">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold text-kuota-deepnavy shadow-sm">
                   <Sparkles className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
                   En 3 clics
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold text-kuota-deepnavy shadow-sm transition-transform duration-150 hover:-translate-y-0.5">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold text-kuota-deepnavy shadow-sm">
                   <ShieldCheck className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
                   5% de interés
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold text-kuota-deepnavy shadow-sm transition-transform duration-150 hover:-translate-y-0.5">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border-2 border-kuota-deepnavy text-xs sm:text-sm font-extrabold text-kuota-deepnavy shadow-sm">
                   <CheckCircle2 className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
                   Sin papeleo ni Infocorp
                 </span>
@@ -198,41 +219,40 @@ export const HeroSection: React.FC = () => {
             </ScrollReveal>
           </div>
 
-          {/* Columna Derecha: Composición Fotográfica Circular + Capas Financieras Sincronizadas (§2 y §3) */}
+          {/* Columna Derecha: Composición Fotográfica Circular + Capas Financieras Sincronizadas */}
           <ScrollReveal
             delayMs={140}
             direction="scale"
             className="lg:col-span-6 relative flex flex-col items-center"
           >
-            {/* Composición visual principal con fotografía circular y tarjetas flotantes */}
             <div className="relative w-full flex flex-col items-center justify-center py-2">
               <CircularImageReveal
                 src="/images/hero-negocio-kuota.jpg"
                 alt="Emprendedor peruano en su negocio abastecido con Kuota"
-                sizeClassName="w-64 h-64 sm:w-80 sm:h-80 lg:w-[21rem] lg:h-[21rem]"
+                sizeClassName="w-60 h-60 sm:w-80 sm:h-80 lg:w-[21rem] lg:h-[21rem]"
                 objectPosition="center center"
                 topBadge={
-                  <div className="rounded-2xl border-2 border-kuota-deepnavy bg-white px-3.5 py-2 shadow-navy-hard flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-xl bg-kuota-dodger text-white flex items-center justify-center shrink-0">
-                      <ShoppingBag className="w-4 h-4" aria-hidden="true" />
+                  <div className="rounded-2xl border-2 border-kuota-deepnavy bg-white px-3 py-1.5 sm:px-3.5 sm:py-2 shadow-navy-hard flex items-center gap-2">
+                    <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-kuota-dodger text-white flex items-center justify-center shrink-0">
+                      <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
                     </span>
                     <div className="text-left">
-                      <span className="block text-[10px] font-extrabold uppercase tracking-wider text-kuota-crayola">
+                      <span className="block text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-kuota-crayola">
                         Compra financiada
                       </span>
-                      <span className="text-xs sm:text-sm font-extrabold text-kuota-deepnavy">
+                      <span className="text-[11px] sm:text-sm font-extrabold text-kuota-deepnavy">
                         3 kuotas · 5% flat
                       </span>
                     </div>
                   </div>
                 }
                 floatingRightBadge={
-                  <div className="rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white px-3.5 py-2.5 shadow-navy-hard">
-                    <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-kuota-palesky">
-                      <Calendar className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
+                  <div className="rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white px-3 py-1.5 sm:px-3.5 sm:py-2.5 shadow-navy-hard">
+                    <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-kuota-palesky">
+                      <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-kuota-dodger" aria-hidden="true" />
                       <span>Calendario claro</span>
                     </div>
-                    <div className="text-xs sm:text-sm font-extrabold text-white mt-0.5 tabular-nums">
+                    <div className="text-[11px] sm:text-sm font-extrabold text-white mt-0.5 tabular-nums">
                       Día 20 · Día 40 · Día 60
                     </div>
                   </div>
@@ -244,68 +264,76 @@ export const HeroSection: React.FC = () => {
                 {/* Narrativa interactiva en 5 pasos (Datos demostrativos — §3) */}
                 <FinancialCardMotion
                   maxTiltDeg={2.2}
-                  className="sm:col-span-7 rounded-2xl border-2 border-kuota-deepnavy bg-white p-4 shadow-navy-hard-lg flex flex-col justify-between"
+                  className="sm:col-span-7"
                 >
-                  <div>
-                    <div className="flex items-center justify-between gap-1.5 mb-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-kuota-palesky border border-kuota-deepnavy text-[10px] font-extrabold uppercase text-kuota-deepnavy">
-                        <Layers className="w-3 h-3 text-kuota-dodger" aria-hidden="true" />
-                        Datos demostrativos
-                      </span>
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-kuota-dodger text-white">
-                        {currentNarrative.statusBadge}
-                      </span>
+                  <div
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                    className="h-full rounded-2xl border-2 border-kuota-deepnavy bg-white p-4 shadow-navy-hard-lg flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1.5 mb-2">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-kuota-palesky border border-kuota-deepnavy text-[10px] font-extrabold uppercase text-kuota-deepnavy">
+                          <Layers className="w-3 h-3 text-kuota-dodger" aria-hidden="true" />
+                          Datos demostrativos
+                        </span>
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-kuota-dodger text-white">
+                          {currentNarrative.statusBadge}
+                        </span>
+                      </div>
+
+                      <div key={currentNarrative.step} className="animate-fadeIn">
+                        <span className="block text-[11px] font-extrabold uppercase tracking-wider text-kuota-crayola">
+                          {currentNarrative.tag}
+                        </span>
+                        <h2 className="text-sm sm:text-base font-extrabold text-kuota-deepnavy leading-snug mt-0.5">
+                          {currentNarrative.title}
+                        </h2>
+                        <p className="text-xs font-semibold text-kuota-deepnavy/75 mt-0.5">
+                          {currentNarrative.detail}
+                        </p>
+                      </div>
                     </div>
 
-                    <div key={currentNarrative.step} className="animate-fadeIn">
-                      <span className="block text-[11px] font-extrabold uppercase tracking-wider text-kuota-crayola">
-                        {currentNarrative.tag}
-                      </span>
-                      <h2 className="text-sm sm:text-base font-extrabold text-kuota-deepnavy leading-snug mt-0.5">
-                        {currentNarrative.title}
-                      </h2>
-                      <p className="text-xs font-semibold text-kuota-deepnavy/75 mt-0.5">
-                        {currentNarrative.detail}
-                      </p>
-                    </div>
-                  </div>
+                    <div className="mt-3 pt-2.5 border-t border-kuota-deepnavy/15">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-[11px] font-bold text-kuota-crayola truncate">
+                          {currentNarrative.installmentText}
+                        </span>
+                        <AnimatedNumber
+                          value={currentNarrative.amountSoles}
+                          prefix="S/ "
+                          className="text-base sm:text-lg font-extrabold text-kuota-deepnavy shrink-0"
+                        />
+                      </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-kuota-deepnavy/15">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-[11px] font-bold text-kuota-crayola truncate">
-                        {currentNarrative.installmentText}
-                      </span>
-                      <AnimatedNumber
-                        value={currentNarrative.amountSoles}
-                        prefix="S/ "
-                        className="text-base sm:text-lg font-extrabold text-kuota-deepnavy shrink-0"
-                      />
-                    </div>
-
-                    {/* Indicadores de escena (1 a 5) */}
-                    <div
-                      role="tablist"
-                      aria-label="Secuencia demostrativa de compra en kuotas"
-                      className="flex items-center gap-1.5 mt-2.5"
-                    >
-                      {HERO_NARRATIVE_STEPS.map((item, idx) => {
-                        const isActive = idx === activeStepIdx;
-                        return (
-                          <button
-                            key={item.step}
-                            type="button"
-                            role="tab"
-                            aria-selected={isActive}
-                            aria-label={item.tag}
-                            onClick={() => handleSelectNarrativeStep(idx)}
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              isActive
-                                ? 'w-7 bg-kuota-dodger'
-                                : 'w-2.5 bg-kuota-deepnavy/25 hover:bg-kuota-deepnavy/50'
-                            }`}
-                          />
-                        );
-                      })}
+                      {/* Botones táctiles de escena (1 a 5) cómodos para celular y PC */}
+                      <div
+                        role="tablist"
+                        aria-label="Secuencia demostrativa de compra en kuotas"
+                        className="grid grid-cols-5 gap-1.5 mt-3"
+                      >
+                        {HERO_NARRATIVE_STEPS.map((item, idx) => {
+                          const isActive = idx === activeStepIdx;
+                          return (
+                            <button
+                              key={item.step}
+                              type="button"
+                              role="tab"
+                              aria-selected={isActive}
+                              aria-label={item.tag}
+                              onClick={() => handleSelectNarrativeStep(idx)}
+                              className={`min-h-[32px] rounded-lg border text-xs font-extrabold touch-manipulation transition-all duration-200 active:scale-95 ${
+                                isActive
+                                  ? 'bg-kuota-dodger text-white border-kuota-deepnavy shadow-sm'
+                                  : 'bg-kuota-palesky/60 text-kuota-deepnavy border-kuota-deepnavy/30 hover:bg-kuota-palesky'
+                              }`}
+                            >
+                              {item.step}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </FinancialCardMotion>

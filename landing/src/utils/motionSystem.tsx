@@ -23,20 +23,29 @@ export function usePrefersReducedMotion(): boolean {
 }
 
 let activeScrollRafId: number | null = null;
+let cancelUserScrollListeners: (() => void) | null = null;
+
+function stopActiveSmoothScroll(): void {
+  if (activeScrollRafId !== null && typeof window !== 'undefined') {
+    window.cancelAnimationFrame(activeScrollRafId);
+    activeScrollRafId = null;
+  }
+  if (cancelUserScrollListeners) {
+    cancelUserScrollListeners();
+    cancelUserScrollListeners = null;
+  }
+}
 
 /**
  * Desplazamiento suave por hardware (requestAnimationFrame) hacia una sección
  * por su selector (`#producto`, `#beneficios`, `#niveles`, `#confianza`, etc.),
- * compensando la altura de la barra de navegación fija e iniciando una animación
- * de llegada en la sección destino.
+ * compensando únicamente la altura de la barra superior fija (`#kuota-top-bar`)
+ * y cancelándose de inmediato si el usuario toca la pantalla en móvil (`touchstart`).
  */
 export function smoothScrollToAnchor(href: string): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  if (activeScrollRafId !== null) {
-    window.cancelAnimationFrame(activeScrollRafId);
-    activeScrollRafId = null;
-  }
+  stopActiveSmoothScroll();
 
   const isTop = href === '#inicio' || href === '#';
   const targetEl = isTop
@@ -45,8 +54,11 @@ export function smoothScrollToAnchor(href: string): void {
 
   if (!targetEl && !isTop) return;
 
-  const headerEl = document.querySelector('header');
-  const headerOffset = headerEl ? headerEl.getBoundingClientRect().height : 76;
+  const topBarEl =
+    document.getElementById('kuota-top-bar') || document.querySelector('header');
+  const rawBarHeight = topBarEl ? topBarEl.getBoundingClientRect().height : 68;
+  // Garantizar que si el menú móvil estaba desplegado nunca se tome más de 84px de offset
+  const headerOffset = Math.min(84, Math.max(56, rawBarHeight));
 
   const startY = window.scrollY || window.pageYOffset;
   const rawTargetY = isTop
@@ -83,10 +95,23 @@ export function smoothScrollToAnchor(href: string): void {
     return;
   }
 
-  const durationMs = Math.min(780, Math.max(460, Math.abs(distance) * 0.38));
+  const durationMs = Math.min(720, Math.max(420, Math.abs(distance) * 0.36));
   const startTime = performance.now();
 
   const easeOutQuart = (t: number): number => 1 - Math.pow(1 - t, 4);
+
+  // Si el usuario toca la pantalla o usa la rueda durante la animación, ceder el control de inmediato
+  const handleUserInterrupt = () => {
+    stopActiveSmoothScroll();
+  };
+
+  window.addEventListener('touchstart', handleUserInterrupt, { passive: true });
+  window.addEventListener('wheel', handleUserInterrupt, { passive: true });
+
+  cancelUserScrollListeners = () => {
+    window.removeEventListener('touchstart', handleUserInterrupt);
+    window.removeEventListener('wheel', handleUserInterrupt);
+  };
 
   const step = (now: number) => {
     const elapsed = now - startTime;
@@ -98,7 +123,7 @@ export function smoothScrollToAnchor(href: string): void {
     if (progress < 1) {
       activeScrollRafId = window.requestAnimationFrame(step);
     } else {
-      activeScrollRafId = null;
+      stopActiveSmoothScroll();
     }
   };
 
@@ -189,10 +214,10 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
   }, [reducedMotion, threshold]);
 
   const hiddenTransform = {
-    up: 'translate3d(0, 16px, 0)',
-    left: 'translate3d(-16px, 0, 0)',
-    right: 'translate3d(16px, 0, 0)',
-    scale: 'translate3d(0, 12px, 0) scale(0.982)',
+    up: 'translate3d(0, 14px, 0)',
+    left: 'translate3d(-14px, 0, 0)',
+    right: 'translate3d(14px, 0, 0)',
+    scale: 'translate3d(0, 10px, 0) scale(0.985)',
   }[direction];
 
   const style: React.CSSProperties = reducedMotion
@@ -229,7 +254,9 @@ export interface TiltCardProps {
 }
 
 /**
- * Contenedor con movimiento 3D sutil en escritorio y respuesta táctil en móvil (`TiltCard` / `FinancialCardMotion`).
+ * Contenedor con movimiento 3D sutil en escritorio (`hover: hover` y `pointer: fine`).
+ * En dispositivos táctiles/móviles desactiva el `perspective` y el `active:scale` del
+ * contenedor padre para que los toques en botones internos respondan al 100% sin desplazamiento.
  */
 export const TiltCard: React.FC<TiltCardProps> = ({
   children,
@@ -238,12 +265,26 @@ export const TiltCard: React.FC<TiltCardProps> = ({
 }) => {
   const reducedMotion = usePrefersReducedMotion();
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const [transformStyle, setTransformStyle] = useState<string>(
-    'perspective(900px) rotateX(0deg) rotateY(0deg) translate3d(0, 0, 0)'
-  );
+  const [canHover, setCanHover] = useState<boolean>(false);
+  const [transformStyle, setTransformStyle] = useState<string>('none');
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const updateCanHover = () => {
+      const supported = mq.matches && window.innerWidth >= 1024;
+      setCanHover(supported);
+      if (!supported) {
+        setTransformStyle('none');
+      }
+    };
+    updateCanHover();
+    window.addEventListener('resize', updateCanHover);
+    return () => window.removeEventListener('resize', updateCanHover);
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (reducedMotion || typeof window === 'undefined' || window.innerWidth < 1024) {
+    if (reducedMotion || !canHover) {
       return;
     }
     const el = cardRef.current;
@@ -260,26 +301,24 @@ export const TiltCard: React.FC<TiltCardProps> = ({
   };
 
   const handleMouseLeave = () => {
-    if (reducedMotion) return;
-    setTransformStyle(
-      'perspective(900px) rotateX(0deg) rotateY(0deg) translate3d(0, 0, 0)'
-    );
+    if (reducedMotion || !canHover) return;
+    setTransformStyle('none');
   };
 
   return (
     <div
       ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseMove={canHover ? handleMouseMove : undefined}
+      onMouseLeave={canHover ? handleMouseLeave : undefined}
       style={
-        reducedMotion
+        reducedMotion || !canHover
           ? undefined
           : {
               transform: transformStyle,
               transition: `transform ${MOTION_TOKENS.duration.normalMs}ms ${MOTION_TOKENS.easing.smoothOut}`,
             }
       }
-      className={`active:scale-[0.99] transition-shadow ${className}`}
+      className={`transition-shadow ${className}`}
     >
       {children}
     </div>
@@ -295,7 +334,7 @@ export interface FinancialCardMotionProps {
 
 /**
  * Componente `FinancialCardMotion` (§12): Tarjeta financiera con profundidad,
- * elevación interactiva y flotación suave opcional.
+ * elevación interactiva en escritorio y respuesta táctil limpia en móvil.
  */
 export const FinancialCardMotion: React.FC<FinancialCardMotionProps> = ({
   children,
@@ -384,7 +423,7 @@ export interface CircularImageRevealProps {
 export const CircularImageReveal: React.FC<CircularImageRevealProps> = ({
   src,
   alt,
-  sizeClassName = 'w-64 h-64 sm:w-80 sm:h-80',
+  sizeClassName = 'w-60 h-60 sm:w-80 sm:h-80',
   objectPosition = 'center center',
   topBadge,
   bottomBadge,
@@ -393,27 +432,27 @@ export const CircularImageReveal: React.FC<CircularImageRevealProps> = ({
 }) => {
   return (
     <div
-      className={`relative inline-flex items-center justify-center select-none ${className}`}
+      className={`relative inline-flex items-center justify-center select-none max-w-full ${className}`}
     >
       {/* Halo ambiental y anillo orbital punteado estilo fintech editorial */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-3 sm:-inset-4 rounded-full border-2 border-dashed border-kuota-deepnavy/35 bg-kuota-dodger/10"
+        className="pointer-events-none absolute -inset-2.5 sm:-inset-4 rounded-full border-2 border-dashed border-kuota-deepnavy/35 bg-kuota-dodger/10"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-1.5 rounded-full border-2 border-kuota-dodger/40"
+        className="pointer-events-none absolute -inset-1 rounded-full border-2 border-kuota-dodger/40"
       />
 
       {/* Recorte fotográfico circular principal */}
       <div
-        className={`relative rounded-full overflow-hidden border-4 border-kuota-deepnavy bg-white shadow-navy-hard-lg transition-transform duration-500 hover:scale-[1.02] ${sizeClassName}`}
+        className={`relative rounded-full overflow-hidden border-4 border-kuota-deepnavy bg-white shadow-navy-hard-lg transition-transform duration-500 lg:hover:scale-[1.02] ${sizeClassName}`}
       >
         <img
           src={src}
           alt={alt}
           style={{ objectPosition }}
-          className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-700 lg:hover:scale-105"
         />
         <div
           aria-hidden="true"
@@ -421,16 +460,16 @@ export const CircularImageReveal: React.FC<CircularImageRevealProps> = ({
         />
       </div>
 
-      {/* Insignias financieras flotantes */}
+      {/* Insignias financieras flotantes (pointer-events-none para no interceptar toques en móvil) */}
       {topBadge && (
-        <div className="absolute -top-3 -left-2 sm:-left-6 z-20 animate-floatCard">
+        <div className="pointer-events-none absolute -top-3 left-0 sm:-left-6 z-20 animate-floatCard">
           {topBadge}
         </div>
       )}
       {floatingRightBadge && (
         <div
           style={{ animationDelay: '900ms' }}
-          className="absolute top-1/2 -translate-y-1/2 -right-3 sm:-right-8 z-20 animate-floatCard"
+          className="pointer-events-none absolute -bottom-2 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 right-0 sm:-right-8 z-20 animate-floatCard"
         >
           {floatingRightBadge}
         </div>
@@ -438,7 +477,7 @@ export const CircularImageReveal: React.FC<CircularImageRevealProps> = ({
       {bottomBadge && (
         <div
           style={{ animationDelay: '450ms' }}
-          className="absolute -bottom-4 left-2 right-2 sm:left-auto sm:-right-4 z-20 flex justify-center animate-floatCard"
+          className="pointer-events-none absolute -bottom-4 left-2 right-2 sm:left-auto sm:-right-4 z-20 flex justify-center animate-floatCard"
         >
           {bottomBadge}
         </div>
@@ -533,7 +572,7 @@ export interface InstallmentTimelineProps {
 
 /**
  * Componente `InstallmentTimeline` (§4 y §12): Línea de tiempo y calendario interactivo
- * de kuotas con montos animados y estados de pago.
+ * de kuotas con montos animados y botones táctiles nativos.
  */
 export const InstallmentTimeline: React.FC<InstallmentTimelineProps> = ({
   items,
@@ -546,28 +585,20 @@ export const InstallmentTimeline: React.FC<InstallmentTimelineProps> = ({
         const isPaid = inst.status === 'Pagada' || inst.status === 'Confirmada';
         const isUpcoming = inst.status === 'Próxima' || inst.status === 'Programada';
 
-        return (
-          <div
-            key={inst.id}
-            onClick={() => onSelectItem && onSelectItem(inst, idx)}
-            role={onSelectItem ? 'button' : undefined}
-            tabIndex={onSelectItem ? 0 : undefined}
-            onKeyDown={(e) => {
-              if (onSelectItem && (e.key === 'Enter' || e.key === ' ')) {
-                e.preventDefault();
-                onSelectItem(inst, idx);
-              }
-            }}
-            className={`rounded-xl border-2 p-3.5 transition-all duration-300 ${
-              onSelectItem ? 'cursor-pointer hover:-translate-y-0.5' : ''
-            } ${
-              isPaid
-                ? 'bg-white border-kuota-dodger shadow-navy-hard'
-                : inst.highlight || isUpcoming
-                  ? 'bg-white border-kuota-deepnavy shadow-sm'
-                  : 'bg-white/65 border-kuota-deepnavy/35 opacity-85'
-            }`}
-          >
+        const cardClasses = `w-full text-left rounded-xl border-2 p-3.5 transition-all duration-200 touch-manipulation ${
+          onSelectItem
+            ? 'cursor-pointer lg:hover:-translate-y-0.5 active:scale-[0.98]'
+            : ''
+        } ${
+          isPaid
+            ? 'bg-white border-kuota-dodger shadow-navy-hard'
+            : inst.highlight || isUpcoming
+              ? 'bg-white border-kuota-deepnavy shadow-sm'
+              : 'bg-white/65 border-kuota-deepnavy/35 opacity-85'
+        }`;
+
+        const content = (
+          <>
             <div className="flex items-center justify-between gap-2 mb-1.5">
               <span className="text-xs font-extrabold text-kuota-deepnavy flex items-center gap-1.5">
                 <span
@@ -605,6 +636,25 @@ export const InstallmentTimeline: React.FC<InstallmentTimelineProps> = ({
                 className="text-lg font-extrabold text-kuota-deepnavy"
               />
             </div>
+          </>
+        );
+
+        if (onSelectItem) {
+          return (
+            <button
+              key={inst.id}
+              type="button"
+              onClick={() => onSelectItem(inst, idx)}
+              className={cardClasses}
+            >
+              {content}
+            </button>
+          );
+        }
+
+        return (
+          <div key={inst.id} className={cardClasses}>
+            {content}
           </div>
         );
       })}
@@ -637,7 +687,7 @@ export const PaymentProgress: React.FC<PaymentProgressProps> = ({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <div className="flex items-center justify-between gap-2 text-xs font-extrabold">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-extrabold">
         <span className="text-kuota-deepnavy uppercase tracking-wider">{label}</span>
         <div className="flex items-center gap-2">
           {statusText && (
@@ -682,14 +732,14 @@ export const AnimatedCTA: React.FC<AnimatedCTAProps> = ({
 }) => {
   const variantClasses = {
     primary:
-      'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard hover:shadow-navy-hard-lg',
+      'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard lg:hover:shadow-navy-hard-lg',
     secondary:
       'bg-white hover:bg-kuota-palesky text-kuota-deepnavy border-2 border-kuota-deepnavy shadow-navy-hard',
     navy:
       'bg-kuota-deepnavy hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard',
   }[variant];
 
-  const baseClasses = `inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-sm sm:text-base transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] ${variantClasses} ${className}`;
+  const baseClasses = `inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-sm sm:text-base touch-manipulation transition-all duration-200 lg:hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] ${variantClasses} ${className}`;
 
   const handleInteraction = (e: React.MouseEvent<HTMLElement>) => {
     kuotaSound.playCtaClick();
@@ -756,7 +806,7 @@ export const SoundController: React.FC<{ className?: string }> = ({
           ? 'Sonidos interactivos activados. Clic para silenciar'
           : 'Sonidos interactivos desactivados. Clic para activar'
       }
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-kuota-deepnavy text-xs font-extrabold transition-all duration-150 ${
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-kuota-deepnavy text-xs font-extrabold touch-manipulation transition-all duration-150 ${
         enabled
           ? 'bg-kuota-deepnavy text-white shadow-sm'
           : 'bg-white hover:bg-kuota-palesky/70 text-kuota-deepnavy'

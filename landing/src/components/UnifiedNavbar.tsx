@@ -100,7 +100,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
     left: number;
     width: number;
     ready: boolean;
-  }>({ left: 4, width: 132, ready: false });
+  }>({ left: 4, width: 110, ready: false });
 
   const navLinks = mode === 'compradores' ? BUYER_LINKS : SUPPLIER_LINKS;
 
@@ -114,7 +114,9 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
   }>({ left: 0, width: 0, ready: false });
 
   useEffect(() => {
-    setActiveNavHref(( mode === 'compradores' ? BUYER_LINKS : SUPPLIER_LINKS )[0].href);
+    setActiveNavHref(
+      (mode === 'compradores' ? BUYER_LINKS : SUPPLIER_LINKS)[0].href
+    );
     setHoveredNavHref(null);
   }, [mode]);
 
@@ -127,7 +129,6 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 12);
 
-      // ScrollSpy: detectar qué sección está activa en el viewport
       const spyOffset = 180;
       let currentActive = links[0].href;
       for (const item of links) {
@@ -171,10 +172,22 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
 
     updatePillBounds();
     window.addEventListener('resize', updatePillBounds);
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(updatePillBounds);
+      if (buyerTabRef.current) ro.observe(buyerTabRef.current);
+      if (supplierTabRef.current) ro.observe(supplierTabRef.current);
+    }
+
     if (typeof document !== 'undefined' && 'fonts' in document) {
       document.fonts.ready.then(updatePillBounds).catch(() => {});
     }
-    return () => window.removeEventListener('resize', updatePillBounds);
+
+    return () => {
+      window.removeEventListener('resize', updatePillBounds);
+      if (ro) ro.disconnect();
+    };
   }, [mode, activeNavHref, hoveredNavHref]);
 
   const handleLinkClick = (
@@ -185,8 +198,12 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
     e.preventDefault();
     kuotaSound.playSelectOption();
     setActiveNavHref(href);
-    trackEvent('click_nav_link', { section: label.toLowerCase(), audience: mode });
+    trackEvent('click_nav_link', {
+      section: label.toLowerCase(),
+      audience: mode,
+    });
     setMobileMenuOpen(false);
+    setSoundPanelOpen(false);
     smoothScrollToAnchor(href);
   };
 
@@ -194,6 +211,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
     e.preventDefault();
     kuotaSound.playSelectOption();
     setMobileMenuOpen(false);
+    setSoundPanelOpen(false);
     smoothScrollToAnchor('#inicio');
   };
 
@@ -214,23 +232,34 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           : 'bg-kuota-palesky/90 backdrop-blur-sm'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+      {/* Barra superior fija optimizada para móvil y escritorio */}
+      <div
+        id="kuota-top-bar"
+        className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-1.5 sm:gap-4 relative z-50"
+      >
         {/* Izquierda: Logo oficial Kuota + Selector de Perfil con píldora deslizante medida al píxel */}
-        <div className="flex items-center gap-4 sm:gap-5 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-5 min-w-0">
           <a
             href="#inicio"
             onClick={handleLogoClick}
             aria-label="Kuota — Ir al inicio"
-            className="focus-visible:outline-none shrink-0 flex items-center transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
+            className="focus-visible:outline-none shrink-0 flex items-center touch-manipulation transition-transform duration-200 lg:hover:scale-[1.03] active:scale-[0.97]"
           >
-            <KuotaLogo size="md" />
+            <KuotaLogo
+              size="sm"
+              className="sm:hidden"
+            />
+            <KuotaLogo
+              size="md"
+              className="hidden sm:inline-flex"
+            />
           </a>
 
-          {/* Pill Switcher Compradores / Proveedores con animación fluida */}
+          {/* Pill Switcher Compradores / Proveedores adaptado a pantallas táctiles */}
           <div
             role="tablist"
             aria-label="Seleccionar perfil de usuario"
-            className="relative inline-flex items-center gap-1 p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0"
+            className="relative inline-flex items-center gap-0.5 sm:gap-1 p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0"
           >
             {pillBounds.ready && (
               <span
@@ -253,7 +282,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               role="tab"
               aria-selected={mode === 'compradores'}
               onClick={() => handleSwitchMode('compradores', 'navbar_pill')}
-              className={`relative z-10 inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-colors duration-250 ease-out active:scale-95 ${
+              className={`relative z-10 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation transition-colors duration-250 ease-out active:scale-95 ${
                 mode === 'compradores'
                   ? pillBounds.ready
                     ? 'text-white'
@@ -262,7 +291,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               }`}
             >
               <ShoppingBag
-                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-300 ${
+                className={`hidden min-[410px]:inline-block w-3.5 h-3.5 shrink-0 transition-transform duration-300 ${
                   mode === 'compradores' ? 'scale-110' : 'scale-100'
                 }`}
                 aria-hidden="true"
@@ -276,7 +305,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               role="tab"
               aria-selected={mode === 'proveedores'}
               onClick={() => handleSwitchMode('proveedores', 'navbar_pill')}
-              className={`relative z-10 inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 transition-colors duration-250 ease-out active:scale-95 ${
+              className={`relative z-10 inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation transition-colors duration-250 ease-out active:scale-95 ${
                 mode === 'proveedores'
                   ? pillBounds.ready
                     ? 'text-white'
@@ -285,7 +314,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               }`}
             >
               <Store
-                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-300 ${
+                className={`hidden min-[410px]:inline-block w-3.5 h-3.5 shrink-0 transition-transform duration-300 ${
                   mode === 'proveedores' ? 'scale-110' : 'scale-100'
                 }`}
                 aria-hidden="true"
@@ -309,7 +338,6 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           }}
           className="relative hidden lg:flex items-center gap-1 xl:gap-1.5 p-1 rounded-2xl shrink-0"
         >
-          {/* Cápsula flotante y barra inferior que se deslizan entre Producto, Beneficios, Niveles y Nosotros */}
           {navPillBounds.ready && (
             <span
               aria-hidden="true"
@@ -358,12 +386,13 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
         </nav>
 
         {/* Derecha: Control de identidad sonora + CTA contextual + botón menú animado */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          {/* Control opcional de Identidad Sonora Kuota (FASE 5 — desactivado por defecto) */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Control opcional de Identidad Sonora Kuota (desactivado por defecto) */}
           <div className="relative">
             <button
               type="button"
               onClick={() => {
+                setMobileMenuOpen(false);
                 if (!soundState.enabled) {
                   kuotaSound.setEnabled(true);
                   setSoundPanelOpen(true);
@@ -381,7 +410,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                   ? 'Sonido interactivo activo'
                   : 'Activar sonido interactivo'
               }
-              className={`w-9 h-9 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
+              className={`w-9 h-9 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center touch-manipulation transition-all duration-200 lg:hover:-translate-y-0.5 active:scale-95 ${
                 soundState.enabled
                   ? 'bg-kuota-deepnavy text-white shadow-sm'
                   : 'bg-white text-kuota-deepnavy hover:bg-kuota-palesky/70'
@@ -410,7 +439,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                   <button
                     type="button"
                     onClick={() => kuotaSound.setEnabled(!soundState.enabled)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold border border-kuota-deepnavy transition-colors ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold border border-kuota-deepnavy touch-manipulation transition-colors ${
                       soundState.enabled
                         ? 'bg-kuota-dodger text-white'
                         : 'bg-kuota-palesky text-kuota-deepnavy'
@@ -442,7 +471,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setSoundPanelOpen(false)}
-                  className="w-full py-1.5 rounded-lg bg-kuota-palesky/70 hover:bg-kuota-palesky text-[11px] font-extrabold text-kuota-deepnavy transition-colors"
+                  className="w-full py-2 rounded-lg bg-kuota-palesky/70 hover:bg-kuota-palesky text-xs font-extrabold text-kuota-deepnavy touch-manipulation transition-colors"
                 >
                   Listo
                 </button>
@@ -476,11 +505,12 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             )}
           </div>
 
-          {/* Botón hamburguesa con rotación y escala animada (< lg) */}
+          {/* Botón hamburguesa con área táctil amplia (< lg) */}
           <button
             type="button"
             onClick={() => {
               kuotaSound.playSelectOption();
+              setSoundPanelOpen(false);
               setMobileMenuOpen((prev) => !prev);
             }}
             aria-expanded={mobileMenuOpen}
@@ -490,7 +520,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                 ? 'Cerrar menú de navegación'
                 : 'Abrir menú de navegación'
             }
-            className={`lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl border-2 border-kuota-deepnavy transition-all duration-200 shrink-0 hover:-translate-y-0.5 active:scale-95 ${
+            className={`lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl border-2 border-kuota-deepnavy touch-manipulation transition-all duration-200 shrink-0 active:scale-95 ${
               mobileMenuOpen
                 ? 'bg-kuota-deepnavy text-white shadow-sm'
                 : 'bg-white text-kuota-deepnavy hover:bg-kuota-palesky'
@@ -518,17 +548,26 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
         </div>
       </div>
 
-      {/* Menú desplegable con transición suave tipo acordeón + entrada escalonada (Staggered Reveal) */}
+      {/* Fondo táctil para cerrar el menú móvil al tocar fuera */}
+      {mobileMenuOpen && (
+        <div
+          aria-hidden="true"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 top-16 bg-kuota-deepnavy/25 backdrop-blur-[1px] z-40 lg:hidden"
+        />
+      )}
+
+      {/* Menú desplegable flotante (`absolute top-full`) para no empujar el layout al hacer scroll en móvil */}
       <div
         id="mobile-nav-menu"
         aria-hidden={!mobileMenuOpen}
-        className={`lg:hidden grid transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`lg:hidden absolute top-full left-0 right-0 z-50 grid transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           mobileMenuOpen
-            ? 'grid-rows-[1fr] opacity-100 border-t-2 border-kuota-deepnavy'
+            ? 'grid-rows-[1fr] opacity-100 border-t-2 border-b-2 border-kuota-deepnavy shadow-navy-hard-lg'
             : 'grid-rows-[0fr] opacity-0 pointer-events-none border-t-0'
         }`}
       >
-        <div className="overflow-hidden bg-white/95 backdrop-blur-md">
+        <div className="overflow-hidden bg-white/98 backdrop-blur-md">
           <nav
             aria-label="Navegación desplegable"
             className="max-w-7xl mx-auto px-4 sm:px-6 pt-3 pb-5 space-y-3"
@@ -542,16 +581,16 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                     href={link.href}
                     onClick={(e) => handleLinkClick(e, link.label, link.href)}
                     style={{
-                      transitionDelay: mobileMenuOpen ? `${index * 45}ms` : '0ms',
+                      transitionDelay: mobileMenuOpen ? `${index * 40}ms` : '0ms',
                     }}
-                    className={`group flex items-center justify-between gap-3 p-3 rounded-2xl border-2 border-kuota-deepnavy/15 hover:border-kuota-deepnavy bg-kuota-palesky/25 hover:bg-kuota-palesky/70 transition-all duration-300 ease-out hover:translate-x-1 hover:shadow-navy-hard ${
+                    className={`group flex items-center justify-between gap-3 p-3.5 rounded-2xl border-2 border-kuota-deepnavy/15 active:border-kuota-deepnavy hover:border-kuota-deepnavy bg-kuota-palesky/30 active:bg-kuota-palesky/80 hover:bg-kuota-palesky/70 touch-manipulation transition-all duration-200 ease-out active:scale-[0.98] ${
                       mobileMenuOpen
                         ? 'translate-y-0 opacity-100'
                         : '-translate-y-2 opacity-0'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="w-9 h-9 rounded-xl bg-white border-2 border-kuota-deepnavy flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:bg-kuota-dodger group-hover:text-white text-kuota-deepnavy">
+                      <span className="w-9 h-9 rounded-xl bg-white border-2 border-kuota-deepnavy flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:bg-kuota-dodger group-hover:text-white text-kuota-deepnavy">
                         <IconComponent className="w-4 h-4" aria-hidden="true" />
                       </span>
                       <div className="min-w-0">
@@ -565,7 +604,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                     </div>
 
                     <ArrowRight
-                      className="w-4 h-4 text-kuota-deepnavy/50 group-hover:text-kuota-dodger shrink-0 transition-transform duration-200 group-hover:translate-x-1"
+                      className="w-4 h-4 text-kuota-deepnavy/60 group-hover:text-kuota-dodger shrink-0"
                       aria-hidden="true"
                     />
                   </a>
@@ -573,10 +612,10 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               })}
             </div>
 
-            {/* Pie del menú desplegable: Correo oficial + CTA principal animado */}
+            {/* Pie del menú desplegable: Correo oficial + CTA principal */}
             <div
               style={{
-                transitionDelay: mobileMenuOpen ? '190ms' : '0ms',
+                transitionDelay: mobileMenuOpen ? '160ms' : '0ms',
               }}
               className={`pt-3 border-t border-kuota-deepnavy/15 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 transition-all duration-300 ${
                 mobileMenuOpen
@@ -587,7 +626,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               <a
                 href="mailto:kuota.contact@gmail.com"
                 onClick={() => kuotaSound.playSelectOption()}
-                className="inline-flex items-center justify-center sm:justify-start gap-2 px-3.5 py-2.5 rounded-xl bg-kuota-palesky/60 hover:bg-kuota-palesky border border-kuota-deepnavy/30 text-xs font-extrabold text-kuota-deepnavy transition-all duration-200 hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center sm:justify-start gap-2 px-3.5 py-2.5 rounded-xl bg-kuota-palesky/60 hover:bg-kuota-palesky border border-kuota-deepnavy/30 text-xs font-extrabold text-kuota-deepnavy touch-manipulation transition-all duration-200"
               >
                 <Mail className="w-4 h-4 text-kuota-dodger shrink-0" aria-hidden="true" />
                 <span>kuota.contact@gmail.com</span>
