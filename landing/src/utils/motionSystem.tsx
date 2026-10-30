@@ -437,16 +437,16 @@ export const CircularImageReveal: React.FC<CircularImageRevealProps> = ({
       {/* Halo ambiental y anillo orbital punteado estilo fintech editorial */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-2.5 sm:-inset-4 rounded-full border-2 border-dashed border-kuota-deepnavy/35 bg-kuota-dodger/10"
+        className="pointer-events-none absolute -inset-2.5 sm:-inset-4 rounded-full border border-dashed border-[#0391FD]/25 bg-[#0391FD]/5"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-1 rounded-full border-2 border-kuota-dodger/40"
+        className="pointer-events-none absolute -inset-1 rounded-full border border-[#0391FD]/30"
       />
 
       {/* Recorte fotográfico circular principal */}
       <div
-        className={`relative rounded-full overflow-hidden border-4 border-kuota-deepnavy bg-white shadow-navy-hard-lg transition-transform duration-500 lg:hover:scale-[1.02] ${sizeClassName}`}
+        className={`relative rounded-full overflow-hidden ring-4 ring-white shadow-2xl transition-transform duration-500 lg:hover:scale-[1.02] ${sizeClassName}`}
       >
         <img
           src={src}
@@ -456,7 +456,7 @@ export const CircularImageReveal: React.FC<CircularImageRevealProps> = ({
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-kuota-deepnavy/30 via-transparent to-transparent"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0A192F]/20 via-transparent to-transparent"
         />
       </div>
 
@@ -585,40 +585,40 @@ export const InstallmentTimeline: React.FC<InstallmentTimelineProps> = ({
         const isPaid = inst.status === 'Pagada' || inst.status === 'Confirmada';
         const isUpcoming = inst.status === 'Próxima' || inst.status === 'Programada';
 
-        const cardClasses = `w-full text-left rounded-xl border-2 p-3.5 transition-all duration-200 touch-manipulation ${
+        const cardClasses = `w-full text-left rounded-2xl border p-3.5 transition-all duration-200 touch-manipulation cursor-pointer ${
           onSelectItem
-            ? 'cursor-pointer lg:hover:-translate-y-0.5 active:scale-[0.98]'
+            ? 'lg:hover:-translate-y-0.5 active:scale-[0.98]'
             : ''
         } ${
           isPaid
-            ? 'bg-white border-kuota-dodger shadow-navy-hard'
+            ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900 shadow-sm'
             : inst.highlight || isUpcoming
-              ? 'bg-white border-kuota-deepnavy shadow-sm'
-              : 'bg-white/65 border-kuota-deepnavy/35 opacity-85'
+              ? 'bg-white border-slate-200 shadow-md ring-2 ring-[#0391FD]/10'
+              : 'bg-slate-50/60 border-slate-200/70 opacity-85'
         }`;
 
         const content = (
           <>
             <div className="flex items-center justify-between gap-2 mb-1.5">
-              <span className="text-xs font-extrabold text-kuota-deepnavy flex items-center gap-1.5">
+              <span className="text-xs font-bold text-[#0A192F] flex items-center gap-1.5">
                 <span
                   className={`w-2 h-2 rounded-full ${
                     isPaid
-                      ? 'bg-kuota-dodger'
+                      ? 'bg-[#10B981]'
                       : isUpcoming
-                        ? 'bg-kuota-deepnavy'
-                        : 'bg-kuota-crayola/50'
+                        ? 'bg-[#0391FD]'
+                        : 'bg-slate-300'
                   }`}
                 />
                 {inst.label}
               </span>
               <span
-                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
                   isPaid
-                    ? 'bg-kuota-dodger text-white border-kuota-deepnavy'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                     : isUpcoming
-                      ? 'bg-kuota-palesky text-kuota-deepnavy border-kuota-deepnavy'
-                      : 'bg-kuota-palesky/60 text-kuota-deepnavy/75 border-kuota-deepnavy/30'
+                      ? 'bg-sky-50 text-[#0391FD] border-sky-200'
+                      : 'bg-slate-50 text-slate-600 border-slate-200'
                 }`}
               >
                 {isPaid ? `${inst.status} ✓` : inst.status}
@@ -626,14 +626,14 @@ export const InstallmentTimeline: React.FC<InstallmentTimelineProps> = ({
             </div>
 
             <div className="flex items-baseline justify-between mt-2">
-              <span className="text-xs font-bold text-kuota-crayola">
+              <span className="text-xs font-medium text-slate-500">
                 {inst.dateLabel}
               </span>
               <AnimatedNumber
                 value={inst.amountSoles}
                 prefix="S/ "
                 decimals={0}
-                className="text-lg font-extrabold text-kuota-deepnavy"
+                className="text-base sm:text-lg font-black text-[#0A192F]"
               />
             </div>
           </>
@@ -699,9 +699,9 @@ export const PaymentProgress: React.FC<PaymentProgressProps> = ({
         </div>
       </div>
 
-      <div className="w-full h-2.5 rounded-full bg-kuota-palesky border border-kuota-deepnavy overflow-hidden p-0.5">
+      <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
         <div
-          className="h-full rounded-full bg-kuota-dodger transition-all duration-500"
+          className="h-full rounded-full bg-[#0391FD] transition-all duration-500"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -732,14 +732,14 @@ export const AnimatedCTA: React.FC<AnimatedCTAProps> = ({
 }) => {
   const variantClasses = {
     primary:
-      'bg-kuota-dodger hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard lg:hover:shadow-navy-hard-lg',
+      'bg-[#0391FD] hover:bg-[#0277d4] text-white shadow-md hover:shadow-lg',
     secondary:
-      'bg-white hover:bg-kuota-palesky text-kuota-deepnavy border-2 border-kuota-deepnavy shadow-navy-hard',
+      'bg-white hover:bg-slate-50 text-[#0A192F] border border-slate-200/90 shadow-sm hover:shadow',
     navy:
-      'bg-kuota-deepnavy hover:bg-kuota-crayola text-white border-2 border-kuota-deepnavy shadow-navy-hard',
+      'bg-[#0A192F] hover:bg-[#0391FD] text-white shadow-md hover:shadow-lg',
   }[variant];
 
-  const baseClasses = `inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-sm sm:text-base touch-manipulation transition-all duration-200 lg:hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] ${variantClasses} ${className}`;
+  const baseClasses = `inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full font-bold text-sm sm:text-base touch-manipulation transition-all duration-200 lg:hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] cursor-pointer ${variantClasses} ${className}`;
 
   const handleInteraction = (e: React.MouseEvent<HTMLElement>) => {
     kuotaSound.playCtaClick();
@@ -806,10 +806,10 @@ export const SoundController: React.FC<{ className?: string }> = ({
           ? 'Sonidos interactivos activados. Clic para silenciar'
           : 'Sonidos interactivos desactivados. Clic para activar'
       }
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-kuota-deepnavy text-xs font-extrabold touch-manipulation transition-all duration-150 ${
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200/80 text-xs font-bold touch-manipulation transition-all duration-150 cursor-pointer ${
         enabled
-          ? 'bg-kuota-deepnavy text-white shadow-sm'
-          : 'bg-white hover:bg-kuota-palesky/70 text-kuota-deepnavy'
+          ? 'bg-[#0A192F] text-white shadow-sm'
+          : 'bg-white hover:bg-slate-50 text-slate-700'
       } ${className}`}
     >
       {enabled ? (
