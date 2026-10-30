@@ -17,6 +17,8 @@ import {
   Sparkles,
   QrCode,
   ArrowRight,
+  FileCheck2,
+  ShoppingBag,
 } from 'lucide-react';
 import { PRODUCT_CHIPS, ProductChipItem } from '../data/landingData';
 import { trackEvent } from '../utils/analytics';
@@ -219,6 +221,13 @@ const EDITORIAL_BENEFIT_SCENES: EditorialBenefitScene[] = [
 
 const DEMO_LOT_AMOUNTS = [600, 1200, 2400] as const;
 
+/** Iconografía por beneficio (chips de "Cómo funciona Kuota") */
+const CHIP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  'sin-papeleo': FileCheck2,
+  'invierte-mas': TrendingUp,
+  'mas-compras': ShoppingBag,
+};
+
 export const ProductChipsSection: React.FC = () => {
   const [activeChipId, setActiveChipId] = useState<string>(PRODUCT_CHIPS[0].id);
   const [demoScene, setDemoScene] = useState<number>(3);
@@ -228,8 +237,39 @@ export const ProductChipsSection: React.FC = () => {
   const sceneTouchStartX = React.useRef<number | null>(null);
   const editorialTouchStartX = React.useRef<number | null>(null);
 
+  const [isChipAutoRotating, setIsChipAutoRotating] = useState<boolean>(true);
+  const [isChipsHovered, setIsChipsHovered] = useState<boolean>(false);
+  const [isChipsInView, setIsChipsInView] = useState<boolean>(false);
+  const chipsBlockRef = React.useRef<HTMLDivElement | null>(null);
+
   const activeChip: ProductChipItem =
     PRODUCT_CHIPS.find((c) => c.id === activeChipId) || PRODUCT_CHIPS[0];
+  const ActiveChipIcon = CHIP_ICONS[activeChip.id] || Sparkles;
+
+  // Auto-avance de chips: solo corre cuando el bloque es visible y respeta reduced-motion
+  useEffect(() => {
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    ) {
+      setIsChipAutoRotating(false);
+      return;
+    }
+    const el = chipsBlockRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsChipsInView(entry.isIntersecting),
+      { threshold: 0.35 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const handleChipProgressEnd = () => {
+    const idx = PRODUCT_CHIPS.findIndex((c) => c.id === activeChipId);
+    const next = PRODUCT_CHIPS[(idx + 1) % PRODUCT_CHIPS.length];
+    setActiveChipId(next.id);
+  };
 
   const currentSceneMeta =
     INSTALLMENT_SCENES.find((s) => s.scene === demoScene) || INSTALLMENT_SCENES[2];
@@ -300,9 +340,10 @@ export const ProductChipsSection: React.FC = () => {
     },
   ];
 
-  const handleSelectChip = (chip: ProductChipItem) => {
+  const handleSelectChip = (chip: ProductChipItem, fromUser = false) => {
+    if (fromUser) setIsChipAutoRotating(false);
     if (chip.id === activeChipId) return;
-    kuotaSound.playSelectOption();
+    if (fromUser) kuotaSound.playSelectOption();
     setActiveChipId(chip.id);
     trackEvent('product_chip_change', {
       chip_id: chip.id,
@@ -318,12 +359,14 @@ export const ProductChipsSection: React.FC = () => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
       e.preventDefault();
       const next = PRODUCT_CHIPS[(index + 1) % PRODUCT_CHIPS.length];
-      handleSelectChip(next);
+      handleSelectChip(next, true);
+      document.getElementById(`tab-${next.id}`)?.focus();
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
       e.preventDefault();
       const prev =
         PRODUCT_CHIPS[(index - 1 + PRODUCT_CHIPS.length) % PRODUCT_CHIPS.length];
-      handleSelectChip(prev);
+      handleSelectChip(prev, true);
+      document.getElementById(`tab-${prev.id}`)?.focus();
     }
   };
 
@@ -437,224 +480,293 @@ export const ProductChipsSection: React.FC = () => {
               id="product-chips-heading"
               className="text-3xl sm:text-4xl font-extrabold text-kuota-deepnavy tracking-tight"
             >
-              Diseñado para que tu negocio nunca pare de surtirse
+              Diseñado para que tu negocio{' '}
+              <span className="text-kuota-dodger">nunca pare de surtirse</span>
             </h2>
+            <p className="mt-3 text-base sm:text-lg font-semibold text-kuota-crayola">
+              Tres pilares para comprar mercadería en kuotas desde tu celular.
+            </p>
           </div>
         </ScrollReveal>
 
-        {/* BLOQUE 1: Captura interactiva + 3 Chips de beneficios (PRD §6.4 preservado) */}
+        {/* BLOQUE 1: Mockup de celular interactivo + 3 Chips de beneficios (PRD §6.4 preservado) */}
         <div
           id="beneficios"
-          className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center"
+          ref={chipsBlockRef}
+          onMouseEnter={() => setIsChipsHovered(true)}
+          onMouseLeave={() => setIsChipsHovered(false)}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center"
         >
-          {/* Captura interactiva con microanimaciones explicativas según el beneficio activo */}
+          {/* Mockup de celular con la pantalla explicativa del beneficio activo */}
           <ScrollReveal delayMs={80} direction="left" className="lg:col-span-5 flex justify-center">
-            <TiltCard maxTiltDeg={2.5} className="w-full max-w-sm">
-              <div
-                role="img"
-                aria-label={activeChip.placeholderLabel}
-                aria-live="polite"
-                className="w-full rounded-3xl border-2 border-kuota-deepnavy bg-white p-5 shadow-navy-hard-lg placeholder-stripes transition-all duration-300"
-              >
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-kuota-deepnavy text-white text-xs font-bold uppercase">
-                    <Smartphone className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
-                    Placeholder · {activeChip.placeholderId}
-                  </span>
-                  <span className="px-2.5 py-1 rounded-md bg-kuota-palesky border border-kuota-deepnavy text-kuota-deepnavy text-xs font-extrabold">
-                    Proporción {activeChip.placeholderAspectRatio}
-                  </span>
-                </div>
-
-                {/* Pantalla dinámica con animación visual explicativa del beneficio */}
+            <TiltCard maxTiltDeg={2.5} className="w-full max-w-[300px] sm:max-w-[330px]">
+              <div className="relative">
+                {/* Halo decorativo detrás del teléfono */}
                 <div
-                  key={activeChip.id}
-                  className="rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white p-4 sm:p-5 mb-4 kuota-section-arrive"
+                  aria-hidden="true"
+                  className="absolute -inset-6 sm:-inset-8 rounded-[3rem] bg-kuota-dodger/15 blur-2xl"
+                />
+
+                <div
+                  role="img"
+                  aria-label={activeChip.placeholderLabel}
+                  aria-live="polite"
+                  className="relative rounded-[2.5rem] border-2 border-kuota-deepnavy bg-kuota-deepnavy p-2.5 shadow-navy-hard-lg"
                 >
-                  <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-white/15">
-                    <span className="text-xs font-extrabold uppercase tracking-wider text-kuota-palesky">
-                      Beneficio {activeChip.index} de 3
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-kuota-dodger text-white text-xs font-extrabold">
-                      {activeChip.title}
-                    </span>
-                  </div>
+                  {/* Pantalla */}
+                  <div className="relative rounded-[2rem] bg-gradient-to-b from-[#0a2f6e] to-kuota-deepnavy overflow-hidden min-h-[440px] sm:min-h-[470px] flex flex-col">
+                    {/* Barra de estado + notch */}
+                    <div className="relative flex items-center justify-between px-5 pt-3 pb-2 text-[10px] font-bold text-white/80">
+                      <span>9:41</span>
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-1/2 -translate-x-1/2 top-2 h-5 w-20 rounded-full bg-black/70"
+                      />
+                      <span className="inline-flex items-center gap-1">
+                        <Smartphone className="w-3 h-3" aria-hidden="true" />
+                        Kuota
+                      </span>
+                    </div>
 
-                  <h3 className="text-lg font-extrabold text-white mb-1">
-                    {activeChip.screenMockTitle}
-                  </h3>
-                  <p className="text-xs text-kuota-palesky font-medium mb-4">
-                    {activeChip.screenMockSubtitle}
-                  </p>
+                    <div key={activeChip.id} className="flex-1 flex flex-col px-4 sm:px-5 pb-5 pt-2">
+                      <div className="kuota-screen-in flex items-center justify-between gap-2 mb-4">
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-kuota-palesky">
+                          Beneficio {activeChip.index} de {PRODUCT_CHIPS.length}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-kuota-dodger text-white text-[11px] font-extrabold">
+                          {activeChip.title}
+                        </span>
+                      </div>
 
-                  <div className="space-y-2.5">
-                    {activeChip.screenMockMetrics.map((metric, mIdx) => (
+                      <div className="kuota-screen-in" style={{ animationDelay: '60ms' }}>
+                        <span className="inline-flex w-11 h-11 rounded-2xl bg-kuota-dodger/20 border border-kuota-dodger/40 items-center justify-center mb-3">
+                          <ActiveChipIcon className="w-5 h-5 text-kuota-dodger" aria-hidden="true" />
+                        </span>
+                        <h3 className="text-xl font-extrabold text-white leading-tight">
+                          {activeChip.screenMockTitle}
+                        </h3>
+                        <p className="text-xs text-kuota-palesky/90 font-medium mt-1 mb-4">
+                          {activeChip.screenMockSubtitle}
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        {activeChip.screenMockMetrics.map((metric, mIdx) => (
+                          <div
+                            key={metric.label}
+                            style={{ animationDelay: `${140 + mIdx * 90}ms` }}
+                            className="kuota-screen-in rounded-xl bg-white/[0.08] border border-white/15 px-3.5 py-2.5 flex items-center justify-between gap-2"
+                          >
+                            <span className="text-[11px] sm:text-xs text-kuota-palesky font-medium">
+                              {metric.label}
+                            </span>
+                            <span className="text-xs sm:text-sm font-extrabold text-white text-right">
+                              {metric.value}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
                       <div
-                        key={metric.label}
-                        style={{ animationDelay: `${mIdx * 75}ms` }}
-                        className="rounded-xl bg-white/10 border border-white/15 px-3.5 py-2.5 flex items-center justify-between gap-2 animate-fadeIn"
+                        className="kuota-screen-in mt-auto pt-4"
+                        style={{ animationDelay: '420ms' }}
                       >
-                        <span className="text-xs text-kuota-palesky font-medium">
-                          {metric.label}
-                        </span>
-                        <span className="text-xs sm:text-sm font-extrabold text-white">
-                          {metric.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                        <div className="pt-3 border-t border-white/15">
+                          {activeChip.id === 'sin-papeleo' && (
+                            <div className="flex items-center justify-between text-[11px] font-bold text-kuota-palesky">
+                              <span className="inline-flex items-center gap-1.5">
+                                <ShieldCheck className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
+                                Protección de identidad activa
+                              </span>
+                              <span className="text-white font-extrabold">100% digital</span>
+                            </div>
+                          )}
 
-                  <div className="mt-4 pt-3 border-t border-white/15">
-                    {activeChip.id === 'sin-papeleo' && (
-                      <div className="flex items-center justify-between text-[11px] font-bold text-kuota-palesky">
-                        <span className="inline-flex items-center gap-1.5">
-                          <ShieldCheck className="w-4 h-4 text-kuota-dodger" />
-                          Protección de identidad activa
-                        </span>
-                        <span className="text-white font-extrabold">100% digital</span>
-                      </div>
-                    )}
+                          {activeChip.id === 'invierte-mas' && (
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between text-[11px] font-bold text-kuota-palesky">
+                                <span className="inline-flex items-center gap-1">
+                                  <TrendingUp className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
+                                  Línea N1 → N6
+                                </span>
+                                <span className="text-white font-extrabold">Hasta S/ 30,000</span>
+                              </div>
+                              <div className="grid grid-cols-6 gap-1 h-2">
+                                {[1, 2, 3, 4, 5, 6].map((lvl, i) => (
+                                  <div
+                                    key={lvl}
+                                    style={{ animationDelay: `${480 + i * 70}ms` }}
+                                    className={`kuota-screen-in rounded-full ${
+                                      i < 4 ? 'bg-kuota-dodger' : 'bg-white/25'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
-                    {activeChip.id === 'invierte-mas' && (
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-kuota-palesky">
-                          <span className="inline-flex items-center gap-1">
-                            <TrendingUp className="w-3.5 h-3.5 text-kuota-dodger" />
-                            Progresión de línea (N1 → N6)
-                          </span>
-                          <span className="text-white font-extrabold">Hasta S/ 30,000</span>
-                        </div>
-                        <div className="grid grid-cols-6 gap-1 h-2">
-                          {[30, 45, 60, 75, 90, 100].map((val, i) => (
-                            <div
-                              key={val}
-                              className={`rounded-full ${
-                                i < 4 ? 'bg-kuota-dodger' : 'bg-white/25'
-                              }`}
-                            />
-                          ))}
+                          {activeChip.id === 'mas-compras' && (
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between text-[11px] font-bold text-kuota-palesky">
+                                <span className="inline-flex items-center gap-1">
+                                  <BarChart3 className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
+                                  Meta para próxima compra
+                                </span>
+                                <span className="text-white font-extrabold">78% lista</span>
+                              </div>
+                              <div className="w-full h-2 rounded-full bg-white/15 overflow-hidden">
+                                <div className="h-full w-[78%] rounded-full bg-kuota-dodger kuota-chip-progress" style={{ animationDuration: '900ms' }} />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
+                    </div>
 
-                    {activeChip.id === 'mas-compras' && (
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-kuota-palesky">
-                          <span className="inline-flex items-center gap-1">
-                            <BarChart3 className="w-3.5 h-3.5 text-kuota-dodger" />
-                            Meta para próxima compra
-                          </span>
-                          <span className="text-white font-extrabold">78% lista</span>
-                        </div>
-                        <div className="w-full h-2 rounded-full bg-white/15 overflow-hidden">
-                          <div className="h-full w-[78%] rounded-full bg-kuota-dodger transition-all duration-500" />
-                        </div>
-                      </div>
-                    )}
+                    {/* Indicador home */}
+                    <div aria-hidden="true" className="pb-2 flex justify-center">
+                      <span className="h-1 w-24 rounded-full bg-white/30" />
+                    </div>
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-kuota-palesky border border-kuota-deepnavy px-3.5 py-2.5">
-                  <p className="text-xs sm:text-sm font-extrabold text-kuota-deepnavy">
-                    {activeChip.placeholderLabel}
-                  </p>
+                {/* Indicadores de paso bajo el teléfono */}
+                <div className="relative mt-5 flex items-center justify-center gap-2" aria-hidden="true">
+                  {PRODUCT_CHIPS.map((chip) => (
+                    <span
+                      key={chip.id}
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        chip.id === activeChip.id ? 'w-8 bg-kuota-dodger' : 'w-2 bg-kuota-deepnavy/25'
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
             </TiltCard>
           </ScrollReveal>
 
-          {/* 3 Chips interactivos */}
+          {/* 3 Chips interactivos (acordeón con auto-avance) */}
           <div
             role="tablist"
             aria-label="Características del producto Kuota"
-            className="lg:col-span-7 flex flex-col gap-4"
+            aria-orientation="vertical"
+            className="lg:col-span-7 flex flex-col gap-3 sm:gap-4"
           >
             {PRODUCT_CHIPS.map((chip, idx) => {
               const isSelected = chip.id === activeChip.id;
+              const ChipIcon = CHIP_ICONS[chip.id] || Sparkles;
               return (
                 <ScrollReveal key={chip.id} delayMs={idx * 90} direction="right">
                   <div
-                    className={`rounded-2xl border-2 border-kuota-deepnavy transition-all duration-200 ${
+                    className={`relative overflow-hidden rounded-2xl border-2 bg-white transition-all duration-300 ${
                       isSelected
-                        ? 'bg-white shadow-navy-hard-lg -translate-y-0.5'
-                        : 'bg-white/65 hover:bg-white/95 shadow-sm'
+                        ? 'border-kuota-deepnavy shadow-navy-hard-lg lg:-translate-y-0.5'
+                        : 'border-kuota-deepnavy/30 hover:border-kuota-deepnavy shadow-sm hover:shadow-md'
                     }`}
                   >
+                    {/* Acento lateral */}
+                    <span
+                      aria-hidden="true"
+                      className={`absolute left-0 top-0 bottom-0 w-1.5 bg-kuota-dodger transition-transform duration-300 origin-top ${
+                        isSelected ? 'scale-y-100' : 'scale-y-0'
+                      }`}
+                    />
+
                     <button
                       type="button"
                       role="tab"
                       id={`tab-${chip.id}`}
                       aria-selected={isSelected}
                       aria-controls={`panel-${chip.id}`}
-                      onClick={() => handleSelectChip(chip)}
+                      tabIndex={isSelected ? 0 : -1}
+                      onClick={() => handleSelectChip(chip, true)}
                       onKeyDown={(e) => handleKeyDown(e, idx)}
-                      className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4"
+                      className="w-full text-left px-4 py-4 sm:px-6 sm:py-5 flex items-center justify-between gap-3 min-h-[64px]"
                     >
-                      <div className="flex items-center gap-3.5">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <span
-                          className={`w-9 h-9 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center text-sm font-extrabold shrink-0 transition-colors duration-200 ${
+                          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center shrink-0 transition-colors duration-300 ${
                             isSelected
                               ? 'bg-kuota-dodger text-white'
                               : 'bg-kuota-palesky text-kuota-deepnavy'
                           }`}
                         >
-                          {chip.index}
+                          <ChipIcon className="w-5 h-5" aria-hidden="true" />
                         </span>
-                        <span className="text-xl sm:text-2xl font-extrabold text-kuota-deepnavy">
-                          {chip.title}
-                        </span>
+                        <div className="min-w-0">
+                          <span className="block text-[11px] font-extrabold uppercase tracking-wider text-kuota-crayola/80">
+                            Paso {chip.index}
+                          </span>
+                          <span className="block text-lg sm:text-2xl font-extrabold text-kuota-deepnavy leading-tight">
+                            {chip.title}
+                          </span>
+                        </div>
                       </div>
 
                       <span
-                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold border border-kuota-deepnavy transition-colors duration-200 ${
+                        className={`w-8 h-8 rounded-full border-2 border-kuota-deepnavy flex items-center justify-center shrink-0 transition-all duration-300 ${
                           isSelected
-                            ? 'bg-kuota-dodger text-white'
-                            : 'bg-kuota-palesky text-kuota-deepnavy'
+                            ? 'bg-kuota-deepnavy text-white rotate-90'
+                            : 'bg-white text-kuota-deepnavy'
                         }`}
+                        aria-hidden="true"
                       >
-                        {isSelected ? 'Activo' : 'Ver'}
-                        <ChevronRight
-                          className={`w-4 h-4 transition-transform duration-200 ${
-                            isSelected ? 'rotate-90' : ''
-                          }`}
-                          aria-hidden="true"
-                        />
+                        <ChevronRight className="w-4 h-4" />
                       </span>
                     </button>
 
-                    {isSelected && (
-                      <div
-                        id={`panel-${chip.id}`}
-                        role="tabpanel"
-                        aria-labelledby={`tab-${chip.id}`}
-                        className="px-5 sm:px-6 pb-6 pt-1 border-t border-kuota-deepnavy/15 space-y-3 animate-fadeIn"
-                      >
-                        <ul className="space-y-2.5">
-                          {chip.bullets.map((bullet) => (
-                            <li
-                              key={bullet}
-                              className="flex items-start gap-2.5 text-base sm:text-lg font-semibold text-kuota-crayola"
-                            >
-                              <CheckCircle2
-                                className="w-5 h-5 text-kuota-dodger shrink-0 mt-1"
+                    <div
+                      id={`panel-${chip.id}`}
+                      role="tabpanel"
+                      aria-labelledby={`tab-${chip.id}`}
+                      aria-hidden={!isSelected}
+                      data-open={isSelected}
+                      className="kuota-accordion"
+                    >
+                      <div>
+                        <div className="px-4 sm:px-6 pb-5 sm:pb-6 pt-1 sm:pl-[5.25rem] space-y-3">
+                          <ul className="space-y-2.5">
+                            {chip.bullets.map((bullet) => (
+                              <li
+                                key={bullet}
+                                className="flex items-start gap-2.5 text-[15px] sm:text-base font-semibold"
+                              >
+                                <CheckCircle2
+                                  className="w-5 h-5 text-kuota-dodger shrink-0 mt-0.5"
+                                  aria-hidden="true"
+                                />
+                                <span className="text-kuota-deepnavy/90">{bullet}</span>
+                              </li>
+                            ))}
+                          </ul>
+
+                          {chip.note && (
+                            <div className="rounded-xl bg-kuota-palesky/70 border border-kuota-deepnavy/20 p-3 flex items-start gap-2.5">
+                              <Info
+                                className="w-4 h-4 text-kuota-crayola shrink-0 mt-0.5"
                                 aria-hidden="true"
                               />
-                              <span className="text-kuota-deepnavy/90">{bullet}</span>
-                            </li>
-                          ))}
-                        </ul>
+                              <p className="text-sm font-semibold text-kuota-deepnavy">
+                                <span className="font-extrabold">Nota:</span> {chip.note}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
 
-                        {chip.note && (
-                          <div className="mt-3 rounded-xl bg-kuota-palesky border border-kuota-deepnavy p-3.5 flex items-start gap-2.5">
-                            <Info
-                              className="w-5 h-5 text-kuota-deepnavy shrink-0 mt-0.5"
-                              aria-hidden="true"
-                            />
-                            <p className="text-sm font-bold italic text-kuota-deepnavy">
-                              Nota: {chip.note}
-                            </p>
-                          </div>
-                        )}
+                    {/* Barra de auto-avance */}
+                    {isSelected && isChipAutoRotating && (
+                      <div aria-hidden="true" className="absolute left-0 right-0 bottom-0 h-1 bg-kuota-palesky/60">
+                        <div
+                          key={`${chip.id}-progress`}
+                          onAnimationEnd={handleChipProgressEnd}
+                          style={{
+                            animationPlayState:
+                              isChipsHovered || !isChipsInView ? 'paused' : 'running',
+                          }}
+                          className="h-full bg-kuota-dodger kuota-chip-progress"
+                        />
                       </div>
                     )}
                   </div>

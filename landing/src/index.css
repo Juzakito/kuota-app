@@ -88,3 +88,64 @@
 .kuota-section-arrive {
   animation: kuotaSectionArrive 680ms cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+
+/* ── Cómo funciona Kuota: chips con auto-avance y acordeón suave ── */
+@keyframes kuotaChipProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.kuota-chip-progress {
+  transform-origin: left center;
+  animation: kuotaChipProgress 6500ms linear forwards;
+}
+
+.kuota-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease;
+}
+
+.kuota-accordion[data-open='true'] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.kuota-accordion > div {
+  overflow: hidden;
+  min-height: 0;
+}
+
+@keyframes kuotaScreenIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.kuota-screen-in {
+  animation: kuotaScreenIn 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kuota-chip-progress {
+    animation: none;
+    transform: scaleX(1);
+  }
+  .kuota-accordion {
+    transition: none;
+  }
+  .kuota-screen-in {
+    animation: none;
+  }
+}
