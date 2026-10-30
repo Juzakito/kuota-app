@@ -1,6 +1,7 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { ShoppingBag, Store, Handshake, ArrowRight, CheckCircle2, ChevronRight, Sparkles } from 'lucide-react';
-import { ScrollReveal, TiltCard } from '../../utils/motionSystem';
+import { ScrollReveal } from '../../utils/motionSystem';
 import { trackEvent } from '../../utils/analytics';
 import { kuotaSound } from '../../utils/soundSystem';
 
@@ -41,174 +42,185 @@ export const ExperienceSelectorSection: React.FC<ExperienceSelectorSectionProps>
           
           {/* Tarjeta 1: Compradores */}
           <ScrollReveal delayMs={80} direction="up">
-            <TiltCard maxTiltDeg={3} className="h-full">
-              <div className="h-full rounded-3xl border-2 border-kuota-deepnavy bg-kuota-palesky/40 p-6 sm:p-7 flex flex-col justify-between shadow-navy-hard-lg transition-transform duration-200 hover:-translate-y-1">
-                <div>
-                  <div className="flex items-center justify-between mb-5">
-                    <span className="w-12 h-12 rounded-2xl bg-kuota-dodger text-white border-2 border-kuota-deepnavy flex items-center justify-center shadow-sm">
-                      <ShoppingBag className="w-6 h-6" />
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-white border border-kuota-deepnavy text-[11px] font-extrabold text-kuota-deepnavy uppercase tracking-wider">
-                      Para Personas
-                    </span>
-                  </div>
+            <motion.div
+              whileHover={{ y: -8 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="h-full rounded-[28px] border border-slate-200/90 bg-white p-6 sm:p-8 flex flex-col justify-between shadow-lg hover:shadow-2xl transition-shadow relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#0391FD]/5 rounded-full blur-2xl pointer-events-none" />
 
-                  <h3 className="text-2xl font-extrabold text-kuota-deepnavy mb-2">
-                    Compradores
-                  </h3>
-                  <p className="text-base font-extrabold text-kuota-dodger mb-3">
-                    Encuentra nuevas formas de comprar.
-                  </p>
-                  <p className="text-xs sm:text-sm font-semibold text-kuota-crayola leading-relaxed mb-6">
-                    Accede a mercadería y productos en comercios participantes, organiza tus pagos en cuotas y consulta tus vencimientos sin costos ocultos.
-                  </p>
-
-                  <ul className="space-y-2 mb-6 text-xs sm:text-sm font-bold text-kuota-deepnavy">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-kuota-dodger shrink-0" />
-                      <span>Compra financiada en cuotas claras</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-kuota-dodger shrink-0" />
-                      <span>Calendario y recordatorios de pago</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-kuota-dodger shrink-0" />
-                      <span>Seguimiento de compromisos desde la app</span>
-                    </li>
-                  </ul>
+              <div>
+                <div className="flex items-center justify-between mb-5">
+                  <span className="w-12 h-12 rounded-2xl bg-sky-50 text-[#0391FD] border border-sky-200/80 flex items-center justify-center shadow-xs">
+                    <ShoppingBag className="w-6 h-6" />
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    Para Personas
+                  </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    kuotaSound.playSelectOption();
-                    trackEvent('profile_switch', { to: 'compradores', source: 'selector_card' });
-                    onSelectBuyer();
-                  }}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-kuota-dodger hover:bg-kuota-crayola text-white font-extrabold text-sm border-2 border-kuota-deepnavy shadow-navy-hard flex items-center justify-center gap-2 transition-transform hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  <span>Descubrir KUOTA</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+                <h3 className="text-2xl font-black text-[#0A192F] mb-1.5">
+                  Compradores
+                </h3>
+                <p className="text-sm font-bold text-[#0391FD] mb-3">
+                  Encuentra nuevas formas de comprar.
+                </p>
+                <p className="text-xs sm:text-sm font-normal text-slate-600 leading-relaxed mb-6">
+                  Accede a mercadería y productos en comercios participantes, organiza tus pagos en cuotas y consulta tus vencimientos sin costos ocultos.
+                </p>
+
+                <ul className="space-y-2.5 mb-6 text-xs sm:text-sm font-semibold text-slate-700">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#0391FD] shrink-0" />
+                    <span>Compra financiada en cuotas claras</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#0391FD] shrink-0" />
+                    <span>Calendario y recordatorios de pago</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#0391FD] shrink-0" />
+                    <span>Seguimiento de compromisos desde la app</span>
+                  </li>
+                </ul>
               </div>
-            </TiltCard>
+
+              <button
+                type="button"
+                onClick={() => {
+                  kuotaSound.playSelectOption();
+                  trackEvent('profile_switch', { to: 'compradores', source: 'selector_card' });
+                  onSelectBuyer();
+                }}
+                className="w-full py-3.5 px-5 rounded-full bg-[#0391FD] hover:bg-[#0277D4] text-white font-bold text-sm shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+              >
+                <span>Descubrir KUOTA</span>
+                <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </button>
+            </motion.div>
           </ScrollReveal>
 
           {/* Tarjeta 2: Comercios */}
           <ScrollReveal delayMs={140} direction="up">
-            <TiltCard maxTiltDeg={3} className="h-full">
-              <div className="h-full rounded-3xl border-2 border-kuota-deepnavy bg-white p-6 sm:p-7 flex flex-col justify-between shadow-navy-hard-lg transition-transform duration-200 hover:-translate-y-1 relative">
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-kuota-deepnavy text-white text-[10px] font-extrabold uppercase tracking-wider">
-                  Piloto Activo
-                </span>
+            <motion.div
+              whileHover={{ y: -8 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="h-full rounded-[28px] border-2 border-[#059669]/30 bg-white p-6 sm:p-8 flex flex-col justify-between shadow-xl hover:shadow-2xl transition-shadow relative overflow-hidden group"
+            >
+              <span className="absolute top-4 right-4 px-3 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
+                Piloto Activo
+              </span>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#10B981]/5 rounded-full blur-2xl pointer-events-none" />
 
-                <div>
-                  <div className="flex items-center justify-between mb-5">
-                    <span className="w-12 h-12 rounded-2xl bg-kuota-deepnavy text-white border-2 border-kuota-deepnavy flex items-center justify-center shadow-sm">
-                      <Store className="w-6 h-6 text-kuota-palesky" />
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-kuota-palesky border border-kuota-deepnavy text-[11px] font-extrabold text-kuota-deepnavy uppercase tracking-wider">
-                      Para Negocios
-                    </span>
-                  </div>
-
-                  <h3 className="text-2xl font-extrabold text-kuota-deepnavy mb-2">
-                    Comercios
-                  </h3>
-                  <p className="text-base font-extrabold text-kuota-deepnavy mb-3">
-                    Amplía las posibilidades de tu negocio.
-                  </p>
-                  <p className="text-xs sm:text-sm font-semibold text-kuota-crayola leading-relaxed mb-6">
-                    Ofrece ventas en cuotas en tu mostrador, dinamiza tus colocaciones comerciales y mantén el control organizado de tu recaudación.
-                  </p>
-
-                  <ul className="space-y-2 mb-6 text-xs sm:text-sm font-bold text-kuota-deepnavy">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-kuota-deepnavy shrink-0" />
-                      <span>Más oportunidades de venta y ticket</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-kuota-deepnavy shrink-0" />
-                      <span>Gestión de colocaciones y despacho</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-kuota-deepnavy shrink-0" />
-                      <span>Monitoreo de cobro y recaudación</span>
-                    </li>
-                  </ul>
+              <div>
+                <div className="flex items-center justify-between mb-5">
+                  <span className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#059669] border border-emerald-200/80 flex items-center justify-center shadow-xs">
+                    <Store className="w-6 h-6" />
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    Para Negocios
+                  </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    kuotaSound.playCtaClick();
-                    trackEvent('profile_switch', { to: 'comercios', source: 'selector_card' });
-                    onSelectMerchant();
-                  }}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-kuota-deepnavy hover:bg-kuota-dodger text-white font-extrabold text-sm border-2 border-kuota-deepnavy shadow-navy-hard flex items-center justify-center gap-2 transition-transform hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  <span>Afiliar mi comercio</span>
-                  <ArrowRight className="w-4 h-4 text-kuota-palesky" />
-                </button>
+                <h3 className="text-2xl font-black text-[#0A192F] mb-1.5">
+                  Comercios
+                </h3>
+                <p className="text-sm font-bold text-[#059669] mb-3">
+                  Amplía las posibilidades de tu negocio.
+                </p>
+                <p className="text-xs sm:text-sm font-normal text-slate-600 leading-relaxed mb-6">
+                  Ofrece ventas en cuotas en tu mostrador, dinamiza tus colocaciones comerciales y mantén el control organizado de tu recaudación.
+                </p>
+
+                <ul className="space-y-2.5 mb-6 text-xs sm:text-sm font-semibold text-slate-700">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
+                    <span>Más oportunidades de venta y ticket</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
+                    <span>Gestión de colocaciones y despacho</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
+                    <span>Monitoreo de cobro y recaudación</span>
+                  </li>
+                </ul>
               </div>
-            </TiltCard>
+
+              <button
+                type="button"
+                onClick={() => {
+                  kuotaSound.playCtaClick();
+                  trackEvent('profile_switch', { to: 'comercios', source: 'selector_card' });
+                  onSelectMerchant();
+                }}
+                className="w-full py-3.5 px-5 rounded-full bg-[#0A192F] hover:bg-[#0391FD] text-white font-bold text-sm shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+              >
+                <span>Afiliar mi comercio</span>
+                <ArrowRight className="w-4 h-4 text-white transition-transform group-hover:translate-x-1" />
+              </button>
+            </motion.div>
           </ScrollReveal>
 
           {/* Tarjeta 3: Aliados Estratégicos */}
           <ScrollReveal delayMs={200} direction="up">
-            <TiltCard maxTiltDeg={3} className="h-full">
-              <div className="h-full rounded-3xl border-2 border-kuota-deepnavy bg-kuota-palesky/40 p-6 sm:p-7 flex flex-col justify-between shadow-navy-hard-lg transition-transform duration-200 hover:-translate-y-1">
-                <div>
-                  <div className="flex items-center justify-between mb-5">
-                    <span className="w-12 h-12 rounded-2xl bg-white text-kuota-deepnavy border-2 border-kuota-deepnavy flex items-center justify-center shadow-sm">
-                      <Handshake className="w-6 h-6 text-kuota-dodger" />
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-white border border-kuota-deepnavy text-[11px] font-extrabold text-kuota-deepnavy uppercase tracking-wider">
-                      Institucional
-                    </span>
-                  </div>
+            <motion.div
+              whileHover={{ y: -8 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="h-full rounded-[28px] border border-slate-200/90 bg-white p-6 sm:p-8 flex flex-col justify-between shadow-lg hover:shadow-2xl transition-shadow relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#0A192F]/5 rounded-full blur-2xl pointer-events-none" />
 
-                  <h3 className="text-2xl font-extrabold text-kuota-deepnavy mb-2">
-                    Aliados
-                  </h3>
-                  <p className="text-base font-extrabold text-kuota-crayola mb-3">
-                    Construyamos nuevas oportunidades.
-                  </p>
-                  <p className="text-xs sm:text-sm font-semibold text-kuota-crayola leading-relaxed mb-6">
-                    Colabora con KUOTA en originación, financiamiento, canales de distribución mayorista o integración de infraestructura tecnológica de pagos.
-                  </p>
-
-                  <ul className="space-y-2 mb-6 text-xs sm:text-sm font-bold text-kuota-deepnavy">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-kuota-dodger shrink-0" />
-                      <span>Ecosistema comercial conectado</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-kuota-dodger shrink-0" />
-                      <span>Integración de capacidades técnicas</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-kuota-dodger shrink-0" />
-                      <span>Desarrollo conjunto de soluciones</span>
-                    </li>
-                  </ul>
+              <div>
+                <div className="flex items-center justify-between mb-5">
+                  <span className="w-12 h-12 rounded-2xl bg-slate-100 text-[#0A192F] border border-slate-200/80 flex items-center justify-center shadow-xs">
+                    <Handshake className="w-6 h-6 text-[#0391FD]" />
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    Institucional
+                  </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    kuotaSound.playSelectOption();
-                    trackEvent('partner_contact_click', { source: 'selector_card' });
-                    onOpenPartnerModal();
-                  }}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-white hover:bg-kuota-palesky text-kuota-deepnavy font-extrabold text-sm border-2 border-kuota-deepnavy shadow-navy-hard flex items-center justify-center gap-2 transition-transform hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  <span>Contactar a KUOTA</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+                <h3 className="text-2xl font-black text-[#0A192F] mb-1.5">
+                  Aliados
+                </h3>
+                <p className="text-sm font-bold text-slate-600 mb-3">
+                  Construyamos nuevas oportunidades.
+                </p>
+                <p className="text-xs sm:text-sm font-normal text-slate-600 leading-relaxed mb-6">
+                  Colabora con KUOTA en originación, financiamiento, canales de distribución mayorista o integración de infraestructura tecnológica de pagos.
+                </p>
+
+                <ul className="space-y-2.5 mb-6 text-xs sm:text-sm font-semibold text-slate-700">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#0391FD] shrink-0" />
+                    <span>Ecosistema comercial conectado</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#0391FD] shrink-0" />
+                    <span>Integración de capacidades técnicas</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#0391FD] shrink-0" />
+                    <span>Desarrollo conjunto de soluciones</span>
+                  </li>
+                </ul>
               </div>
-            </TiltCard>
+
+              <button
+                type="button"
+                onClick={() => {
+                  kuotaSound.playSelectOption();
+                  trackEvent('partner_contact_click', { source: 'selector_card' });
+                  onOpenPartnerModal();
+                }}
+                className="w-full py-3.5 px-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm border border-slate-200/80 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+              >
+                <span>Contactar a KUOTA</span>
+                <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </button>
+            </motion.div>
           </ScrollReveal>
 
         </div>

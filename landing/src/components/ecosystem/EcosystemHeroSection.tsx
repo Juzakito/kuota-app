@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { ShoppingBag, Store, ArrowRight, ShieldCheck, Sparkles, Layers, QrCode, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { ScrollReveal, TiltCard, FinancialCardMotion, CircularImageReveal } from '../../utils/motionSystem';
 import { trackEvent } from '../../utils/analytics';
@@ -52,35 +53,39 @@ export const EcosystemHeroSection: React.FC<EcosystemHeroSectionProps> = ({
               </p>
             </ScrollReveal>
 
-            {/* CTAs Principales */}
+            {/* CTAs Principales con Micro-Interacciones */}
             <ScrollReveal delayMs={200} direction="up">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2">
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ y: -2, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     kuotaSound.playCtaClick();
                     trackEvent('hero_cta_buyer', { source: 'ecosystem_hero' });
                     onSelectBuyer();
                   }}
-                  className="px-6 py-4 rounded-2xl bg-kuota-dodger hover:bg-kuota-crayola text-white font-extrabold text-base border-2 border-kuota-deepnavy shadow-navy-hard transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2.5"
+                  className="px-7 py-4 rounded-full bg-[#0391FD] hover:bg-[#0277D4] text-white font-bold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer"
                 >
                   <ShoppingBag className="w-5 h-5" />
                   <span>Quiero comprar</span>
                   <ArrowRight className="w-4 h-4 ml-0.5" />
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ y: -2, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     kuotaSound.playCtaClick();
                     trackEvent('hero_cta_merchant', { source: 'ecosystem_hero' });
                     onOpenMerchantAffiliation();
                   }}
-                  className="px-6 py-4 rounded-2xl bg-kuota-deepnavy hover:bg-kuota-dodger text-white font-extrabold text-base border-2 border-kuota-deepnavy shadow-navy-hard transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2.5"
+                  className="px-7 py-4 rounded-full bg-[#0A192F] hover:bg-[#0391FD] text-white font-bold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer"
                 >
-                  <Store className="w-5 h-5 text-kuota-palesky" />
+                  <Store className="w-5 h-5 text-[#38BDF8]" />
                   <span>Quiero afiliar mi negocio</span>
-                </button>
+                </motion.button>
               </div>
 
               <div className="pt-3">
@@ -90,9 +95,9 @@ export const EcosystemHeroSection: React.FC<EcosystemHeroSectionProps> = ({
                     kuotaSound.playSelectOption();
                     onExploreEcosystem();
                   }}
-                  className="inline-flex items-center gap-2 text-xs sm:text-sm font-extrabold text-kuota-deepnavy hover:text-kuota-dodger transition-colors"
+                  className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#0A192F] hover:text-[#0391FD] transition-colors cursor-pointer"
                 >
-                  <Layers className="w-4 h-4 text-kuota-dodger" />
+                  <Layers className="w-4 h-4 text-[#0391FD]" />
                   <span>Conoce nuestro ecosistema integral (Comprador ↔ Kuota ↔ Comercio) ↓</span>
                 </button>
               </div>
@@ -141,45 +146,49 @@ export const EcosystemHeroSection: React.FC<EcosystemHeroSectionProps> = ({
                     className="z-10"
                   />
                   
-                  {/* Tarjeta flotante superior: Operación en Cuotas */}
-                  <div className="absolute -top-4 -left-2 sm:-left-4 z-20">
-                    <FinancialCardMotion floating className="shadow-navy-hard-lg">
-                      <div className="rounded-2xl bg-white border-2 border-kuota-deepnavy p-3.5 space-y-1.5">
-                        <div className="flex items-center justify-between gap-3 text-xs font-extrabold text-kuota-deepnavy">
-                          <span>Operación Comercial</span>
-                          <span className="px-2 py-0.5 rounded bg-kuota-dodger text-white text-[10px] font-extrabold">
-                            Cuotas 3x
-                          </span>
-                        </div>
-                        <div className="text-xl font-extrabold text-kuota-deepnavy">
-                          S/ 1,200.00
-                        </div>
-                        <div className="text-[11px] font-semibold text-kuota-crayola">
-                          Mercadería entregada en lote
-                        </div>
+                  {/* Tarjeta flotante superior: Operación en Cuotas con Levitation Motion */}
+                  <motion.div
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute -top-4 -left-2 sm:-left-4 z-20 pointer-events-auto"
+                  >
+                    <div className="rounded-2xl bg-white border border-slate-200/90 p-4 space-y-1.5 shadow-xl">
+                      <div className="flex items-center justify-between gap-3 text-xs font-bold text-[#0A192F]">
+                        <span>Operación Comercial</span>
+                        <span className="px-2 py-0.5 rounded-full bg-[#0391FD] text-white text-[10px] font-bold">
+                          Cuotas 3x
+                        </span>
                       </div>
-                    </FinancialCardMotion>
-                  </div>
+                      <div className="text-xl font-black text-[#0A192F]">
+                        S/ 1,200.00
+                      </div>
+                      <div className="text-[11px] font-medium text-slate-500">
+                        Mercadería entregada en lote
+                      </div>
+                    </div>
+                  </motion.div>
 
-                  {/* Tarjeta flotante inferior: Estado de Recaudación */}
-                  <div className="absolute -bottom-6 -right-2 sm:-right-4 z-20">
-                    <TiltCard maxTiltDeg={3}>
-                      <div className="rounded-2xl bg-white border-2 border-kuota-deepnavy p-3.5 shadow-navy-hard space-y-2">
-                        <div className="flex items-center justify-between gap-3 text-xs font-extrabold text-kuota-deepnavy">
-                          <span className="flex items-center gap-1.5">
-                            <QrCode className="w-4 h-4 text-kuota-dodger" />
-                            Pago QR / Link
-                          </span>
-                          <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-extrabold">
-                            Al día
-                          </span>
-                        </div>
-                        <div className="text-[11px] font-semibold text-kuota-crayola">
-                          Recaudación programada · Día 20 / 40 / 60
-                        </div>
+                  {/* Tarjeta flotante inferior: Estado de Recaudación con Levitation Motion */}
+                  <motion.div
+                    animate={{ y: [0, 8, 0] }}
+                    transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute -bottom-6 -right-2 sm:-right-4 z-20 pointer-events-auto"
+                  >
+                    <div className="rounded-2xl bg-white border border-slate-200/90 p-4 shadow-xl space-y-2">
+                      <div className="flex items-center justify-between gap-3 text-xs font-bold text-[#0A192F]">
+                        <span className="flex items-center gap-1.5">
+                          <QrCode className="w-4 h-4 text-[#0391FD]" />
+                          Pago QR / Link
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#10B981] border border-emerald-200 text-[10px] font-bold">
+                          Al día
+                        </span>
                       </div>
-                    </TiltCard>
-                  </div>
+                      <div className="text-[11px] font-medium text-slate-500">
+                        Recaudación programada · Día 20 / 40 / 60
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
 
               </div>

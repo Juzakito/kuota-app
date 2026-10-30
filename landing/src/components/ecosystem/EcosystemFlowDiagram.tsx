@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
   Building,
@@ -128,71 +129,86 @@ export const EcosystemFlowDiagram: React.FC = () => {
 
         {/* Diagrama de Relación Tripartita: COMPRADOR ↔ KUOTA ↔ COMERCIO */}
         <ScrollReveal delayMs={80} direction="up">
-          <div className="rounded-3xl bg-white border-2 border-kuota-deepnavy p-6 sm:p-8 shadow-navy-hard-lg">
+          <div className="rounded-[28px] bg-white border border-slate-200/90 p-6 sm:p-8 shadow-xl">
             <div className="text-center mb-6">
-              <span className="text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Relación Integral en 3 Dimensiones
               </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
               {/* Actor 1: Comprador */}
-              <div
-                className={`rounded-2xl border-2 p-5 text-center transition-all ${
+              <motion.div
+                animate={{
+                  scale: activeStep.actor === 'COMPRADOR' ? 1.02 : 1,
+                  y: activeStep.actor === 'COMPRADOR' ? -4 : 0,
+                }}
+                transition={{ duration: 0.2 }}
+                className={`rounded-2xl border p-5 text-center transition-all ${
                   activeStep.actor === 'COMPRADOR'
-                    ? 'border-kuota-dodger bg-kuota-dodger/10 shadow-sm -translate-y-1'
-                    : 'border-kuota-deepnavy/25 bg-white'
+                    ? 'border-[#0391FD] bg-[#0391FD]/10 shadow-md ring-2 ring-[#0391FD]/20'
+                    : 'border-slate-200/80 bg-slate-50/50 hover:bg-slate-50'
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-kuota-dodger text-white border-2 border-kuota-deepnavy flex items-center justify-center mx-auto mb-3 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-[#0391FD] text-white flex items-center justify-center mx-auto mb-3 shadow-md">
                   <Users className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-extrabold text-kuota-deepnavy">COMPRADOR</h3>
-                <p className="text-xs font-semibold text-kuota-crayola mt-1">
+                <h3 className="text-lg font-black text-[#0A192F]">COMPRADOR</h3>
+                <p className="text-xs font-normal text-slate-500 mt-1 leading-relaxed">
                   Accede a compras financiadas, organiza sus cuotas y construye historial comercial positivo.
                 </p>
-              </div>
+              </motion.div>
 
               {/* Actor 2: Plataforma KUOTA (Centro) */}
-              <div
-                className={`rounded-2xl border-2 p-6 text-center transition-all relative ${
-                  activeStep.actor === 'KUOTA'
-                    ? 'border-kuota-deepnavy bg-kuota-deepnavy text-white shadow-navy-hard -translate-y-1'
-                    : 'border-kuota-deepnavy bg-kuota-deepnavy/90 text-white'
+              <motion.div
+                animate={{
+                  scale: activeStep.actor === 'KUOTA' || activeStep.actor === 'ECOSISTEMA' ? 1.03 : 1,
+                  y: activeStep.actor === 'KUOTA' || activeStep.actor === 'ECOSISTEMA' ? -4 : 0,
+                }}
+                transition={{ duration: 0.2 }}
+                className={`rounded-2xl border p-6 text-center transition-all relative ${
+                  activeStep.actor === 'KUOTA' || activeStep.actor === 'ECOSISTEMA'
+                    ? 'border-[#0A192F] bg-[#0A192F] text-white shadow-xl ring-4 ring-[#0391FD]/20'
+                    : 'border-slate-800 bg-[#0A192F] text-white shadow-md'
                 }`}
               >
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-kuota-dodger text-white text-[10px] font-extrabold uppercase">
-                  Articulador
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[#10B981] text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                  Articulador Central
                 </span>
-                <div className="w-14 h-14 rounded-2xl bg-white text-kuota-deepnavy border-2 border-kuota-deepnavy flex items-center justify-center mx-auto mb-3 shadow-sm">
-                  <Layers className="w-7 h-7 text-kuota-dodger" />
+                <div className="w-14 h-14 rounded-2xl bg-white/10 text-white border border-white/20 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                  <Layers className="w-7 h-7 text-[#38BDF8]" />
                 </div>
-                <h3 className="text-xl font-extrabold text-white">KUOTA</h3>
-                <p className="text-xs font-semibold text-kuota-palesky mt-1">
+                <h3 className="text-xl font-black text-white">KUOTA</h3>
+                <p className="text-xs font-normal text-slate-300 mt-1 leading-relaxed">
                   Motor de colocaciones, administración de cuotas, trazabilidad de recaudación y soporte integral.
                 </p>
-              </div>
+              </motion.div>
 
               {/* Actor 3: Comercio */}
-              <div
-                className={`rounded-2xl border-2 p-5 text-center transition-all ${
+              <motion.div
+                animate={{
+                  scale: activeStep.actor === 'COMERCIO' ? 1.02 : 1,
+                  y: activeStep.actor === 'COMERCIO' ? -4 : 0,
+                }}
+                transition={{ duration: 0.2 }}
+                className={`rounded-2xl border p-5 text-center transition-all ${
                   activeStep.actor === 'COMERCIO'
-                    ? 'border-kuota-deepnavy bg-kuota-palesky/50 shadow-sm -translate-y-1'
-                    : 'border-kuota-deepnavy/25 bg-white'
+                    ? 'border-[#10B981] bg-emerald-50/80 shadow-md ring-2 ring-emerald-500/20'
+                    : 'border-slate-200/80 bg-slate-50/50 hover:bg-slate-50'
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-kuota-deepnavy text-white border-2 border-kuota-deepnavy flex items-center justify-center mx-auto mb-3 shadow-sm">
-                  <Store className="w-6 h-6 text-kuota-palesky" />
+                <div className="w-12 h-12 rounded-2xl bg-[#059669] text-white flex items-center justify-center mx-auto mb-3 shadow-md">
+                  <Store className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-lg font-extrabold text-kuota-deepnavy">COMERCIO</h3>
-                <p className="text-xs font-semibold text-kuota-crayola mt-1">
+                <h3 className="text-lg font-black text-[#0A192F]">COMERCIO</h3>
+                <p className="text-xs font-normal text-slate-500 mt-1 leading-relaxed">
                   Vende más mercadería, ofrece cuotas en mostrador y recibe seguimiento organizado de su recaudación.
                 </p>
-              </div>
+              </motion.div>
             </div>
 
             {/* Barra de progreso de las 6 etapas operativas */}
-            <div className="mt-8 pt-6 border-t border-kuota-deepnavy/15">
+            <div className="mt-8 pt-6 border-t border-slate-100">
               <PaymentProgress
                 label={`Proceso operativo Kuota · Etapa ${activeStepNum} de 6`}
                 currentStep={activeStepNum}
@@ -203,7 +219,7 @@ export const EcosystemFlowDiagram: React.FC = () => {
           </div>
         </ScrollReveal>
 
-        {/* Las 6 Etapas Operativas (Interactivas y Secuenciales) */}
+        {/* Las 6 Etapas Operativas (Interactivas con Animaciones) */}
         <div className="space-y-6">
           <div
             role="tablist"
@@ -214,65 +230,74 @@ export const EcosystemFlowDiagram: React.FC = () => {
               const isSelected = s.step === activeStepNum;
               const Icon = s.icon;
               return (
-                <button
+                <motion.button
                   key={s.step}
                   type="button"
                   role="tab"
                   aria-selected={isSelected}
                   onClick={() => handleStepClick(s.step)}
-                  className={`p-3 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-2 ${
+                  whileHover={{ y: -3, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2.5 cursor-pointer ${
                     isSelected
-                      ? 'bg-kuota-deepnavy text-white border-kuota-deepnavy shadow-navy-hard -translate-y-1'
-                      : 'bg-white hover:bg-kuota-palesky/40 text-kuota-deepnavy border-kuota-deepnavy/30'
+                      ? 'bg-[#0A192F] text-white border-[#0A192F] shadow-lg ring-2 ring-[#0391FD]/20'
+                      : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200/90 shadow-xs'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <Icon className={`w-4 h-4 ${isSelected ? 'text-kuota-dodger' : 'text-kuota-crayola'}`} />
-                    <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${
-                      isSelected ? 'bg-kuota-dodger text-white' : 'bg-kuota-palesky text-kuota-deepnavy'
+                    <Icon className={`w-4 h-4 ${isSelected ? 'text-[#38BDF8]' : 'text-slate-400'}`} />
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isSelected ? 'bg-[#0391FD] text-white' : 'bg-slate-100 text-slate-600'
                     }`}>
                       Paso {s.step}
                     </span>
                   </div>
-                  <span className="text-xs font-extrabold leading-tight">
+                  <span className="text-xs font-bold leading-tight">
                     {s.label.split('. ')[1]}
                   </span>
-                </button>
+                </motion.button>
               );
             })}
           </div>
 
-          {/* Panel Detallado de la Etapa Seleccionada */}
-          <ScrollReveal delayMs={60} direction="up">
-            <div className="rounded-3xl bg-white border-2 border-kuota-deepnavy p-6 sm:p-8 shadow-navy-hard-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="space-y-2 max-w-2xl">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-kuota-palesky border border-kuota-deepnavy text-[11px] font-extrabold text-kuota-deepnavy uppercase">
+          {/* Panel Detallado de la Etapa Seleccionada (Animación Fluida AnimatePresence) */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeStep.step}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="rounded-[28px] bg-white border border-slate-200/90 p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 overflow-hidden relative"
+            >
+              <div className="space-y-2.5 max-w-2xl relative z-10">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                     Etapa {activeStep.step} de 6 · Actor: {activeStep.actor}
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-kuota-dodger text-white text-[11px] font-extrabold">
+                  <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
                     {activeStep.tag}
                   </span>
                 </div>
-                <h3 className="text-2xl font-extrabold text-kuota-deepnavy">
+                <h3 className="text-2xl sm:text-3xl font-black text-[#0A192F] tracking-tight">
                   {activeStep.title}
                 </h3>
-                <p className="text-sm font-semibold text-kuota-crayola leading-relaxed">
+                <p className="text-sm font-normal text-slate-600 leading-relaxed">
                   {activeStep.description}
                 </p>
-                <div className="pt-2 text-xs font-bold text-kuota-deepnavy flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-kuota-dodger shrink-0" />
+                <div className="pt-2 text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#10B981] shrink-0" />
                   <span>{activeStep.detail}</span>
                 </div>
               </div>
 
-              <div className="w-full md:w-auto shrink-0 flex items-center justify-end">
-                <div className="w-20 h-20 rounded-2xl bg-kuota-palesky/70 border-2 border-kuota-deepnavy flex items-center justify-center">
-                  <StepIcon className="w-10 h-10 text-kuota-deepnavy" />
+              <div className="w-full md:w-auto shrink-0 flex items-center justify-end relative z-10">
+                <div className="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-200/90 flex items-center justify-center shadow-inner">
+                  <StepIcon className="w-10 h-10 text-[#0391FD]" />
                 </div>
               </div>
-            </div>
-          </ScrollReveal>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </section>

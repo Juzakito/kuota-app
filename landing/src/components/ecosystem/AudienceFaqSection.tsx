@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ShoppingBag, Store, Handshake, HelpCircle } from 'lucide-react';
 import { ScrollReveal } from '../../utils/motionSystem';
 import { trackEvent } from '../../utils/analytics';
@@ -205,46 +206,69 @@ export const AudienceFaqSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Acordeones de Preguntas (Estilo Moderno Fintech) */}
-        <div className="space-y-3 pt-2">
-          {currentFaqs.map((faq) => {
-            const isOpen = openFaqId === faq.id;
-            return (
-              <div
-                key={faq.id}
-                className={`rounded-2xl border transition-all duration-200 bg-white overflow-hidden ${
-                  isOpen
-                    ? 'border-[#0391FD]/50 shadow-md ring-1 ring-[#0391FD]/20'
-                    : 'border-slate-200/90 hover:border-slate-300 shadow-xs'
-                }`}
-              >
-                <button
-                  type="button"
-                  aria-expanded={isOpen}
-                  onClick={() => handleToggleFaq(faq.id, faq.question)}
-                  className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-[#0A192F] hover:text-[#0391FD] transition-colors"
+        {/* Acordeones de Preguntas (Estilo Moderno Fintech con Animaciones Fluidas) */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeAudience}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-3 pt-2"
+          >
+            {currentFaqs.map((faq) => {
+              const isOpen = openFaqId === faq.id;
+              return (
+                <motion.div
+                  key={faq.id}
+                  layout
+                  className={`rounded-2xl border transition-colors duration-200 bg-white overflow-hidden ${
+                    isOpen
+                      ? 'border-[#0391FD]/50 shadow-md ring-1 ring-[#0391FD]/20'
+                      : 'border-slate-200/90 hover:border-slate-300 shadow-xs'
+                  }`}
                 >
-                  <span className="leading-snug pr-2">{faq.question}</span>
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
-                      isOpen
-                        ? 'bg-[#0391FD] text-white rotate-180'
-                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                    }`}
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    onClick={() => handleToggleFaq(faq.id, faq.question)}
+                    className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-[#0A192F] hover:text-[#0391FD] transition-colors cursor-pointer select-none"
                   >
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
-                </button>
+                    <span className="leading-snug pr-2">{faq.question}</span>
+                    <motion.div
+                      animate={{ rotate: isOpen ? 180 : 0 }}
+                      transition={{ duration: 0.22, ease: 'easeInOut' }}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                        isOpen
+                          ? 'bg-[#0391FD] text-white'
+                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      }`}
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </motion.div>
+                  </button>
 
-                {isOpen && (
-                  <div className="px-5 sm:px-6 pb-6 pt-0 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 mt-1 pt-4 animate-fadeIn">
-                    <p>{faq.answer}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        key="content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-5 sm:px-6 pb-6 pt-2 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
+                          <p>{faq.answer}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );
