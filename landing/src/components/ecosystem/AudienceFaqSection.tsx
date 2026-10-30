@@ -143,7 +143,7 @@ export const AudienceFaqSection: React.FC = () => {
           </span>
           <h2
             id="faq-heading"
-            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0A192F] tracking-tight"
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0A192F] tracking-tight"
           >
             Preguntas Frecuentes
           </h2>

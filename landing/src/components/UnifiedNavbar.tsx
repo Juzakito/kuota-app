@@ -324,7 +324,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           </div>
         </div>
 
-        {/* Centro: Navegación de secciones (Visible en pantallas amplias xl:flex para evitar cualquier colisión) */}
+        {/* Centro: Navegación de secciones (Visible únicamente en pantallas ultra-amplias 2xl:flex para garantizar cero colisión en cualquier laptop o tablet) */}
         <nav
           aria-label="Navegación principal"
           onMouseLeave={() => setHoveredNavHref(null)}
@@ -333,7 +333,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             transform: isSwitching ? 'translate3d(0, -4px, 0)' : 'translate3d(0, 0, 0)',
             transition: 'opacity 220ms ease, transform 220ms ease',
           }}
-          className="relative hidden xl:flex items-center gap-1 p-1 rounded-full bg-slate-50/90 border border-slate-200/60 shrink-0"
+          className="relative hidden 2xl:flex items-center gap-1 p-1 rounded-full bg-slate-50/90 border border-slate-200/60 shrink-0"
         >
           {navLinks.map((link) => {
             const IconComponent = link.icon;
@@ -467,7 +467,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             )}
           </div>
 
-          {/* Hamburguesa (visible en pantallas inferiores a xl) */}
+          {/* Hamburguesa (visible en pantallas inferiores a 2xl para evitar colisión de la barra) */}
           <button
             type="button"
             onClick={() => {
@@ -478,7 +478,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-nav-menu"
             aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
-            className={`xl:hidden w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+            className={`2xl:hidden w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
               mobileMenuOpen
                 ? 'bg-[#0A192F] text-white shadow-sm'
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80'
@@ -494,23 +494,23 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
         <div
           aria-hidden="true"
           onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 top-16 sm:top-20 bg-slate-900/40 backdrop-blur-sm z-40 xl:hidden"
+          className="fixed inset-0 top-16 sm:top-20 bg-slate-900/60 backdrop-blur-sm z-40 2xl:hidden"
         />
       )}
 
-      {/* Menú Móvil / Tablet Desplegable */}
+      {/* Menú Móvil / Tablet Desplegable (Completamente opaco y sin duplicar selector en tablet) */}
       <div
         id="mobile-nav-menu"
         aria-hidden={!mobileMenuOpen}
-        className={`xl:hidden fixed top-16 sm:top-20 inset-x-0 bottom-0 z-50 bg-[#070E1A]/95 backdrop-blur-xl border-t border-white/10 transition-all duration-300 overflow-y-auto ${
+        className={`2xl:hidden fixed top-16 sm:top-20 inset-x-0 bottom-0 z-50 bg-[#0A192F] text-white border-t border-white/10 transition-all duration-300 overflow-y-auto ${
           mobileMenuOpen
             ? 'opacity-100 pointer-events-auto'
             : 'opacity-0 pointer-events-none'
         }`}
       >
         <div className="p-5 space-y-4 max-w-lg mx-auto">
-          {/* Selector de perfil para móviles (High Contrast Fintech Capsule) */}
-          <div className="p-1.5 rounded-2xl bg-white/5 border border-white/10 grid grid-cols-3 gap-1.5 shadow-inner">
+          {/* Selector de perfil: Solo visible en móviles (< sm) ya que en tablet y desktop ya está en la barra superior */}
+          <div className="sm:hidden p-1.5 rounded-2xl bg-white/5 border border-white/10 grid grid-cols-3 gap-1.5 shadow-inner">
             <button
               type="button"
               onClick={() => handleSwitchMode('ecosistema', 'mobile_drawer')}

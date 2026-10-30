@@ -57,7 +57,8 @@ export const InstitutionalFooter: React.FC<InstitutionalFooterProps> = ({
                     kuotaSound.playSelectOption();
                     onSelectBuyer();
                   }}
-                  className="text-xs font-medium text-slate-300 hover:text-white transition-colors text-left bg-transparent border-0 p-0 m-0 outline-none cursor-pointer block"
+                  style={{ background: 'transparent', border: 'none', padding: 0 }}
+                  className="appearance-none !bg-transparent !border-0 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left p-0 m-0 outline-none cursor-pointer block"
                 >
                   Experiencia de Comprador
                 </button>
@@ -103,7 +104,8 @@ export const InstitutionalFooter: React.FC<InstitutionalFooterProps> = ({
                     kuotaSound.playSelectOption();
                     onSelectMerchant();
                   }}
-                  className="text-xs font-medium text-slate-300 hover:text-white transition-colors text-left bg-transparent border-0 p-0 m-0 outline-none cursor-pointer block"
+                  style={{ background: 'transparent', border: 'none', padding: 0 }}
+                  className="appearance-none !bg-transparent !border-0 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left p-0 m-0 outline-none cursor-pointer block"
                 >
                   Portal de Comercios
                 </button>
@@ -157,7 +159,8 @@ export const InstitutionalFooter: React.FC<InstitutionalFooterProps> = ({
                     kuotaSound.playSelectOption();
                     onOpenPartnerModal();
                   }}
-                  className="text-xs font-medium text-slate-300 hover:text-white transition-colors text-left bg-transparent border-0 p-0 m-0 outline-none cursor-pointer block"
+                  style={{ background: 'transparent', border: 'none', padding: 0 }}
+                  className="appearance-none !bg-transparent !border-0 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left p-0 m-0 outline-none cursor-pointer block"
                 >
                   Alianzas estratégicas
                 </button>
