@@ -1,26 +1,26 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { NavbarCapsule } from './components/landing/NavbarCapsule';
-import { HeroBentoSplit } from './components/landing/HeroBentoSplit';
-import { OrbitalMetricsSection } from './components/landing/OrbitalMetricsSection';
-import { StickyFeatureShowcase } from './components/landing/StickyFeatureShowcase';
-import { VideoStoriesCarousel } from './components/landing/VideoStoriesCarousel';
-import { LevelsGamification3D } from './components/landing/LevelsGamification3D';
-import { TestimonialsMarquee } from './components/landing/TestimonialsMarquee';
-import { EditorialBlogCarousel } from './components/landing/EditorialBlogCarousel';
-import { OnboardingPhoneStepper } from './components/landing/OnboardingPhoneStepper';
-import { FinancialBentoGrid } from './components/landing/FinancialBentoGrid';
-import { FaqSplitAccordion } from './components/landing/FaqSplitAccordion';
-import { LayeredPreFooter } from './components/landing/LayeredPreFooter';
-import { FloatingLeadWidgets } from './components/landing/FloatingLeadWidgets';
+import { UnifiedNavbar, AudienceMode } from './components/UnifiedNavbar';
+import { CrossAudienceBanner } from './components/EcosystemBanner';
+import { LaunchCountdownSection } from './components/LaunchCountdownSection';
+
+// Secciones del Ecosistema Principal (Hub Ecosistema)
+import { EcosystemHeroSection } from './components/ecosystem/EcosystemHeroSection';
+import { ExperienceSelectorSection } from './components/ecosystem/ExperienceSelectorSection';
+import { EcosystemFlowDiagram } from './components/ecosystem/EcosystemFlowDiagram';
+import { MerchantOperationDemo } from './components/ecosystem/MerchantOperationDemo';
+import { ColocacionesRecaudacionSection } from './components/ecosystem/ColocacionesRecaudacionSection';
+import { AudienceFaqSection } from './components/ecosystem/AudienceFaqSection';
+import { MasterCtaSection } from './components/ecosystem/MasterCtaSection';
+import { InstitutionalFooter } from './components/ecosystem/InstitutionalFooter';
 
 // Modales globales de captación y alianzas
 import { MerchantAffiliationModal } from './components/ecosystem/MerchantAffiliationModal';
 import { PartnerContactModal } from './components/ecosystem/PartnerContactModal';
+import { FloatingLeadWidgets } from './components/landing/FloatingLeadWidgets';
 
-// Vistas secundarias especializadas por query param
-import { UnifiedNavbar, AudienceMode } from './components/UnifiedNavbar';
+// Vistas especializadas de Compradores
 import { HeroSection as BuyerHeroSection } from './components/HeroSection';
 import { ProblemSolutionSection as BuyerProblemSolutionSection } from './components/ProblemSolutionSection';
 import { PaymentMethodsSection as BuyerPaymentMethodsSection } from './components/PaymentMethodsSection';
@@ -30,6 +30,7 @@ import { LevelsSection as BuyerLevelsSection } from './components/LevelsSection'
 import { TrustSection as BuyerTrustSection } from './components/TrustSection';
 import { CtaFooterSection as BuyerCtaFooterSection } from './components/CtaFooterSection';
 
+// Vistas especializadas de Proveedores / Comercios
 import { HeroSection as SupplierHeroSection } from './components/supplier/HeroSection';
 import { ProblemSolutionSection as SupplierProblemSolutionSection } from './components/supplier/ProblemSolutionSection';
 import { SocialProofSection as SupplierSocialProofSection } from './components/supplier/SocialProofSection';
@@ -39,7 +40,6 @@ import { TrustSection as SupplierTrustSection } from './components/supplier/Trus
 import { PricingSection as SupplierPricingSection } from './components/supplier/PricingSection';
 import { CalCtaSection as SupplierCalCtaSection } from './components/supplier/CalCtaSection';
 import { FooterSection as SupplierFooterSection } from './components/supplier/FooterSection';
-import { CrossAudienceBanner } from './components/EcosystemBanner';
 
 import { trackEvent } from './utils/analytics';
 import { smoothScrollToAnchor } from './utils/motionSystem';
@@ -165,65 +165,67 @@ export const App: React.FC = () => {
         onClose={() => setPartnerModalOpen(false)}
       />
 
-      {/* RENDERIZADO PRINCIPAL */}
+      {/* RENDERIZADO PRINCIPAL SEGÚN EL PERFIL ACTIVO */}
       {mode === 'ecosistema' ? (
         <>
           {/* ========================================================= */}
-          {/* EXPERIENCIA MAESTRA FLAGSHIP (12 SECCIONES DEL PRD iO)    */}
+          {/* HUB ECOSISTEMA KUOTA (Compradores ↔ KUOTA ↔ Comercios)   */}
           {/* ========================================================= */}
 
-          {/* SECCIÓN 1: NAVBAR FIJO CON CÁPSULA CENTRAL */}
-          <NavbarCapsule
+          {/* NAVBAR UNIFICADA CON SELECTOR DE PERFILES TRIPARTITO */}
+          <UnifiedNavbar
             mode={mode}
             onModeChange={handleModeChange}
-            onOpenEvaluationModal={() => setEvaluationModalOpen(true)}
+            onOpenMerchantAffiliation={() => setMerchantModalOpen(true)}
           />
 
-          <main className="flex-1 space-y-4">
-            {/* SECCIÓN 2: HERO PRINCIPAL SPLIT EN MACRO-CONTENEDOR CURVO */}
-            <HeroBentoSplit
-              onOpenEvaluationModal={() => setEvaluationModalOpen(true)}
-              onExploreDemo={() => smoothScrollToAnchor('#plataforma')}
+          <main className="flex-1">
+            {/* 1. HERO DEL ECOSISTEMA (Conectamos compras y ventas en cuotas) */}
+            <EcosystemHeroSection
+              onSelectBuyer={() => handleModeChange('compradores', 'hero_cta_buyer')}
+              onOpenMerchantAffiliation={() => setMerchantModalOpen(true)}
+              onExploreEcosystem={() => smoothScrollToAnchor('#diagrama')}
             />
 
-            {/* SECCIÓN 3: EL SISTEMA ORBITAL / CÍRCULOS CONCÉNTRICOS INTERACTIVOS */}
-            <OrbitalMetricsSection
-              onOpenEvaluationModal={() => setEvaluationModalOpen(true)}
+            {/* 2. CONTADOR OFICIAL DE LANZAMIENTO */}
+            <LaunchCountdownSection mode="ecosistema" />
+
+            {/* 3. SELECTOR DE EXPERIENCIAS (Compradores / Comercios / Aliados) */}
+            <ExperienceSelectorSection
+              onSelectBuyer={() => handleModeChange('compradores', 'experience_selector')}
+              onSelectMerchant={() => handleModeChange('comercios', 'experience_selector')}
+              onOpenPartnerModal={() => setPartnerModalOpen(true)}
             />
 
-            {/* SECCIÓN 4: SHOWCASE ASIMÉTRICO STICKY (CEREBRO IA Y ARO CÓNICO) */}
-            <StickyFeatureShowcase
-              onOpenEvaluationModal={() => setEvaluationModalOpen(true)}
+            {/* 4. DIAGRAMA INTERACTIVO DEL FLUJO COMPLETO (6 Pasos) */}
+            <EcosystemFlowDiagram />
+
+            {/* 5. DEMOSTRACIÓN OPERATIVA EN COMERCIO (Mostrador, QR, Despacho) */}
+            <MerchantOperationDemo
+              onOpenAffiliation={() => setMerchantModalOpen(true)}
             />
 
-            {/* SECCIÓN 5: BLOQUE MONOLÍTICO OSCURO - CARRUSEL 3D DE VIDEO-HISTORIAS */}
-            <VideoStoriesCarousel />
+            {/* 6. COLOCACIONES Y RECAUDACIÓN TRAZABLE (Ledger y Conciliación) */}
+            <ColocacionesRecaudacionSection />
 
-            {/* SECCIÓN 6: BANNER OSCURO DE GAMIFICACIÓN Y NIVELES 3D */}
-            <LevelsGamification3D
-              onOpenEvaluationModal={() => setEvaluationModalOpen(true)}
+            {/* 7. PRUEBA SOCIAL Y RESPALDO COMERCIAL */}
+            <SupplierSocialProofSection />
+
+            {/* 8. PREGUNTAS FRECUENTES POR AUDIENCIA */}
+            <AudienceFaqSection />
+
+            {/* 9. MASTER CTA FINAL */}
+            <MasterCtaSection
+              onSelectBuyer={() => handleModeChange('compradores', 'master_cta_buyer')}
+              onOpenMerchantAffiliation={() => setMerchantModalOpen(true)}
+              onOpenPartnerModal={() => setPartnerModalOpen(true)}
             />
 
-            {/* SECCIÓN 7: MARQUEE INFINITO DE TESTIMONIOS REALES */}
-            <TestimonialsMarquee />
-
-            {/* SECCIÓN 8: CARRUSEL EDITORIAL & BLOG (NUESTRO RADAR B2B) */}
-            <EditorialBlogCarousel />
-
-            {/* SECCIÓN 9: STEPPER INTERACTIVO DE ONBOARDING */}
-            <OnboardingPhoneStepper
-              onOpenEvaluationModal={() => setEvaluationModalOpen(true)}
-            />
-
-            {/* SECCIÓN 10: BENTO GRID DE TRANSPARENCIA FINANCIERA */}
-            <FinancialBentoGrid />
-
-            {/* SECCIÓN 11: PREGUNTAS FRECUENTES SPLIT */}
-            <FaqSplitAccordion />
-
-            {/* SECCIÓN 12: PRE-FOOTER ANIMADO 3D + FOOTER MONOLÍTICO */}
-            <LayeredPreFooter
-              onOpenEvaluationModal={() => setEvaluationModalOpen(true)}
+            {/* 10. FOOTER INSTITUCIONAL */}
+            <InstitutionalFooter
+              onSelectBuyer={() => handleModeChange('compradores', 'footer_link')}
+              onSelectMerchant={() => handleModeChange('comercios', 'footer_link')}
+              onOpenPartnerModal={() => setPartnerModalOpen(true)}
             />
           </main>
         </>
