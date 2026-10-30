@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { ShieldCheck, Lock, Cloud, Award, CheckCircle2, TrendingUp, Sparkles, Building } from 'lucide-react';
 import { FINANCIAL_BENTO_CARDS, FinancialMetricCard } from '../../config/fintechData';

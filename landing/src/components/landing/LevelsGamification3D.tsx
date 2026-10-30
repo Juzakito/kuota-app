@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Sparkles, CheckCircle2, ShieldCheck, Zap, Award, Layers } from 'lucide-react';

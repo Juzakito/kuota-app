@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { ShieldCheck, Star } from 'lucide-react';
 import { TESTIMONIALS_ROW_1, TESTIMONIALS_ROW_2 } from '../../config/fintechData';

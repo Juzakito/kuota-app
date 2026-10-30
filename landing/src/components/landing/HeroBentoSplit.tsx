@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, ShieldCheck, CheckCircle2, TrendingUp, Package, Bot, Zap } from 'lucide-react';

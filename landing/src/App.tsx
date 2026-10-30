@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { NavbarCapsule } from './components/landing/NavbarCapsule';
 import { HeroBentoSplit } from './components/landing/HeroBentoSplit';

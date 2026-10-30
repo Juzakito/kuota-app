@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight, BookOpen, Clock } from 'lucide-react';
 import { BLOG_POSTS, BlogPostItem } from '../../config/fintechData';
