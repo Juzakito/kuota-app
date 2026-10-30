@@ -57,7 +57,7 @@ export const LayeredPreFooter: React.FC<LayeredPreFooterProps> = ({
             className="absolute w-64 sm:w-80 h-24 rounded-2xl bg-white/15 border border-white/20 backdrop-blur-lg rotate-1"
           />
 
-          {/* Capa 1 Superior (Tarjeta Kuota | VALT) */}
+          {/* Capa 1 Superior (Tarjeta Kuota B2B) */}
           <motion.div
             initial={{ opacity: 0, y: -24 }}
             whileInView={{ opacity: 1, y: -16 }}
@@ -85,7 +85,7 @@ export const LayeredPreFooter: React.FC<LayeredPreFooterProps> = ({
             </div>
             <div className="text-right">
               <span className="text-[10px] font-mono font-bold text-emerald-400 block">
-                by VALT
+                KUOTA B2B
               </span>
               <span className="text-[9px] text-slate-500">T&C Aplican</span>
             </div>
@@ -114,9 +114,6 @@ export const LayeredPreFooter: React.FC<LayeredPreFooterProps> = ({
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">
               <KuotaLogo variant="inverted" className="h-7 w-auto object-contain" />
-              <span className="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                by VALT
-              </span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               El Sistema Operativo de Compras e Inteligencia Predictiva que conecta a comercios con sus proveedores mediante esquemas de financiamiento en cuotas.
@@ -234,7 +231,7 @@ export const LayeredPreFooter: React.FC<LayeredPreFooterProps> = ({
         {/* Barra Inferior */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 gap-3">
           <div>
-            © 2026 KUOTA Technologies Inc. Todos los derechos reservados. Con el respaldo de VALT.
+            © 2026 KUOTA Technologies Inc. Todos los derechos reservados.
           </div>
           <div className="flex items-center gap-4">
             <span>Encriptación TLS 1.3</span>

@@ -95,7 +95,7 @@ export const LevelsGamification3D: React.FC<LevelsGamification3DProps> = ({
                 </div>
               </div>
 
-              {/* PEDESTAL 2: 200K MAESTRO VALT (CENTRAL PROMINENTE) */}
+              {/* PEDESTAL 2: 200K MAESTRO (CENTRAL PROMINENTE) */}
               <div
                 onClick={() => setSelectedLevelId('maestro')}
                 className="flex flex-col items-center cursor-pointer group -translate-y-4"
@@ -119,7 +119,7 @@ export const LevelsGamification3D: React.FC<LevelsGamification3DProps> = ({
                     <span className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300">
                       200K
                     </span>
-                    <span className="text-[9px] font-bold text-emerald-400">VALT</span>
+                    <span className="text-[9px] font-bold text-emerald-400">KUOTA</span>
                   </div>
                 </motion.div>
 
@@ -132,7 +132,7 @@ export const LevelsGamification3D: React.FC<LevelsGamification3DProps> = ({
                   }`}
                 >
                   <span className="text-[10px] sm:text-xs font-bold text-emerald-400">
-                    Maestro Valt
+                    Nivel Maestro
                   </span>
                 </div>
               </div>

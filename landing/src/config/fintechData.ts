@@ -48,7 +48,7 @@ export const ORBITAL_SLIDES: OrbitalSlide[] = [
     metricPrefix: '',
     metricNumber: '100%',
     title: 'Tecnología B2B Peruana',
-    subtitle: 'Te ofrecemos una experiencia de compras segura y respaldada por la infraestructura tecnológica y financiera de VALT.',
+    subtitle: 'Te ofrecemos una experiencia de compras segura y respaldada por arquitectura de infraestructura tecnológica y financiera de primer nivel.',
     ctaText: 'Conoce Nuestra Infraestructura',
     nodes: [
       { id: 'c1', label: 'Ferretería Industrial', sublabel: 'Lima Norte · 8 años', iconName: 'Store', radius: 1, angle: 30, color: '#10B981', metric: 'S/ 24K' },
@@ -281,14 +281,14 @@ export const GAMIFICATION_LEVELS: GamificationLevelItem[] = [
   },
   {
     id: 'maestro',
-    name: 'Nivel Maestro Valt',
+    name: 'Nivel Maestro',
     badgeSymbol: '200K',
     badgeLabel: 'Nivel Corporativo',
     maxAmount: 'Hasta S/ 200,000+',
     terms: 'Plazos de 30, 60 y 90 días',
     rate: 'Tasa institucional desde 1.4% mensual',
     cashback: '2.5% bonificación + compras conjuntas',
-    requirements: 'Línea corporativa con respaldo VALT e historial impecable',
+    requirements: 'Línea corporativa con condiciones institucionales e historial impecable',
     color: '#10B981',
   },
 ];
@@ -351,7 +351,7 @@ export const TESTIMONIALS_ROW_1: TestimonialItem[] = [
     location: 'Arequipa',
     years: '6 años',
     avatarBg: 'bg-emerald-500/20 text-emerald-600',
-    quote: 'La transparencia de saber cuánto pago por kuotear cada factura sin cobros sorpresa es lo mejor. Valt y Kuota nos dan un respaldo institucional único.',
+    quote: 'La transparencia de saber cuánto pago por kuotear cada factura sin cobros sorpresa es lo mejor. Kuota nos da un respaldo operativo y de liquidez único.',
     metricLabel: 'Línea activa',
     metricValue: 'S/ 50K',
   },
@@ -540,7 +540,7 @@ export const ONBOARDING_STEPS: OnboardingStepItem[] = [
     title: 'Recibe tu línea de financiamiento pre-aprobada con tu RUC.',
     description: 'Evaluación algorítmica sin hipotecas inmobiliarias ni avales personales. Te asignamos una línea de capital de trabajo inmediata.',
     screenHighlight: 'Paso 4: Asignación de Línea Kuota',
-    screenSub: 'Línea B2B respaldada por VALT',
+    screenSub: 'Línea B2B pre-aprobada y 100% digital',
     pillColor: '#8FD694',
     phoneDetails: [
       { label: 'Línea Asignada', value: 'S/ 25,000.00' },
@@ -664,7 +664,7 @@ export const FAQS_LIST: FaqItem[] = [
   {
     id: 'faq-5',
     question: '¿Qué respaldo tiene Kuota y quién está detrás de la plataforma?',
-    answer: 'Kuota opera bajo la infraestructura tecnológica y financiera institucional de VALT (ecosistema de innovación empresarial con estándares Stanford/MIT), garantizando encriptación de datos de grado bancario (TLS 1.3), alta disponibilidad en la nube y total transparencia operativa en cada transacción.',
+    answer: 'Kuota opera bajo una arquitectura de infraestructura tecnológica y financiera de grado bancario con encriptación de datos TLS 1.3, alta disponibilidad en la nube y total transparencia operativa en cada transacción sin costos ocultos.',
   },
   {
     id: 'faq-6',

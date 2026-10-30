@@ -64,7 +64,7 @@ export const NavbarCapsule: React.FC<NavbarCapsuleProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* LOGO KUOTA + BADGE BY VALT */}
+        {/* LOGO KUOTA */}
         <div className="flex items-center gap-3">
           <a
             href="#inicio"
@@ -76,10 +76,6 @@ export const NavbarCapsule: React.FC<NavbarCapsuleProps> = ({
           >
             <div className="relative flex items-center">
               <KuotaLogo variant="inverted" className="h-7 w-auto object-contain" />
-            </div>
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-semibold text-[#8FD694] tracking-wider uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
-              by VALT
             </div>
           </a>
         </div>

@@ -127,14 +127,14 @@ export const FinancialBentoGrid: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 3: Sello de Innovación VALT */}
+          {/* Card 3: Innovación y Tecnología Kuota */}
           <div className="rounded-[32px] bg-gradient-to-br from-[#0F766E] to-[#1E3A8A] border border-white/15 p-7 text-white flex flex-col justify-between shadow-xl">
             <div>
               <span className="text-xs font-mono text-emerald-300 font-bold uppercase tracking-wider">
-                Respaldo Institucional
+                Innovación Tecnológica
               </span>
               <div className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
-                Ecosistema VALT
+                Ecosistema Kuota
               </div>
               <p className="text-xs text-slate-200 mt-2 leading-relaxed italic">
                 "Reinventamos el flujo de capital para el comercio latinoamericano combinando inteligencia artificial y financiamiento sin fricción."
@@ -142,7 +142,7 @@ export const FinancialBentoGrid: React.FC = () => {
             </div>
             <div className="pt-4 border-t border-white/15 flex items-center gap-2 text-[11px] text-emerald-200">
               <Award className="w-4 h-4 text-[#8FD694]" />
-              <span>Estándar MIT & Stanford Innovation</span>
+              <span>Arquitectura Cloud de Alta Disponibilidad</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 # PRD — Landing Kuota para Compradores y Emprendedores (B2B Supply BNPL)
 > **Producto:** KUOTA para Compradores (`kuota-ia.vercel.app?perfil=compradores`)  
-> **Versión:** 2.0 (Alineada al Ecosistema Kuota + Nexo IA + Respaldo VALT)  
+> **Versión:** 2.0 (Alineada al Ecosistema Kuota + Nexo IA + Respaldo Institucional)  
 > **Fecha:** 29 de octubre de 2026 · **Estado:** Implementado y Aprobado para Producción  
 > **Audiencia Primaria:** Emprendedores, dueños de bodegas, minimarkets, ferreterías, tiendas de ropa y pequeños comercios que compran mercadería de forma recurrente.
 
@@ -11,7 +11,7 @@
 La landing page de **Compradores de Kuota** está diseñada para resolver el problema fundamental del comercio minorista e independiente en Perú: **quedarse sin caja para reabastecer mercadería de alta rotación**, viéndose obligados a recurrir al fiado informal, prestamistas con cobros diarios abusivos o trámites bancarios lentos que exigen garantías inmobiliarias.
 
 ### La Propuesta de Valor Kuota:
-> **"Financia tu mercadería sin quedarte sin caja. Abastécete con tus proveedores mayoristas hoy y paga en cómodas kuotas semanales o mensuales, con la asistencia de tu copiloto Nexo IA y el respaldo institucional de VALT."**
+> **"Financia tu mercadería sin quedarte sin caja. Abastécete con tus proveedores mayoristas hoy y paga en cómodas kuotas semanales o mensuales, con la asistencia de tu copiloto Nexo IA y respaldo institucional de primer nivel."**
 
 ### Métricas Clave de Éxito (KPIs):
 - **Conversión Principal:** Clics en *"Descargar en Play Store"* o envío del formulario de pre-evaluación rápida de línea.
@@ -42,7 +42,7 @@ Alineado con el documento rector `DESIGN.md`:
 
 ## 4. Estructura y Flujo de Secciones
 
-1. **Header Sticky:** Barra fija con logotipo oficial blanco de Kuota, badge `by VALT` y botón de acción directa.
+1. **Header Sticky:** Barra fija con logotipo oficial blanco de Kuota, badge `Kuota` y botón de acción directa.
 2. **Hero Principal (El Hook Emprendedor):** Título de empoderamiento, promesa de liquidez y llamado a la acción.
 3. **Problema vs. Solución (Comparativa de Alto Impacto):** Contraste entre el crédito informal/bancario tradicional y la agilidad de Kuota.
 4. **Medios de Pago y Cobranza:** Red integrada con Yape, Plin, BCP, BBVA, Interbank y Scotiabank.
@@ -50,7 +50,7 @@ Alineado con el documento rector `DESIGN.md`:
 6. **Acompañamiento en Formalización:** Respaldo a comercios que buscan crecer de RUC 10 a RUC 20 sin trabas.
 7. **Niveles de Línea Kuota (Gamificación Financiera):** Escala de niveles según puntualidad y volumen de compras.
 8. **Banner Cruzado de Audiencia:** Enlace directo para aquellos comerciantes que también son proveedores mayoristas.
-9. **Confianza y Respaldo Institucional:** Equipo fundador, seguridad bancaria TLS 1.3 y respaldo VALT.
+9. **Confianza y Respaldo Institucional:** Equipo fundador, seguridad bancaria TLS 1.3 y respaldo institucional.
 10. **CTA de Cierre y Footer:** Descarga de app móvil, formulario de evaluación express y enlaces legales transparentes.
 
 ---
@@ -113,7 +113,7 @@ El usuario descubre cómo su disciplina de pago le permite desbloquear mayor pod
 | :---: | :--- | :--- | :--- | :--- | :--- |
 | **01** | **Nivel Impulso** | Hasta S/ 15,000 | 30 días | 2.4% mensual fija | Acceso inmediato con DNI y negocio activo |
 | **02** | **Nivel Expansión** | Hasta S/ 50,000 | 30 y 60 días | 1.9% preferencial | Plazos bimestrales y bonificación en compras |
-| **03** | **Nivel Maestro VALT**| Hasta S/ 200,000+ | 30, 60 y 90 días | Desde 1.4% corporativa | Compras conjuntas con descuento mayorista de fábrica |
+| **03** | **Nivel Maestro**| Hasta S/ 200,000+ | 30, 60 y 90 días | Desde 1.4% corporativa | Compras conjuntas con descuento mayorista de fábrica |
 
 - **Interactividad:** Switcher con pestañas clicables que iluminan la escalera de progreso y actualizan la tarjeta central con requisitos y plazos.
 
@@ -121,7 +121,7 @@ El usuario descubre cómo su disciplina de pago le permite desbloquear mayor pod
 
 ### 5.7 Confianza, Seguridad y Respaldo Institucional
 - **Seguridad Tecnológica:** Encriptación de datos de grado bancario (TLS 1.3), almacenamiento seguro en AWS/GCP y estricto cumplimiento de la Ley N° 29733 (Protección de Datos Personales).
-- **Respaldo Institucional:** Ecosistema respaldado por la matriz corporativa de **VALT** con estándares internacionales de innovación financiera.
+- **Respaldo Institucional:** Ecosistema respaldado por la matriz tecnológica y financiera de Kuota con estándares internacionales de innovación financiera.
 - **Atención Humana y Cercana:** Soporte directo vía WhatsApp Ejecutivo y Libro de Reclamaciones virtual accesible.
 
 ---

@@ -1,7 +1,7 @@
 # KUOTA — MASTER DESIGN SYSTEM & STYLE REFERENCE
 > **"High-Contrast Modern Fintech & B2B Embedded Finance Architecture"**  
 > *Inspiración y Estándar de Ejecución: Tarjeta iO · Stripe · Vercel · Nubank · Apple*  
-> **Ecosistema de Marca:** **KUOTA** (Plataforma Comercial / Acción de *"Kuotear"*), **NEXO IA** (Copiloto Predictivo / Orbe Cristalino), **VALT** (Infraestructura Institucional y Respaldo Corporativo).
+> **Ecosistema de Marca:** **KUOTA** (Plataforma Comercial / Acción de *"Kuotear"*), **NEXO IA** (Copiloto Predictivo / Orbe Cristalino), **KUOTA B2B** (Infraestructura Institucional y Operativa).
 
 ---
 
@@ -35,7 +35,7 @@ La experiencia NO es un lienzo plano y continuo. Está construida mediante **Mac
 | `--color-kuota-emerald` | `#10B981` | Emerald Signal | Señal de aprobación, estados óptimos, halos orbitales y botones primarios |
 | `--color-nexo-cyan` | `#06B6D4` | Nexo Cyan | Copiloto predictivo, aros cónicos, forecast y sincronización ERP |
 | `--color-nexo-blue` | `#38BDF8` | Sky Glow | Iluminación cenital secundaria, orbe Nexo y badges técnicos |
-| `--color-valt-indigo` | `#6366F1` | Valt Indigo | Respaldo institucional, integraciones corporativas y multimoneda |
+| `--color-kuota-indigo` | `#6366F1` | Kuota Indigo | Integraciones corporativas y multimoneda |
 | `--color-slate-900` | `#0F172A` | Deep Charcoal | Tipografía de display principal sobre fondos claros y bordes |
 | `--color-slate-600` | `#475569` | Muted Body | Texto de párrafos secundarios y subtítulos explicativos |
 | `--color-hairline-dark` | `rgba(255,255,255,0.10)` | Hairline White | Separadores, bordes de cápsulas y líneas de mockups en bloques oscuros |
@@ -125,7 +125,7 @@ En lugar de tarjetas genéricas de 8px o 12px, KUOTA adopta la arquitectura de *
 ### 6. Gamificación de Niveles 3D (`LevelsGamification3D.tsx`)
 - Bloque `#080C14` con tres pedestales y escudos flotando a diferentes alturas:
   - **`S/` (Impulso):** Plata/Verde hasta S/ 15,000.
-  - **`200K` (Maestro VALT):** Oro/Esmeralda corporativo hasta S/ 200,000+.
+  - **`200K` (Nivel Maestro):** Oro/Esmeralda corporativo hasta S/ 200,000+.
   - **`50K` (Expansión):** Turquesa hasta S/ 50,000.
 - Línea de tiempo horizontal conectora que se ilumina dinámicamente y actualiza los requisitos, plazos y cashback B2B.
 
@@ -144,7 +144,7 @@ En lugar de tarjetas genéricas de 8px o 12px, KUOTA adopta la arquitectura de *
 
 ### 10. Bento de Transparencia Financiera (`FinancialBentoGrid.tsx`)
 - 5 tarjetas con métricas claras (Forecast 94.5%, Comisión fija 1.8%, PEN/USD, Plazos 30/60/90d, Membresía S/ 0.00).
-- 3 tarjetas de respaldo: Satisfacción 4.9 ★★★★★, Encriptación TLS 1.3 / Cloud y Sello de Innovación VALT.
+- 3 tarjetas de respaldo: Satisfacción 4.9 ★★★★★, Encriptación TLS 1.3 / Cloud y Arquitectura Cloud de Alta Disponibilidad.
 
 ### 11. Preguntas Frecuentes Split (`FaqSplitAccordion.tsx`)
 - Columna izquierda sticky con redacción honesta y botón directo a WhatsApp.
@@ -152,7 +152,7 @@ En lugar de tarjetas genéricas de 8px o 12px, KUOTA adopta la arquitectura de *
 
 ### 12. Pre-Footer 3D y Footer Corporativo (`LayeredPreFooter.tsx`)
 - Titular *"Menos quiebres, más liquidez"* con 4 capas isométricas translúcidas de la tarjeta Kuota levitando en cascada bajo luz cenital esmeralda.
-- Footer corporativo de 3 columnas de Transparencia, Plataforma y Contacto con sello `by VALT`.
+- Footer corporativo de 3 columnas de Transparencia, Plataforma y Contacto con sello KUOTA B2B.
 
 ### 13. Widgets Flotantes Persistentes (`FloatingLeadWidgets.tsx`)
 - Botón cápsula verde en esquina inferior derecha (`#10B981`) con icono de WhatsApp/Nexo.
@@ -166,13 +166,13 @@ En lugar de tarjetas genéricas de 8px o 12px, KUOTA adopta la arquitectura de *
 - **Mantener el ritmo visual alternante:** Cada macro-contenedor debe tener un propósito visual claro (luz vs. monolito oscuro).
 - **Usar números tabulares (`tabular-nums`):** Todas las tasas (`1.8%`), cifras monetarias (`S/ 15,400`), días (`30d`) y métricas deben usar fuentes monoespaciadas o tabulares para evitar saltos de layout.
 - **Botones siempre en cápsula (`rounded-full`):** Todo botón interactivo es una píldora con padding horizontal generoso (`px-7 py-3.5`).
-- **Respaldo institucional transparente:** Siempre incluir el sello `by VALT` con su badge sutil en el Navbar y Pre-Footer.
+- **Respaldo institucional transparente:** Mantener siempre la identidad corporativa limpia de Kuota y su arquitectura cloud de alta disponibilidad.
 - **Garantizar 60 FPS y cero scroll horizontal:** Toda animación espacial debe usar aceleración por GPU (`transform: translate3d`) y anchos máximos acotados (`max-w-7xl` con `overflow-x-hidden`).
 
 ### ❌ Lo que NUNCA se debe hacer
 - **NO usar esquinas afiladas o radios pequeños (8px/12px) en macro-secciones:** Rompe la identidad visual moderna de Kuota. Las macro-tarjetas son de `32px` a `48px`.
 - **NO usar gradientes saturados arbitrarios tipo "neón de los 90s":** Los gradientes en Kuota son controlados, en tonos menta (`#8FD694`), esmeralda (`#10B981`) y cian (`#06B6D4`).
-- **NO inventar tasas falsas, aprobación bancaria automática ni promesas desmedidas:** Comunicar siempre *"Aplican T&C"* y mantener la transparencia comercial respaldada por VALT.
+- **NO inventar tasas falsas, aprobación bancaria automática ni promesas desmedidas:** Comunicar siempre *"Aplican T&C"* y mantener la transparencia comercial y operativa.
 - **NO bloquear la navegación táctil en celulares:** En dispositivos táctiles, deshabilitar efectos de tilt 3D excesivos con `@media (pointer: coarse)` y priorizar el tap instantáneo (`touch-action: manipulation`).
 
 ---
@@ -192,7 +192,7 @@ En lugar de tarjetas genéricas de 8px o 12px, KUOTA adopta la arquitectura de *
   --kuota-emerald: #10B981;
   --nexo-cyan: #06B6D4;
   --nexo-blue: #38BDF8;
-  --valt-indigo: #6366F1;
+  --kuota-indigo: #6366F1;
   
   /* Radios Geométricos */
   --radius-macro-mobile: 32px;

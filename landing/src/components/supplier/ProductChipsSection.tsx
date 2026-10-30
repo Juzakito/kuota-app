@@ -227,14 +227,14 @@ export const ProductChipsSection: React.FC = () => {
             direction="left"
             className="order-2 lg:order-1 lg:col-span-5 flex flex-col items-center"
           >
-            <div className="w-full max-w-sm rounded-3xl border-2 border-kuota-deepnavy bg-white p-5 shadow-navy-hard-lg placeholder-stripes">
+            <div className="w-full max-w-sm rounded-3xl border border-slate-200/90 bg-white p-5 shadow-xl">
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-kuota-deepnavy text-white text-xs font-bold uppercase">
-                  <Smartphone className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
-                  Placeholder · {currentCapture.placeholderId}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#070A0F] text-white text-xs font-bold uppercase">
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+                  {currentCapture.title}
                 </span>
-                <span className="px-2.5 py-1 rounded-md bg-kuota-palesky border border-kuota-deepnavy text-kuota-deepnavy text-xs font-extrabold">
-                  {currentCapture.dimensions}
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 text-xs font-bold border border-emerald-500/20">
+                  Flujo Digital 100%
                 </span>
               </div>
 
@@ -254,35 +254,35 @@ export const ProductChipsSection: React.FC = () => {
                         kuotaSound.playSelectOption();
                         setActiveCaptureIdx(i);
                       }}
-                      className={`flex-1 py-1.5 px-2.5 rounded-xl border border-kuota-deepnavy text-xs font-extrabold transition-colors ${
+                      className={`flex-1 py-1.5 px-2.5 rounded-xl text-xs font-bold transition-all ${
                         isCapActive
-                          ? 'bg-kuota-dodger text-white'
-                          : 'bg-kuota-palesky/80 text-kuota-deepnavy hover:bg-kuota-palesky'
+                          ? 'bg-[#0391FD] text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
-                      {cap.placeholderId} ({i + 1}/{activeChip.captures.length})
+                      Paso 0{i + 1}: {cap.title}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Mockup esquemático de la captura 390×800 con transición animada */}
+              {/* Mockup esquemático de la captura con transición animada */}
               <div
                 key={`${activeChip.id}-${activeCaptureIdx}`}
                 role="img"
-                aria-label={`${currentCapture.placeholderId}: ${currentCapture.description}`}
+                aria-label={currentCapture.description}
                 aria-live="polite"
-                className="rounded-2xl border-2 border-kuota-deepnavy bg-kuota-deepnavy text-white p-5 mb-4 kuota-section-arrive"
+                className="rounded-2xl border border-white/10 bg-[#0A0F14] text-white p-5 mb-4 shadow-inner"
               >
-                <div className="flex items-center justify-between text-xs text-kuota-palesky font-bold pb-2.5 mb-3 border-b border-white/15">
+                <div className="flex items-center justify-between text-xs text-slate-400 font-bold pb-2.5 mb-3 border-b border-white/10">
                   <span>{currentCapture.mockHeader}</span>
-                  <span className="px-2 py-0.5 rounded bg-kuota-dodger text-white font-extrabold">
-                    {currentCapture.placeholderId}
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 text-[10px]">
+                    Operación Activa
                   </span>
                 </div>
 
-                <div className="rounded-xl bg-kuota-dodger/25 border border-kuota-palesky/40 p-3.5 mb-3 text-center">
-                  <div className="text-base sm:text-lg font-extrabold text-white">
+                <div className="rounded-xl bg-[#0391FD]/15 border border-[#0391FD]/30 p-3.5 mb-3 text-center">
+                  <div className="text-base sm:text-lg font-black text-white">
                     {currentCapture.mockHighlight}
                   </div>
                 </div>
@@ -291,9 +291,9 @@ export const ProductChipsSection: React.FC = () => {
                   {currentCapture.mockRows.map((row) => (
                     <div
                       key={row.label}
-                      className="rounded-xl bg-white/10 border border-white/15 px-3 py-2 flex items-center justify-between gap-2 text-xs"
+                      className="rounded-xl bg-white/[0.06] border border-white/10 px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs"
                     >
-                      <span className="text-kuota-palesky font-medium">
+                      <span className="text-slate-400 font-medium">
                         {row.label}
                       </span>
                       <span className="font-extrabold text-white">
@@ -304,9 +304,9 @@ export const ProductChipsSection: React.FC = () => {
                 </div>
               </div>
 
-              <div className="rounded-xl bg-kuota-palesky border border-kuota-deepnavy px-3.5 py-2.5 text-left">
-                <p className="text-xs sm:text-sm font-extrabold text-kuota-deepnavy">
-                  {currentCapture.placeholderId}: {currentCapture.description}
+              <div className="rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 text-left">
+                <p className="text-xs sm:text-sm font-semibold text-slate-700">
+                  {currentCapture.description}
                 </p>
               </div>
             </div>
@@ -381,8 +381,8 @@ export const ProductChipsSection: React.FC = () => {
                           </p>
 
                           <div className="flex flex-wrap items-center gap-2 pt-1">
-                            <span className="text-xs font-extrabold text-kuota-crayola">
-                              Capturas asociadas:
+                            <span className="text-xs font-bold text-slate-500">
+                              Pantallas del flujo:
                             </span>
                             {chip.captures.map((cap, capIdx) => (
                               <button
@@ -392,13 +392,13 @@ export const ProductChipsSection: React.FC = () => {
                                   kuotaSound.playSelectOption();
                                   setActiveCaptureIdx(capIdx);
                                 }}
-                                className={`text-xs font-extrabold px-2.5 py-1 rounded-lg border border-kuota-deepnavy transition-colors ${
+                                className={`text-xs font-bold px-2.5 py-1 rounded-lg transition-all ${
                                   activeCaptureIdx === capIdx
-                                    ? 'bg-kuota-dodger text-white'
-                                    : 'bg-kuota-palesky text-kuota-deepnavy hover:bg-kuota-dodger/20'
+                                    ? 'bg-[#0391FD] text-white shadow-sm'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                 }`}
                               >
-                                {cap.placeholderId}: {cap.title}
+                                Paso 0{capIdx + 1}: {cap.title}
                               </button>
                             ))}
                           </div>

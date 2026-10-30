@@ -234,10 +234,10 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full border-b-2 border-kuota-deepnavy transition-all duration-300 ${
+      className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
         isScrolled
-          ? 'bg-kuota-palesky/95 backdrop-blur-md shadow-navy-hard'
-          : 'bg-kuota-palesky/90 backdrop-blur-sm'
+          ? 'bg-white/95 backdrop-blur-md border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.04)]'
+          : 'bg-white/90 backdrop-blur-sm border-slate-200/60'
       }`}
     >
       <div
@@ -256,11 +256,11 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             <KuotaLogo size="md" className="hidden sm:inline-flex" />
           </a>
 
-          {/* Capsule Switcher Tripartito */}
+          {/* Capsule Switcher Tripartito (High-Contrast Modern Fintech) */}
           <div
             role="tablist"
             aria-label="Seleccionar perfil del ecosistema"
-            className="inline-flex items-center gap-1 p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0"
+            className="inline-flex items-center gap-1 p-1 rounded-full bg-slate-100 border border-slate-200/90 shadow-inner shrink-0"
           >
             {/* Pestaña 1: Ecosistema */}
             <button
@@ -268,15 +268,15 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               role="tab"
               aria-selected={activeModeNormalized === 'ecosistema'}
               onClick={() => handleSwitchMode('ecosistema', 'navbar_pill')}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation border-0 outline-none focus:outline-none transition-all duration-200 select-none active:scale-95 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 select-none active:scale-95 ${
                 activeModeNormalized === 'ecosistema'
-                  ? 'bg-kuota-deepnavy text-white shadow-sm'
-                  : 'bg-transparent text-kuota-deepnavy hover:text-kuota-dodger hover:bg-kuota-palesky/50'
+                  ? 'bg-[#070A0F] text-white shadow-sm'
+                  : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-white/70'
               }`}
             >
               <Layers
                 className={`w-3.5 h-3.5 shrink-0 ${
-                  activeModeNormalized === 'ecosistema' ? 'text-kuota-dodger' : 'text-kuota-deepnavy/75'
+                  activeModeNormalized === 'ecosistema' ? 'text-[#10B981]' : 'text-slate-500'
                 }`}
               />
               <span>Ecosistema</span>
@@ -288,15 +288,15 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               role="tab"
               aria-selected={activeModeNormalized === 'compradores'}
               onClick={() => handleSwitchMode('compradores', 'navbar_pill')}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation border-0 outline-none focus:outline-none transition-all duration-200 select-none active:scale-95 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 select-none active:scale-95 ${
                 activeModeNormalized === 'compradores'
-                  ? 'bg-kuota-dodger text-white shadow-sm'
-                  : 'bg-transparent text-kuota-deepnavy hover:text-kuota-dodger hover:bg-kuota-palesky/50'
+                  ? 'bg-[#0391FD] text-white shadow-sm'
+                  : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-white/70'
               }`}
             >
               <ShoppingBag
                 className={`w-3.5 h-3.5 shrink-0 ${
-                  activeModeNormalized === 'compradores' ? 'text-white' : 'text-kuota-deepnavy/75'
+                  activeModeNormalized === 'compradores' ? 'text-white' : 'text-slate-500'
                 }`}
               />
               <span>Compradores</span>
@@ -308,15 +308,15 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               role="tab"
               aria-selected={activeModeNormalized === 'comercios'}
               onClick={() => handleSwitchMode('comercios', 'navbar_pill')}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation border-0 outline-none focus:outline-none transition-all duration-200 select-none active:scale-95 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 select-none active:scale-95 ${
                 activeModeNormalized === 'comercios'
-                  ? 'bg-kuota-deepnavy text-white shadow-sm'
-                  : 'bg-transparent text-kuota-deepnavy hover:text-kuota-dodger hover:bg-kuota-palesky/50'
+                  ? 'bg-[#10B981] text-white shadow-sm'
+                  : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-white/70'
               }`}
             >
               <Store
                 className={`w-3.5 h-3.5 shrink-0 ${
-                  activeModeNormalized === 'comercios' ? 'text-kuota-palesky' : 'text-kuota-deepnavy/75'
+                  activeModeNormalized === 'comercios' ? 'text-white' : 'text-slate-500'
                 }`}
               />
               <span>Comercios</span>
@@ -343,7 +343,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                 width: `${navPillBounds.width}px`,
                 transition: 'left 340ms cubic-bezier(0.22, 1, 0.36, 1), width 340ms cubic-bezier(0.22, 1, 0.36, 1)',
               }}
-              className="pointer-events-none absolute top-1 bottom-1 rounded-xl bg-white/85 border border-kuota-deepnavy/20 shadow-sm z-0 flex items-end justify-center overflow-hidden"
+              className="pointer-events-none absolute top-1 bottom-1 rounded-xl bg-slate-100 border border-slate-200/80 shadow-sm z-0 flex items-end justify-center overflow-hidden"
             >
               <span className="w-7 h-[3px] rounded-full bg-kuota-dodger mb-0.5" />
             </span>
@@ -361,10 +361,10 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                 href={link.href}
                 onMouseEnter={() => setHoveredNavHref(link.href)}
                 onClick={(e) => handleLinkClick(e, link.label, link.href)}
-                className={`relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-extrabold whitespace-nowrap transition-all duration-200 ${
+                className={`relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 ${
                   isHighlighted
                     ? 'text-kuota-dodger -translate-y-[1px]'
-                    : 'text-kuota-deepnavy hover:text-kuota-dodger'
+                    : 'text-slate-700 hover:text-kuota-dodger'
                 }`}
               >
                 <IconComponent className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />

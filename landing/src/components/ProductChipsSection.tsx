@@ -468,28 +468,31 @@ export const ProductChipsSection: React.FC = () => {
     <section
       id="producto"
       aria-labelledby="product-chips-heading"
-      className="py-14 sm:py-20 border-b-2 border-kuota-deepnavy"
+      className="py-16 sm:py-24 border-b border-slate-200/80 bg-[#F4F6F8]"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16">
         <ScrollReveal delayMs={0} direction="up">
           <div className="max-w-2xl">
-            <span className="inline-block px-3 py-1 rounded-full bg-white border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider mb-3">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-[#0391FD]" />
               Cómo funciona Kuota
             </span>
             <h2
               id="product-chips-heading"
-              className="text-3xl sm:text-4xl font-extrabold text-kuota-deepnavy tracking-tight"
+              className="text-3xl sm:text-4xl font-extrabold text-[#070A0F] tracking-tight leading-tight"
             >
               Diseñado para que tu negocio{' '}
-              <span className="text-kuota-dodger">nunca pare de surtirse</span>
+              <span className="bg-gradient-to-r from-[#0391FD] to-[#10B981] bg-clip-text text-transparent">
+                nunca pare de surtirse
+              </span>
             </h2>
-            <p className="mt-3 text-base sm:text-lg font-semibold text-kuota-crayola">
-              Tres pilares para comprar mercadería en kuotas desde tu celular.
+            <p className="mt-3 text-base sm:text-lg font-medium text-slate-600">
+              Tres pilares para comprar mercadería al por mayor en kuotas directamente desde tu celular.
             </p>
           </div>
         </ScrollReveal>
 
-        {/* BLOQUE 1: Mockup de celular interactivo + 3 Chips de beneficios (PRD §6.4 preservado) */}
+        {/* BLOQUE 1: Mockup de celular interactivo + 3 Chips de beneficios */}
         <div
           id="beneficios"
           ref={chipsBlockRef}
@@ -499,131 +502,181 @@ export const ProductChipsSection: React.FC = () => {
         >
           {/* Mockup de celular con la pantalla explicativa del beneficio activo */}
           <ScrollReveal delayMs={80} direction="left" className="lg:col-span-5 flex justify-center">
-            <TiltCard maxTiltDeg={2.5} className="w-full max-w-[300px] sm:max-w-[330px]">
+            <TiltCard maxTiltDeg={2.5} className="w-full max-w-[310px] sm:max-w-[340px]">
               <div className="relative">
                 {/* Halo decorativo detrás del teléfono */}
                 <div
                   aria-hidden="true"
-                  className="absolute -inset-6 sm:-inset-8 rounded-[3rem] bg-kuota-dodger/15 blur-2xl"
+                  className="absolute -inset-6 sm:-inset-8 rounded-[3rem] bg-[#0391FD]/15 blur-2xl"
                 />
 
                 <div
                   role="img"
                   aria-label={activeChip.placeholderLabel}
                   aria-live="polite"
-                  className="relative rounded-[2.5rem] border-2 border-kuota-deepnavy bg-kuota-deepnavy p-2.5 shadow-navy-hard-lg"
+                  className="relative rounded-[2.8rem] border border-white/20 bg-[#070A0F] p-3 shadow-2xl"
                 >
-                  {/* Pantalla */}
-                  <div className="relative rounded-[2rem] bg-gradient-to-b from-[#0a2f6e] to-kuota-deepnavy overflow-hidden min-h-[440px] sm:min-h-[470px] flex flex-col">
-                    {/* Barra de estado + notch */}
-                    <div className="relative flex items-center justify-between px-5 pt-3 pb-2 text-[10px] font-bold text-white/80">
+                  {/* Pantalla del Celular */}
+                  <div className="relative rounded-[2.2rem] bg-gradient-to-b from-[#0A0F14] via-[#0F172A] to-[#0A0F14] border border-white/10 overflow-hidden min-h-[460px] sm:min-h-[490px] flex flex-col text-white">
+                    {/* Barra de estado + Dynamic Island */}
+                    <div className="relative flex items-center justify-between px-5 pt-3 pb-2 text-[10px] font-bold text-white/70">
                       <span>9:41</span>
                       <span
                         aria-hidden="true"
-                        className="absolute left-1/2 -translate-x-1/2 top-2 h-5 w-20 rounded-full bg-black/70"
-                      />
+                        className="absolute left-1/2 -translate-x-1/2 top-2 h-4 w-20 rounded-full bg-black/90 flex items-center justify-center"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-emerald-400/80 mr-1" />
+                      </span>
                       <span className="inline-flex items-center gap-1">
-                        <Smartphone className="w-3 h-3" aria-hidden="true" />
-                        Kuota
+                        <Smartphone className="w-3 h-3 text-emerald-400" aria-hidden="true" />
+                        Kuota App
                       </span>
                     </div>
 
                     <div key={activeChip.id} className="flex-1 flex flex-col px-4 sm:px-5 pb-5 pt-2">
-                      <div className="kuota-screen-in flex items-center justify-between gap-2 mb-4">
-                        <span className="text-[11px] font-extrabold uppercase tracking-wider text-kuota-palesky">
-                          Beneficio {activeChip.index} de {PRODUCT_CHIPS.length}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full bg-kuota-dodger text-white text-[11px] font-extrabold">
-                          {activeChip.title}
-                        </span>
-                      </div>
-
-                      <div className="kuota-screen-in" style={{ animationDelay: '60ms' }}>
-                        <span className="inline-flex w-11 h-11 rounded-2xl bg-kuota-dodger/20 border border-kuota-dodger/40 items-center justify-center mb-3">
-                          <ActiveChipIcon className="w-5 h-5 text-kuota-dodger" aria-hidden="true" />
-                        </span>
-                        <h3 className="text-xl font-extrabold text-white leading-tight">
-                          {activeChip.screenMockTitle}
-                        </h3>
-                        <p className="text-xs text-kuota-palesky/90 font-medium mt-1 mb-4">
-                          {activeChip.screenMockSubtitle}
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        {activeChip.screenMockMetrics.map((metric, mIdx) => (
-                          <div
-                            key={metric.label}
-                            style={{ animationDelay: `${140 + mIdx * 90}ms` }}
-                            className="kuota-screen-in rounded-xl bg-white/[0.08] border border-white/15 px-3.5 py-2.5 flex items-center justify-between gap-2"
-                          >
-                            <span className="text-[11px] sm:text-xs text-kuota-palesky font-medium">
-                              {metric.label}
+                      {/* PANTALLA 1: SIN PAPELEO (KYC & LÍNEA INSTANTÁNEA) */}
+                      {activeChip.id === 'sin-papeleo' && (
+                        <div className="space-y-3.5 kuota-screen-in">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                              <ShieldCheck className="w-3 h-3" />
+                              RENIEC Validado ✓
                             </span>
-                            <span className="text-xs sm:text-sm font-extrabold text-white text-right">
-                              {metric.value}
+                            <span className="text-[10px] font-bold text-slate-400">Paso 1 de 3</span>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-white/[0.06] border border-white/10 space-y-2">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-slate-400">Titular DNI</span>
+                              <span className="font-bold text-white">7284•••• (Activo)</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-slate-400">Billeteras</span>
+                              <span className="font-bold text-emerald-400 flex items-center gap-1">
+                                Yape & Plin ✓
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-slate-400">Garantía / Aval</span>
+                              <span className="font-bold text-slate-300">0% Requerido</span>
+                            </div>
+                          </div>
+
+                          <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-transparent border border-emerald-500/30 space-y-1 text-center">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">
+                              Línea Pre-Aprobada Inmediata
+                            </span>
+                            <div className="text-2xl sm:text-3xl font-black text-white tabular-nums tracking-tight">
+                              S/ 5,000.00
+                            </div>
+                            <p className="text-[11px] text-slate-300 pt-1">
+                              Disponible en 60 segundos para comprar mercadería
+                            </p>
+                          </div>
+
+                          <div className="rounded-xl bg-white/[0.04] p-3 text-center border border-white/5">
+                            <span className="text-[11px] font-bold text-emerald-300 flex items-center justify-center gap-1.5">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              100% digital · Sin trámites bancarios
                             </span>
                           </div>
-                        ))}
-                      </div>
-
-                      <div
-                        className="kuota-screen-in mt-auto pt-4"
-                        style={{ animationDelay: '420ms' }}
-                      >
-                        <div className="pt-3 border-t border-white/15">
-                          {activeChip.id === 'sin-papeleo' && (
-                            <div className="flex items-center justify-between text-[11px] font-bold text-kuota-palesky">
-                              <span className="inline-flex items-center gap-1.5">
-                                <ShieldCheck className="w-4 h-4 text-kuota-dodger" aria-hidden="true" />
-                                Protección de identidad activa
-                              </span>
-                              <span className="text-white font-extrabold">100% digital</span>
-                            </div>
-                          )}
-
-                          {activeChip.id === 'invierte-mas' && (
-                            <div className="space-y-1.5">
-                              <div className="flex items-center justify-between text-[11px] font-bold text-kuota-palesky">
-                                <span className="inline-flex items-center gap-1">
-                                  <TrendingUp className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
-                                  Línea N1 → N6
-                                </span>
-                                <span className="text-white font-extrabold">Hasta S/ 30,000</span>
-                              </div>
-                              <div className="grid grid-cols-6 gap-1 h-2">
-                                {[1, 2, 3, 4, 5, 6].map((lvl, i) => (
-                                  <div
-                                    key={lvl}
-                                    style={{ animationDelay: `${480 + i * 70}ms` }}
-                                    className={`kuota-screen-in rounded-full ${
-                                      i < 4 ? 'bg-kuota-dodger' : 'bg-white/25'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {activeChip.id === 'mas-compras' && (
-                            <div className="space-y-1.5">
-                              <div className="flex items-center justify-between text-[11px] font-bold text-kuota-palesky">
-                                <span className="inline-flex items-center gap-1">
-                                  <BarChart3 className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
-                                  Meta para próxima compra
-                                </span>
-                                <span className="text-white font-extrabold">78% lista</span>
-                              </div>
-                              <div className="w-full h-2 rounded-full bg-white/15 overflow-hidden">
-                                <div className="h-full w-[78%] rounded-full bg-kuota-dodger kuota-chip-progress" style={{ animationDuration: '900ms' }} />
-                              </div>
-                            </div>
-                          )}
                         </div>
-                      </div>
+                      )}
+
+                      {/* PANTALLA 2: INVIERTE MÁS, CRECE MÁS (NIVELES & LÍNEA) */}
+                      {activeChip.id === 'invierte-mas' && (
+                        <div className="space-y-3.5 kuota-screen-in">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-400 bg-cyan-500/15 border border-cyan-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                              <TrendingUp className="w-3 h-3" />
+                              Nivel 02 · Expansión
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-400">Paso 2 de 3</span>
+                          </div>
+
+                          <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0391FD]/20 to-transparent border border-[#0391FD]/30 space-y-1">
+                            <span className="text-[10px] font-bold text-slate-300">Línea de Capital Activa</span>
+                            <div className="text-2xl sm:text-3xl font-black text-white tabular-nums tracking-tight">
+                              S/ 50,000.00
+                            </div>
+                            <div className="text-[11px] text-emerald-400 font-bold flex items-center gap-1 pt-0.5">
+                              <span>↑ Desbloqueada por pagos al día</span>
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-white/[0.06] border border-white/10 space-y-2.5">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-slate-400">Historial de Cuotas</span>
+                              <span className="text-emerald-400 font-bold">4 de 4 pagadas ✓</span>
+                            </div>
+                            <div className="grid grid-cols-4 gap-1.5 h-1.5">
+                              <div className="bg-emerald-400 rounded-full" />
+                              <div className="bg-emerald-400 rounded-full" />
+                              <div className="bg-emerald-400 rounded-full" />
+                              <div className="bg-emerald-400 rounded-full" />
+                            </div>
+                            <div className="flex justify-between text-[11px] text-slate-300 pt-1">
+                              <span>Próximo salto:</span>
+                              <span className="font-extrabold text-white">Nivel Maestro (S/ 200K+)</span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                            <div className="p-2.5 rounded-xl bg-white/[0.05] border border-white/10">
+                              <span className="block text-[10px] text-slate-400">Plazos Flexibles</span>
+                              <span className="font-extrabold text-white">30, 60 y 90d</span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-white/[0.05] border border-white/10">
+                              <span className="block text-[10px] text-slate-400">Cuota Inicial</span>
+                              <span className="font-extrabold text-emerald-400">Baja al 10%</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* PANTALLA 3: TU CEREBRO DE COMPRAS CON NEXO IA */}
+                      {activeChip.id === 'mas-compras' && (
+                        <div className="space-y-3 kuota-screen-in">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-400 bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-cyan-300" />
+                              Nexo IA Copiloto
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-400">Paso 3 de 3</span>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 space-y-1">
+                            <div className="flex items-center gap-1.5 text-amber-300 text-xs font-bold">
+                              <span>⚠️ Alerta de Quiebre de Stock</span>
+                            </div>
+                            <p className="text-xs text-white font-medium">
+                              Arroz Costeño 50kg & Aceite Primor 1L se agotarán en <strong>4 días</strong>.
+                            </p>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-white/[0.06] border border-white/10 space-y-2">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-slate-400">Orden Sugerida Mayorista</span>
+                              <span className="font-bold text-white tabular-nums">S/ 3,850.00</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-slate-400">Plan en Kuotas</span>
+                              <span className="font-bold text-emerald-400">3 kuotas de S/ 1,283</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-slate-400">Proveedor</span>
+                              <span className="text-slate-300">Distribuidora Central</span>
+                            </div>
+                          </div>
+
+                          <div className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#0391FD] to-[#10B981] text-center text-xs font-extrabold text-white shadow-md">
+                            Aprobar Compra en Kuotas ✓
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Indicador home */}
+                    {/* Indicador home inferior */}
                     <div aria-hidden="true" className="pb-2 flex justify-center">
                       <span className="h-1 w-24 rounded-full bg-white/30" />
                     </div>
@@ -636,7 +689,7 @@ export const ProductChipsSection: React.FC = () => {
                     <span
                       key={chip.id}
                       className={`h-2 rounded-full transition-all duration-300 ${
-                        chip.id === activeChip.id ? 'w-8 bg-kuota-dodger' : 'w-2 bg-kuota-deepnavy/25'
+                        chip.id === activeChip.id ? 'w-8 bg-[#0391FD]' : 'w-2 bg-slate-300'
                       }`}
                     />
                   ))}
@@ -650,7 +703,7 @@ export const ProductChipsSection: React.FC = () => {
             role="tablist"
             aria-label="Características del producto Kuota"
             aria-orientation="vertical"
-            className="lg:col-span-7 flex flex-col gap-3 sm:gap-4"
+            className="lg:col-span-7 flex flex-col gap-3.5 sm:gap-4"
           >
             {PRODUCT_CHIPS.map((chip, idx) => {
               const isSelected = chip.id === activeChip.id;
@@ -658,16 +711,16 @@ export const ProductChipsSection: React.FC = () => {
               return (
                 <ScrollReveal key={chip.id} delayMs={idx * 90} direction="right">
                   <div
-                    className={`relative overflow-hidden rounded-2xl border-2 bg-white transition-all duration-300 ${
+                    className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
                       isSelected
-                        ? 'border-kuota-deepnavy shadow-navy-hard-lg lg:-translate-y-0.5'
-                        : 'border-kuota-deepnavy/30 hover:border-kuota-deepnavy shadow-sm hover:shadow-md'
+                        ? 'border-[#0391FD] bg-white shadow-lg ring-1 ring-[#0391FD]/20 lg:-translate-y-0.5'
+                        : 'border-slate-200/90 bg-white/70 hover:bg-white hover:border-slate-300 shadow-sm'
                     }`}
                   >
                     {/* Acento lateral */}
                     <span
                       aria-hidden="true"
-                      className={`absolute left-0 top-0 bottom-0 w-1.5 bg-kuota-dodger transition-transform duration-300 origin-top ${
+                      className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-[#0391FD] to-[#10B981] transition-transform duration-300 origin-top ${
                         isSelected ? 'scale-y-100' : 'scale-y-0'
                       }`}
                     />
@@ -681,33 +734,33 @@ export const ProductChipsSection: React.FC = () => {
                       tabIndex={isSelected ? 0 : -1}
                       onClick={() => handleSelectChip(chip, true)}
                       onKeyDown={(e) => handleKeyDown(e, idx)}
-                      className="w-full text-left px-4 py-4 sm:px-6 sm:py-5 flex items-center justify-between gap-3 min-h-[64px]"
+                      className="w-full text-left px-5 py-4 sm:px-6 sm:py-5 flex items-center justify-between gap-3 min-h-[64px]"
                     >
                       <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <span
-                          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center shrink-0 transition-colors duration-300 ${
+                          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-300 ${
                             isSelected
-                              ? 'bg-kuota-dodger text-white'
-                              : 'bg-kuota-palesky text-kuota-deepnavy'
+                              ? 'bg-[#0391FD] text-white shadow-md'
+                              : 'bg-slate-100 text-slate-700'
                           }`}
                         >
                           <ChipIcon className="w-5 h-5" aria-hidden="true" />
                         </span>
                         <div className="min-w-0">
-                          <span className="block text-[11px] font-extrabold uppercase tracking-wider text-kuota-crayola/80">
-                            Paso {chip.index}
+                          <span className="block text-[11px] font-extrabold uppercase tracking-wider text-[#0391FD]">
+                            Paso 0{chip.index}
                           </span>
-                          <span className="block text-lg sm:text-2xl font-extrabold text-kuota-deepnavy leading-tight">
+                          <span className="block text-lg sm:text-xl font-extrabold text-[#070A0F] leading-tight">
                             {chip.title}
                           </span>
                         </div>
                       </div>
 
                       <span
-                        className={`w-8 h-8 rounded-full border-2 border-kuota-deepnavy flex items-center justify-center shrink-0 transition-all duration-300 ${
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
                           isSelected
-                            ? 'bg-kuota-deepnavy text-white rotate-90'
-                            : 'bg-white text-kuota-deepnavy'
+                            ? 'bg-[#070A0F] text-white rotate-90 shadow-sm'
+                            : 'bg-slate-100 text-slate-600'
                         }`}
                         aria-hidden="true"
                       >
@@ -724,30 +777,30 @@ export const ProductChipsSection: React.FC = () => {
                       className="kuota-accordion"
                     >
                       <div>
-                        <div className="px-4 sm:px-6 pb-5 sm:pb-6 pt-1 sm:pl-[5.25rem] space-y-3">
+                        <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-1 sm:pl-[5.25rem] space-y-3">
                           <ul className="space-y-2.5">
                             {chip.bullets.map((bullet) => (
                               <li
                                 key={bullet}
-                                className="flex items-start gap-2.5 text-[15px] sm:text-base font-semibold"
+                                className="flex items-start gap-2.5 text-sm sm:text-base font-medium text-slate-700"
                               >
                                 <CheckCircle2
-                                  className="w-5 h-5 text-kuota-dodger shrink-0 mt-0.5"
+                                  className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"
                                   aria-hidden="true"
                                 />
-                                <span className="text-kuota-deepnavy/90">{bullet}</span>
+                                <span>{bullet}</span>
                               </li>
                             ))}
                           </ul>
 
                           {chip.note && (
-                            <div className="rounded-xl bg-kuota-palesky/70 border border-kuota-deepnavy/20 p-3 flex items-start gap-2.5">
+                            <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3 flex items-start gap-2.5">
                               <Info
-                                className="w-4 h-4 text-kuota-crayola shrink-0 mt-0.5"
+                                className="w-4 h-4 text-[#0391FD] shrink-0 mt-0.5"
                                 aria-hidden="true"
                               />
-                              <p className="text-sm font-semibold text-kuota-deepnavy">
-                                <span className="font-extrabold">Nota:</span> {chip.note}
+                              <p className="text-xs sm:text-sm text-slate-600">
+                                <strong className="text-slate-900">Nota:</strong> {chip.note}
                               </p>
                             </div>
                           )}
@@ -757,7 +810,7 @@ export const ProductChipsSection: React.FC = () => {
 
                     {/* Barra de auto-avance */}
                     {isSelected && isChipAutoRotating && (
-                      <div aria-hidden="true" className="absolute left-0 right-0 bottom-0 h-1 bg-kuota-palesky/60">
+                      <div aria-hidden="true" className="absolute left-0 right-0 bottom-0 h-1 bg-slate-100">
                         <div
                           key={`${chip.id}-progress`}
                           onAnimationEnd={handleChipProgressEnd}
@@ -765,7 +818,7 @@ export const ProductChipsSection: React.FC = () => {
                             animationPlayState:
                               isChipsHovered || !isChipsInView ? 'paused' : 'running',
                           }}
-                          className="h-full bg-kuota-dodger kuota-chip-progress"
+                          className="h-full bg-gradient-to-r from-[#0391FD] to-[#10B981] kuota-chip-progress"
                         />
                       </div>
                     )}

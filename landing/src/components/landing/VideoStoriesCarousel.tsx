@@ -177,7 +177,7 @@ export const VideoStoriesCarousel: React.FC = () => {
                     Video Reportaje B2B · Kuota Experiencias
                   </p>
                   <p className="text-xs text-slate-400 mt-1">
-                    Duración: {selectedStory.duration} · Resultados auditados por VALT
+                    Duración: {selectedStory.duration} · Casos y métricas reales auditadas
                   </p>
                 </div>
 

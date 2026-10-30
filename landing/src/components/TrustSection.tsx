@@ -68,11 +68,11 @@ export const TrustSection: React.FC = () => {
                           className="aspect-square w-full rounded-2xl border-2 border-kuota-deepnavy bg-kuota-palesky/65 placeholder-stripes p-3.5 flex flex-col justify-between mb-4"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="px-2 py-0.5 rounded bg-kuota-deepnavy text-white text-[10px] font-bold uppercase">
-                              {member.placeholderId}
+                            <span className="px-2.5 py-0.5 rounded-full bg-kuota-deepnavy text-white text-[10px] font-bold uppercase">
+                              Equipo Directivo
                             </span>
-                            <span className="px-2 py-0.5 rounded bg-white border border-kuota-deepnavy text-kuota-deepnavy text-[10px] font-extrabold">
-                              1:1
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 border border-emerald-500/30 text-[10px] font-bold">
+                              Verificado ✓
                             </span>
                           </div>
 
@@ -84,12 +84,12 @@ export const TrustSection: React.FC = () => {
                                 .join('')}
                             </div>
                             <span className="text-xs font-bold text-kuota-deepnavy mt-2">
-                              Foto placeholder
+                              {member.name}
                             </span>
                           </div>
 
                           <div className="text-[11px] font-bold text-kuota-deepnavy bg-white/90 border border-kuota-deepnavy rounded-lg px-2.5 py-1 text-center">
-                            Retrato · {member.name}
+                            {member.role} · Kuota Finanzas
                           </div>
                         </div>
                       )}

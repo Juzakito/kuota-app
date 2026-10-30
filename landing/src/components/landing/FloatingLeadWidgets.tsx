@@ -203,7 +203,7 @@ export const FloatingLeadWidgets: React.FC<FloatingLeadWidgetsProps> = ({
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                       100% Confidencial
                     </span>
-                    <span>Respaldo VALT</span>
+                    <span>Evaluación 100% Digital</span>
                   </div>
                 </div>
               ) : (

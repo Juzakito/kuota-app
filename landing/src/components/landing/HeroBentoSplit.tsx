@@ -101,11 +101,11 @@ export const HeroBentoSplit: React.FC<HeroBentoSplitProps> = ({
                 <div className="w-6 h-6 rounded-full bg-cyan-500 text-white text-[10px] flex items-center justify-center font-bold">
                   IA
                 </div>
-                <div className="w-6 h-6 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center font-bold">
-                  V
+                <div className="w-6 h-6 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
+                  K
                 </div>
               </div>
-              <span>Líneas pre-aprobadas con RUC · Respaldo institucional por VALT</span>
+              <span>Líneas de compra pre-aprobadas con RUC · Evaluación 100% digital</span>
             </div>
           </div>
 

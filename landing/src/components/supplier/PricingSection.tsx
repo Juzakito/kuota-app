@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Sparkles, Check, TrendingUp } from 'lucide-react';
 import { PRICING_PLANS } from '../../config/pricingConfig';
 import { ScheduleCallButton } from './ScheduleCallButton';
@@ -156,11 +156,11 @@ export const PricingSection: React.FC = () => {
                       className="rounded-2xl border-2 border-kuota-deepnavy bg-kuota-palesky/65 p-3.5 mb-6 text-kuota-deepnavy"
                     >
                       <div className="flex items-center justify-between text-[10px] font-extrabold uppercase mb-2">
-                        <span className="px-2 py-0.5 rounded bg-kuota-deepnavy text-white">
-                          Placeholder · IMG-21
+                        <span className="px-2.5 py-0.5 rounded-full bg-kuota-deepnavy text-white">
+                          Escalera de Niveles Plan Open
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-white border border-kuota-deepnavy">
-                          600×200
+                        <span className="px-2.5 py-0.5 rounded-full bg-white border border-kuota-deepnavy text-kuota-deepnavy">
+                          Bonificación Progresiva
                         </span>
                       </div>
 

@@ -1,6 +1,6 @@
 # PRD — Landing Page para Proveedores y Comercios | Kuota
 > **Producto:** KUOTA para Comercios y Proveedores (`kuota-ia.vercel.app?perfil=comercios`)  
-> **Versión:** 2.0 (Alineada al Ecosistema de Colocaciones, Recaudación y Respaldo VALT)  
+> **Versión:** 2.0 (Alineada al Ecosistema de Colocaciones y Recaudación)  
 > **Fecha:** 29 de octubre de 2026 · **Estado:** Implementado y Aprobado para Producción  
 > **Audiencia Primaria:** Distribuidores mayoristas, importadores, fabricantes, almacenes comerciales y negocios proveedores que venden mercadería e insumos a crédito o al contado.
 
@@ -15,7 +15,7 @@ Hoy, los proveedores enfrentan dos grandes cuellos de botella:
 2. **El peligro del fiado tradicional:** Si el proveedor decide dar crédito directo de su propio bolsillo, asume el 100% del riesgo de cobranza, mora y capital de trabajo inmovilizado en cuadernos de fiado o letras impagas.
 
 ### La Solución Kuota para Proveedores:
-> **"Vende más mercadería a tus clientes ofreciéndoles pago en kuotas, con 0% de riesgo de impago para tu negocio. Kuota te liquida el 100% de la factura al contado en 24-48 horas y asume la recaudación mediante la infraestructura tecnológica de VALT."**
+> **"Vende más mercadería a tus clientes ofreciéndoles pago en kuotas, con 0% de riesgo de impago para tu negocio. Kuota te liquida el 100% de la factura al contado en 24-48 horas y asume la recaudación mediante infraestructura tecnológica institucional de primer nivel."**
 
 ### Métricas Clave de Conversión (KPIs):
 - **Conversión Principal 1 (Distribuidores Grandes):** Reunión ejecutiva agendada mediante Cal.com para integración de catálogo y líneas mayoristas.
@@ -56,14 +56,14 @@ Alineado con el documento rector `DESIGN.md`:
 
 ## 4. Estructura General de la Página
 
-1. **Navbar Fijo:** Logotipo oficial de Kuota, badge `by VALT` y botón de afiliación rápida / agendar llamada.
+1. **Navbar Fijo:** Logotipo oficial de Kuota, badge `Kuota` y botón de afiliación rápida / agendar llamada.
 2. **Hero Principal (El Gancho Comercial B2B):** *"Más oportunidades para vender. Más posibilidades para tus clientes."*
 3. **Demostración Operativa en Vivo:** Simulador interactivo del ciclo completo (Venta → Colocación → Cuotas → Liquidación en 48h).
 4. **Problema vs. Solución para el Proveedor:** Comparación directa entre vender con riesgo de fiado vs. vender con respaldo Kuota.
 5. **Red de Medios de Pago Integrada:** Aceptación multicanal con Yape, Plin y tarjetas de todos los bancos nacionales.
 6. **Los Módulos del Producto (3 Chips Interactivos):** Kuota QR de almacén, Kuota Link por WhatsApp y aKuotas! B2B.
 7. **Calculadora de Impacto y Ahorro:** Comparador interactivo de ventas adicionales proyectadas y comisiones optimizadas.
-8. **Seguridad, Transparencia y Respaldo VALT:** Infraestructura cloud TLS 1.3 y cumplimiento normativo.
+8. **Seguridad, Transparencia y Respaldo Institucional:** Infraestructura cloud TLS 1.3 y cumplimiento normativo.
 9. **Tarifario y Esquema de Afiliación Transparente:** Comisión competitiva y fija, sin costos ocultos de membresía.
 10. **Embudo Dual de Cierre (Cal.com + Modal RUC):** Agenda con el equipo comercial o registro directo en 3 minutos.
 11. **Footer Corporativo:** Enlaces legales, SLA, seguridad de datos y canales ejecutivos.
@@ -80,7 +80,7 @@ Alineado con el documento rector `DESIGN.md`:
 - **Tarjeta Escénica Flotante:** Mockup visual de dashboard de proveedor mostrando:
   - *Ventas Kuoteadas:* `S/ 84,200.00`
   - *Liquidación Programada:* `Hoy a las 18:00 (100% al contado)`
-  - *Riesgo de Cobranza:* `0.0% (Asumido por Kuota & VALT)`
+  - *Riesgo de Cobranza:* `0.0% (Asumido por Kuota)`
 
 ---
 
@@ -99,7 +99,7 @@ Dos macro-tarjetas bento contrastadas:
   - Dolor 1: Vendes fiado y tu capital de trabajo queda atrapado en la calle por 60 o 90 días.
   - Dolor 2: Tu equipo gasta tiempo valioso cobrando por teléfono o lidiando con cuentas incobrables.
   - Dolor 3: Los POS bancarios te cobran comisiones elevadas y no le dan financiamiento real a tus clientes.
-- **Tarjeta "Con Kuota y Respaldo VALT" (Borde esmeralda / alto relieve):**
+- **Tarjeta "Con Kuota y Respaldo Institucional" (Borde esmeralda / alto relieve):**
   - Beneficio 1: Cobras el 100% del valor de la mercadería en 24 a 48 horas hábiles directamente en tu cuenta bancaria.
   - Beneficio 2: 0% riesgo de impago. Si el comprador se atrasa, la gestión de recaudación es responsabilidad exclusiva de Kuota.
   - Beneficio 3: Tus clientes te compran tickets más grandes (hasta +40% en volumen) porque pueden pagar en kuotas.
@@ -143,7 +143,7 @@ Estructura clara de afiliación sin letras chicas ni cláusulas de permanencia f
 - **Plan Distribuidores Mayoristas (Corporativo):**
   - Para empresas con facturación mayorista recurrente.
   - Integración directa con ERP contable (SAP, Spring, Excel automático).
-  - Soporte de gestor de cuenta asignado por VALT y cobranza multimoneda.
+  - Soporte de gestor de cuenta asignado por Kuota y cobranza multimoneda.
 
 ---
 
@@ -159,7 +159,7 @@ Para maximizar el cierre de acuerdos comerciales con comercios de cualquier esca
 ---
 
 ### 5.9 Footer Corporativo
-- Mismas especificaciones institucionales del PRD Maestro: enlaces legales (Términos, Privacidad, SLA, Ley N° 29733), Libro de Reclamaciones virtual y sello de infraestructura `by VALT`.
+- Mismas especificaciones institucionales del PRD Maestro: enlaces legales (Términos, Privacidad, SLA, Ley N° 29733), Libro de Reclamaciones virtual y sello de infraestructura `Kuota`.
 
 ---
 
