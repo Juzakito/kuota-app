@@ -1,8 +1,8 @@
-# PRD — Landing Page Principal de Kuota (Ecosistema & Flagship)
+﻿# PRD — Landing Page Principal de Kuota (Ecosistema & Flagship)
 > **Producto:** KUOTA (`kuota-ia.vercel.app`)  
 > **Versión:** 2.0 (Alineada a la Arquitectura Fintech de Alto Contraste)  
 > **Fecha:** 29 de octubre de 2026 · **Estado:** Implementado y Desplegado en Producción  
-> **Ecosistema de Marca:** **KUOTA** (Plataforma Comercial / *"Kuotear"*), **NEXO IA** (Copiloto Predictivo de Demanda).  
+> **Ecosistema de Marca:** **KUOTA** (Plataforma Comercial / *"Kuotear"*), **NEXO IA** (Copiloto Predictivo de Demanda), **KUOTA B2B** (Infraestructura Institucional y Operativa).  
 > **Documento de Diseño Rector:** `DESIGN.md` (Macro-Contenedores Bento, Ritmo Claro/Oscuro, Tipografía Plus Jakarta Sans & Inter tabular-nums).
 
 ---
@@ -14,7 +14,7 @@ La landing page principal de **KUOTA** es la puerta de entrada al **Sistema Oper
 No es una web corporativa tradicional de folleto ni un formulario plano de captura. Es una experiencia fintech inmersiva de alto impacto (estilo *Tarjeta iO / Stripe / Vercel*) diseñada para:
 1. **Posicionar a KUOTA:** Demostrar cómo las PYMES pueden abastecer su inventario con **94.5% de precisión predictiva**, anticipar quiebres de stock a 30 días y pagar sus órdenes de compra en cuotas (**"Kuotear"**) a 30, 60 o 90 días sin descapitalizarse.
 2. **Presentar al Copiloto NEXO IA:** Humanizar y tangibilizar el software predictivo mediante el orbe cristalino y alertas proactivas en tiempo real.
-3. **Ofrecer Respaldo Institucional y Seguridad:** Comunicar infraestructura tecnológica de nivel bancario (TLS 1.3, alta disponibilidad cloud) con estándares MIT/Stanford.
+3. **Ofrecer Respaldo Institucional y Seguridad:** Comunicar infraestructura tecnológica de nivel bancario (TLS 1.3, alta disponibilidad cloud) y total transparencia operativa.
 4. **Convertir Tráfico Cualificado:** Permitir el inicio de sesión directo con Google OAuth al panel interno (`/dashboard`), pre-evaluar líneas de financiamiento mediante RUC/DNI en 2 horas, o afiliar comercios proveedores.
 
 ---
@@ -55,7 +55,7 @@ La plataforma atiende a tres actores dentro de una misma URL con preservación d
 
 ### SECCIÓN 1: Navbar Fijo con Cápsula Central (`NavbarCapsule.tsx`)
 - **Estructura:** Fijo al viewport (`fixed top-0 inset-x-0 z-50`). Al hacer scroll aplica `bg-[#070A0F]/95`, `backdrop-blur-md` y borde translúcido `border-white/10`.
-- **Izquierda:** Logo oficial de **kuota** con acento menta y badge institucional `Kuota` con indicador de pulso en vivo.
+- **Izquierda:** Logo oficial de **kuota** con acento menta con indicador en vivo.
 - **Centro (La Cápsula de Navegación):** Píldora en `#161B22` con borde `border-white/10` y selector dinámico animado vía `framer-motion` (`layoutId="nav-pill"`):
   1. `Niveles de Línea` (smooth scroll hacia `#niveles`)
   2. `Refiere PYMES` (badge `+S/500`)
@@ -93,7 +93,7 @@ La plataforma atiende a tres actores dentro de una misma URL con preservación d
   $$x = R \cdot \cos(\theta), \quad y = R \cdot \sin(\theta)$$
 - **Ciclo Automático de 3 Diapositivas (Auto-play cada 5s):**
   - **Slide 1 (+20):** Módulos de IA predictiva (8 nodos orbitando con íconos vectoriales y tooltips interactivos: Pronóstico 90d, Alerta de Quiebre, Órdenes Automáticas, QR de Almacén, WhatsApp Cloud, ERP/SAP, Analítica SKU, BNPL).
-  - **Slide 2 (100%):** Tecnología B2B respaldada por arquitectura institucional (7 avatares de gerentes y negocios reales: Ferretería Industrial, Distribuidora Textil Gamarra, Cadena Minimarkets, etc.).
+  - **Slide 2 (100%):** Tecnología B2B Peruana (7 avatares de gerentes y negocios reales: Ferretería Industrial, Distribuidora Textil Gamarra, Cadena Minimarkets, etc.).
   - **Slide 3 (+ S/ 48M):** Impacto financiero y mercadería abastecida (8 burbujas de impacto monetario: `+S/ 48,600 ahorro`, `0 quiebres`, `2.4x rotación`, `1.8% fijo`).
 - **Controles:** Botón central `Solicitar Línea Kuota` + paginador de 3 puntos donde el activo es una cápsula expandible con barra de progreso verde del 0% al 100% sincronizada con el temporizador de 5 segundos.
 
@@ -159,7 +159,7 @@ La plataforma atiende a tres actores dentro de una misma URL con preservación d
   3. Integración Multi-Moneda: Operaciones en Soles (`S/`) y Dólares (`USD`).
   4. Plazos Flexibles: Fraccionamiento a `30, 60 o 90 días`.
   5. Costo de Membresía Base: `S/ 0.00` (acceso inicial gratuito).
-- **Sub-bloque B (Respaldo y Seguridad):** Puntuación de satisfacción 4.9 ★★★★★, encriptación cloud TLS 1.3 con 99.99% uptime y sello de arquitectura cloud de alta disponibilidad.
+- **Sub-bloque B (Respaldo y Seguridad):** Puntuación de satisfacción 4.9 ★★★★★, encriptación cloud TLS 1.3 con 99.99% uptime y arquitectura cloud de alta disponibilidad.
 
 ---
 
@@ -176,7 +176,7 @@ La plataforma atiende a tres actores dentro de una misma URL con preservación d
   - Columna 1: Transparencia y Legal (Términos, Privacidad, SLA, Ley N° 29733 de Protección de Datos Personales).
   - Columna 2: Plataforma y Ecosistema (Cerebro Nexo, Niveles, Integraciones, Radar B2B).
   - Columna 3: Contacto 24/7 (WhatsApp Ejecutivo, Correo oficial, Libro de Reclamaciones).
-  - Barra inferior con copyright y sello `Kuota B2B`.
+  - Barra inferior con copyright © 2026 KUOTA Technologies Inc. Todos los derechos reservados.
 
 ---
 
@@ -209,4 +209,4 @@ La plataforma atiende a tres actores dentro de una misma URL con preservación d
 2. **Interactividad Fluida:** El sistema orbital cicla automáticamente cada 5 segundos y responde instantáneamente al clic manual de sus 3 puntos de progreso.
 3. **Persistencia y Enrutamiento:** El botón de inicio de sesión conecta limpiamente con el flujo de autenticación del producto (`/login` / `/dashboard`) sin pantallas intermedias rotas.
 4. **Cero Scroll Horizontal:** La página mantiene un ancho máximo controlado de 1280px (`max-w-7xl`) con `overflow-x: hidden` verificado en pantallas desde 360px hasta 4K.
-5. **Cumplimiento Legal:** Todo cálculo y mención de tasas especifica claramente *"Aplican T&C"* e identifica la infraestructura institucional.
+5. **Cumplimiento Legal:** Todo cálculo y mención de tasas especifica claramente *"Aplican T&C"* y mantiene total transparencia de condiciones operativas.
