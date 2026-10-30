@@ -1,12 +1,12 @@
-﻿import React from 'react';
-import { Shield } from 'lucide-react';
+import React from 'react';
+import { ShieldCheck } from 'lucide-react';
 import { SOCIAL_PROOF_LOGOS } from '../../config/pricingConfig';
 
 /**
- * PRD §5.4: Prueba social
- * - Banner delgado a todo lo ancho con los logos de BCP, BBVA, Interbank, Scotiabank, Yape y Plin (IMG-04 a IMG-09, 160×60 cada uno).
- * - Texto de apoyo: "Las tarjetas que acepta 360 Pay".
- * - En móvil, los logos se desplazan en un carrusel horizontal automático.
+ * Prueba social y canales de recaudación compatibles:
+ * - Muestra las tarjetas y medios de pago con los que opera la recaudación en Perú
+ * - Banner horizontal con logos de BCP, BBVA, Interbank, Scotiabank, Yape y Plin
+ * - Claridad y transparencia respecto a la compatibilidad técnica
  */
 export const SocialProofSection: React.FC = () => {
   const carouselItems = [...SOCIAL_PROOF_LOGOS, ...SOCIAL_PROOF_LOGOS];
@@ -15,7 +15,7 @@ export const SocialProofSection: React.FC = () => {
     <section
       id="prueba-social"
       aria-labelledby="social-proof-heading"
-      className="w-full bg-white/85 border-b-2 border-kuota-deepnavy py-6 sm:py-8 overflow-hidden"
+      className="w-full bg-white/90 border-b-2 border-kuota-deepnavy py-6 sm:py-8 overflow-hidden"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5">
@@ -23,18 +23,18 @@ export const SocialProofSection: React.FC = () => {
             id="social-proof-heading"
             className="text-base sm:text-lg font-extrabold text-kuota-deepnavy flex items-center gap-2"
           >
-            <Shield className="w-5 h-5 text-kuota-dodger shrink-0" aria-hidden="true" />
-            <span>Las tarjetas que acepta 360 Pay</span>
+            <ShieldCheck className="w-5 h-5 text-kuota-dodger shrink-0" aria-hidden="true" />
+            <span>Canales y medios de recaudación compatibles</span>
           </h2>
           <span className="text-xs font-bold text-kuota-crayola">
-            Bancos y billeteras digitales oficiales
+            Billeteras digitales, tarjetas y transferencias en Perú
           </span>
         </div>
 
         {/* Desktop / Tablet: Fila completa de 6 logos */}
         <div
           role="list"
-          aria-label="Bancos y billeteras compatibles con 360 Pay"
+          aria-label="Canales y billeteras compatibles"
           className="hidden sm:grid sm:grid-cols-6 gap-3"
         >
           {SOCIAL_PROOF_LOGOS.map((logo) => (
@@ -61,7 +61,7 @@ export const SocialProofSection: React.FC = () => {
           ))}
         </div>
 
-        {/* Móvil: Carrusel horizontal automático (PRD §5.4) */}
+        {/* Móvil: Carrusel horizontal continuo */}
         <div
           aria-label="Carrusel de medios de pago"
           className="sm:hidden relative w-full overflow-hidden"
@@ -93,4 +93,3 @@ export const SocialProofSection: React.FC = () => {
     </section>
   );
 };
-

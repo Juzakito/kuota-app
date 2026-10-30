@@ -121,7 +121,9 @@ export const CrossAudienceBanner: React.FC<EcosystemProps> = ({ mode, onModeChan
   const kuotaFee = formatPercentEs(PRICING_CONFIG.kuotaPaymentsFeePercent);
   const posFee = formatPercentEs(PRICING_CONFIG.posAverageFeePercent);
 
-  if (mode === 'compradores') {
+  const isMerchant = mode === 'proveedores' || mode === 'comercios';
+
+  if (!isMerchant) {
     return (
       <section
         aria-label="Kuota para Proveedores"

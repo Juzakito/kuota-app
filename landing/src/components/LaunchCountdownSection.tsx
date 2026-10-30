@@ -84,7 +84,7 @@ export const LaunchCountdownSection: React.FC<LaunchCountdownSectionProps> = ({
     };
   }, [targetIso, launchDayEndIso]);
 
-  const isSupplier = mode === 'proveedores';
+  const isSupplier = mode === 'proveedores' || mode === 'comercios';
 
   const primaryHref =
     snapshot.phase === 'live'
