@@ -242,15 +242,15 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
     >
       <div
         id="kuota-top-bar"
-        className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-1.5 sm:gap-4 relative z-50"
+        className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3 sm:gap-6 relative z-50"
       >
         {/* Izquierda: Logo oficial Kuota + Selector de 3 Perfiles (Ecosistema / Compradores / Comercios) */}
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <a
             href="#inicio"
             onClick={handleLogoClick}
             aria-label="Kuota — Ir al inicio"
-            className="focus-visible:outline-none shrink-0 flex items-center touch-manipulation transition-transform duration-200 lg:hover:scale-[1.03] active:scale-[0.97]"
+            className="focus-visible:outline-none shrink-0 flex items-center touch-manipulation transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
             <KuotaLogo size="sm" className="sm:hidden" />
             <KuotaLogo size="md" className="hidden sm:inline-flex" />
@@ -260,7 +260,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           <div
             role="tablist"
             aria-label="Seleccionar perfil del ecosistema"
-            className="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-slate-100 border border-slate-200/90 shadow-inner shrink-0"
+            className="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-slate-100/90 border border-slate-200/80 shadow-inner shrink-0"
           >
             {/* Pestaña 1: Ecosistema */}
             <button
@@ -268,10 +268,10 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               role="tab"
               aria-selected={activeModeNormalized === 'ecosistema'}
               onClick={() => handleSwitchMode('ecosistema', 'navbar_pill')}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 select-none active:scale-95 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 select-none cursor-pointer active:scale-95 ${
                 activeModeNormalized === 'ecosistema'
-                  ? 'bg-[#070A0F] text-white shadow-sm'
-                  : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-white/70'
+                  ? 'bg-[#0A192F] text-white shadow-sm'
+                  : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-white/80'
               }`}
             >
               <Layers
@@ -288,10 +288,10 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               role="tab"
               aria-selected={activeModeNormalized === 'compradores'}
               onClick={() => handleSwitchMode('compradores', 'navbar_pill')}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 select-none active:scale-95 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 select-none cursor-pointer active:scale-95 ${
                 activeModeNormalized === 'compradores'
                   ? 'bg-[#0391FD] text-white shadow-sm'
-                  : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-white/70'
+                  : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-white/80'
               }`}
             >
               <ShoppingBag
@@ -308,10 +308,10 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               role="tab"
               aria-selected={activeModeNormalized === 'comercios'}
               onClick={() => handleSwitchMode('comercios', 'navbar_pill')}
-              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 select-none active:scale-95 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 select-none cursor-pointer active:scale-95 ${
                 activeModeNormalized === 'comercios'
                   ? 'bg-[#059669] text-white shadow-sm'
-                  : 'bg-transparent text-slate-700 hover:text-slate-950 hover:bg-white/80'
+                  : 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-white/80'
               }`}
             >
               <Store
@@ -324,7 +324,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           </div>
         </div>
 
-        {/* Centro: Navegación Desktop con indicador deslizante */}
+        {/* Centro: Navegación de secciones (Visible en pantallas amplias xl:flex para evitar cualquier colisión) */}
         <nav
           aria-label="Navegación principal"
           onMouseLeave={() => setHoveredNavHref(null)}
@@ -333,22 +333,8 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             transform: isSwitching ? 'translate3d(0, -4px, 0)' : 'translate3d(0, 0, 0)',
             transition: 'opacity 220ms ease, transform 220ms ease',
           }}
-          className="relative hidden lg:flex items-center gap-1 xl:gap-1.5 p-1 rounded-2xl shrink-0"
+          className="relative hidden xl:flex items-center gap-1 p-1 rounded-full bg-slate-50/90 border border-slate-200/60 shrink-0"
         >
-          {navPillBounds.ready && (
-            <span
-              aria-hidden="true"
-              style={{
-                left: `${navPillBounds.left}px`,
-                width: `${navPillBounds.width}px`,
-                transition: 'left 340ms cubic-bezier(0.22, 1, 0.36, 1), width 340ms cubic-bezier(0.22, 1, 0.36, 1)',
-              }}
-              className="pointer-events-none absolute top-1 bottom-1 rounded-xl bg-slate-100 border border-slate-200/80 shadow-sm z-0 flex items-end justify-center overflow-hidden"
-            >
-              <span className="w-7 h-[3px] rounded-full bg-kuota-dodger mb-0.5" />
-            </span>
-          )}
-
           {navLinks.map((link) => {
             const IconComponent = link.icon;
             const isHighlighted = highlightedNavHref === link.href;
@@ -361,13 +347,13 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                 href={link.href}
                 onMouseEnter={() => setHoveredNavHref(link.href)}
                 onClick={(e) => handleLinkClick(e, link.label, link.href)}
-                className={`relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 ${
+                className={`relative z-10 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                   isHighlighted
-                    ? 'text-kuota-dodger -translate-y-[1px]'
-                    : 'text-slate-700 hover:text-kuota-dodger'
+                    ? 'bg-white text-[#0391FD] shadow-sm'
+                    : 'text-slate-600 hover:text-[#0A192F] hover:bg-white/60'
                 }`}
               >
-                <IconComponent className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                <IconComponent className={`w-3.5 h-3.5 shrink-0 ${isHighlighted ? 'text-[#0391FD]' : 'text-slate-400'}`} aria-hidden="true" />
                 <span>{link.label}</span>
               </a>
             );
@@ -375,7 +361,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
         </nav>
 
         {/* Derecha: Identidad sonora + CTA Contextual + Hamburguesa */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Identidad Sonora */}
           <div className="relative">
             <button
@@ -390,14 +376,14 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                 }
               }}
               aria-label={soundState.enabled ? 'Configurar sonido' : 'Activar sonido'}
-              className={`w-9 h-9 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center transition-all ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 soundState.enabled
-                  ? 'bg-kuota-deepnavy text-white shadow-sm'
-                  : 'bg-white text-kuota-deepnavy hover:bg-kuota-palesky/70'
+                  ? 'bg-sky-50 text-[#0391FD] border border-sky-200/80 shadow-sm'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border border-slate-200/70'
               }`}
             >
               {soundState.enabled ? (
-                <Volume2 className="w-4 h-4 text-kuota-dodger animate-pulse" />
+                <Volume2 className="w-4 h-4 text-[#0391FD] animate-pulse" />
               ) : (
                 <VolumeX className="w-4 h-4 opacity-70" />
               )}
@@ -407,41 +393,49 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
               <div
                 role="dialog"
                 aria-label="Control de sonido"
-                className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border-2 border-kuota-deepnavy p-3.5 shadow-navy-hard z-50 space-y-3 animate-fadeIn"
+                className="absolute right-0 mt-2 w-60 rounded-2xl bg-white border border-slate-200/90 p-4 shadow-xl z-50 space-y-3 animate-fadeIn text-[#0A192F]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-kuota-deepnavy">Sonido Kuota</span>
+                  <span className="text-xs font-bold text-slate-800">Efectos sonoros Kuota</span>
                   <button
                     type="button"
                     onClick={() => kuotaSound.setEnabled(!soundState.enabled)}
-                    className={`px-2 py-0.5 rounded text-[11px] font-extrabold border border-kuota-deepnavy ${
-                      soundState.enabled ? 'bg-kuota-dodger text-white' : 'bg-kuota-palesky text-kuota-deepnavy'
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${
+                      soundState.enabled
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-slate-100 text-slate-500'
                     }`}
                   >
-                    {soundState.enabled ? 'Activado' : 'Desactivado'}
+                    {soundState.enabled ? 'Activado' : 'Silenciado'}
                   </button>
                 </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={Math.round(soundState.volume * 100)}
-                  onChange={(e) => kuotaSound.setVolume(Number(e.target.value) / 100)}
-                  className="w-full accent-kuota-dodger cursor-pointer"
-                />
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[11px] text-slate-500 font-medium">
+                    <span>Volumen</span>
+                    <span className="font-bold text-slate-700">{Math.round(soundState.volume * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(soundState.volume * 100)}
+                    onChange={(e) => kuotaSound.setVolume(Number(e.target.value) / 100)}
+                    className="w-full accent-[#0391FD] cursor-pointer"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => setSoundPanelOpen(false)}
-                  className="w-full py-1.5 rounded-lg bg-kuota-palesky/70 text-xs font-extrabold text-kuota-deepnavy"
+                  className="w-full py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
                 >
-                  Cerrar
+                  Listo
                 </button>
               </div>
             )}
           </div>
 
           {/* CTA Contextual en Desktop */}
-          <div className="hidden lg:block shrink-0">
+          <div className="hidden sm:block shrink-0">
             {activeModeNormalized === 'ecosistema' ? (
               <button
                 type="button"
@@ -453,7 +447,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                     onModeChange('comercios', 'navbar_cta');
                   }
                 }}
-                className="px-4 py-2 rounded-xl bg-kuota-deepnavy hover:bg-kuota-dodger text-white text-xs font-extrabold border-2 border-kuota-deepnavy shadow-navy-hard transition-transform hover:-translate-y-0.5"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#0A192F] hover:bg-[#0391FD] text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all duration-200 active:scale-95 cursor-pointer"
               >
                 Afiliar mi comercio
               </button>
@@ -466,14 +460,14 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
                   kuotaSound.playCtaClick();
                   if (onOpenMerchantAffiliation) onOpenMerchantAffiliation();
                 }}
-                className="px-4 py-2 rounded-xl bg-kuota-dodger hover:bg-kuota-crayola text-white text-xs font-extrabold border-2 border-kuota-deepnavy shadow-navy-hard transition-transform hover:-translate-y-0.5"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#10B981] hover:bg-[#059669] text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all duration-200 active:scale-95 cursor-pointer"
               >
                 Afiliar mi negocio
               </button>
             )}
           </div>
 
-          {/* Hamburguesa Móvil */}
+          {/* Hamburguesa (visible en pantallas inferiores a xl) */}
           <button
             type="button"
             onClick={() => {
@@ -484,29 +478,31 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-nav-menu"
             aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
-            className={`lg:hidden w-10 h-10 rounded-xl border-2 border-kuota-deepnavy flex items-center justify-center transition-all ${
-              mobileMenuOpen ? 'bg-kuota-deepnavy text-white' : 'bg-white text-kuota-deepnavy'
+            className={`xl:hidden w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              mobileMenuOpen
+                ? 'bg-[#0A192F] text-white shadow-sm'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80'
             }`}
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
-      {/* Backdrop móvil */}
+      {/* Backdrop móvil / tablet */}
       {mobileMenuOpen && (
         <div
           aria-hidden="true"
           onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 top-16 bg-kuota-deepnavy/25 backdrop-blur-[1px] z-40 lg:hidden"
+          className="fixed inset-0 top-16 sm:top-20 bg-slate-900/40 backdrop-blur-sm z-40 xl:hidden"
         />
       )}
 
-      {/* Menú Móvil Desplegable */}
+      {/* Menú Móvil / Tablet Desplegable */}
       <div
         id="mobile-nav-menu"
         aria-hidden={!mobileMenuOpen}
-        className={`lg:hidden fixed top-16 inset-x-0 bottom-0 z-50 bg-[#070E1A]/95 backdrop-blur-xl border-t border-white/10 transition-all duration-300 overflow-y-auto ${
+        className={`xl:hidden fixed top-16 sm:top-20 inset-x-0 bottom-0 z-50 bg-[#070E1A]/95 backdrop-blur-xl border-t border-white/10 transition-all duration-300 overflow-y-auto ${
           mobileMenuOpen
             ? 'opacity-100 pointer-events-auto'
             : 'opacity-0 pointer-events-none'
