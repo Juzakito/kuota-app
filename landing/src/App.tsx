@@ -119,6 +119,23 @@ export const App: React.FC = () => {
         mode === 'compradores'
           ? 'Kuota — Financia tu crecimiento sin apuros | Compra mercadería a kuotas'
           : 'Kuota Proveedores — Reduce comisiones POS al 2% y cobra con tarjeta o en kuotas';
+
+      const iconHref = '/logos/kuota-icon.png';
+      const existingIcons = document.querySelectorAll<HTMLLinkElement>(
+        'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]'
+      );
+      if (existingIcons.length > 0) {
+        existingIcons.forEach((linkEl) => {
+          linkEl.type = 'image/png';
+          linkEl.href = iconHref;
+        });
+      } else {
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'icon';
+        linkEl.type = 'image/png';
+        linkEl.href = iconHref;
+        document.head.appendChild(linkEl);
+      }
     }
   }, [mode]);
 
