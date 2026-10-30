@@ -6,16 +6,24 @@
  */
 
 export const PRICING_CONFIG = {
-  /** Comisión de la solución de payments (Kuota QR y Kuota Link) — PRD §1 y §7 */
-  kuotaPaymentsFeePercent: 2,
-  /** Comisión promedio de un POS tradicional de referencia — PRD §5.6 y §7 */
+  /** Comisión oficial de Kuota Payments (links de pago y QR) — KUOTA Contexto §3 (vs 3.4-5% POS y 2.95% Yape Empresa) */
+  kuotaPaymentsFeePercent: 1,
+  /** Comisión promedio de un POS tradicional de referencia (Izipay, Niubiz, Culqi) */
   posAverageFeePercent: 3.5,
+  /** Comisión de Yape Empresa de referencia */
+  yapeEmpresaFeePercent: 2.95,
+  /** Comisión de venta a crédito B2B para proveedores (procesamiento con cobro al contado) */
+  supplierCreditSalesFeePercent: 2,
+  /** Comisión base para compradores en financiamiento a cuotas (baja según los 6 niveles) */
+  buyerCreditPurchaseFeePercent: 5,
   /** Comisión de aKuotas! en el plan Open — PRD §5.8 y §7 */
-  akuotasOpenFeePercent: 5,
+  akuotasOpenFeePercent: 2,
   /** Tiempo de liquidación en horas hábiles — PRD §7 */
   settlementBusinessHours: 48,
-  /** Riesgo de impago para el proveedor — PRD §7 */
+  /** Riesgo de impago para el proveedor (Kuota asume el 100% del riesgo) */
   supplierDefaultRisk: 0,
+  /** Ticket mínimo calificado para proveedores / distribuidores según ICP */
+  minQualifiedTicketSoles: 199,
   /** Venta mensual por defecto sugerida en la calculadora (en soles) — PRD §5.6 */
   calculatorDefaultMonthlySalesSoles: 20000,
   calculatorMinMonthlySalesSoles: 1000,
