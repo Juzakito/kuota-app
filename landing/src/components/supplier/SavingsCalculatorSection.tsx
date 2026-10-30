@@ -1,12 +1,13 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Calculator, TrendingUp, Info } from 'lucide-react';
 import {
   PRICING_CONFIG,
   formatPercentEs,
-  formatSoles,
 } from '../../config/pricingConfig';
 import { ScheduleCallButton } from './ScheduleCallButton';
 import { trackSupplierEvent } from '../../utils/analytics';
+import { ScrollReveal, AnimatedNumber } from '../../utils/motionSystem';
+import { kuotaSound } from '../../utils/soundSystem';
 
 /**
  * PRD §5.6: Úsalo – calculadora de ahorro
@@ -19,7 +20,7 @@ import { trackSupplierEvent } from '../../utils/analytics';
  *   - Ahorro mensual = costo con POS − costo con Kuota.
  *   - Ahorro anual = ahorro mensual × 12.
  * - Salida:
- *   - Ahorro mensual y anual en soles, en tamaño grande.
+ *   - Ahorro mensual y anual en soles, en tamaño grande con `AnimatedNumber`.
  *   - Barra comparativa de dos colores (POS vs Kuota) que se actualiza con la entrada.
  *   - Nota al pie: "Cálculo referencial con una comisión promedio de POS de 3,5%. No incluye la suscripción del plan."
  *   - CTA debajo: "Agenda una call y calcula tu caso".
@@ -47,11 +48,14 @@ export const SavingsCalculatorSection: React.FC = () => {
   const posFeeText = formatPercentEs(PRICING_CONFIG.posAverageFeePercent);
   const kuotaFeeText = formatPercentEs(PRICING_CONFIG.kuotaPaymentsFeePercent);
 
-  const handleSalesChange = (nextVal: number) => {
+  const handleSalesChange = (nextVal: number, playAudio = false) => {
     const clamped = Math.min(
       Math.max(0, nextVal),
       PRICING_CONFIG.calculatorMaxMonthlySalesSoles * 5
     );
+    if (playAudio) {
+      kuotaSound.playSelectOption();
+    }
     setMonthlySales(clamped);
     trackSupplierEvent('calculator_interaction', {
       monthly_sales_soles: clamped,
@@ -76,25 +80,31 @@ export const SavingsCalculatorSection: React.FC = () => {
       className="py-16 sm:py-20 border-b-2 border-kuota-deepnavy bg-white/45"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider mb-3">
-            <Calculator className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
-            Calculadora de ahorro
-          </span>
-          <h2
-            id="calculator-heading"
-            className="text-3xl sm:text-4xl font-extrabold text-kuota-deepnavy tracking-tight mb-2"
-          >
-            Descubre cuánto dinero recuperas cada mes
-          </h2>
-          <p className="text-base sm:text-lg font-semibold text-kuota-crayola">
-            Ajusta tu volumen mensual de ventas con tarjeta y compara al instante.
-          </p>
-        </div>
+        <ScrollReveal delayMs={0} direction="up">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white border-2 border-kuota-deepnavy text-xs font-extrabold text-kuota-deepnavy uppercase tracking-wider mb-3">
+              <Calculator className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
+              Calculadora de ahorro
+            </span>
+            <h2
+              id="calculator-heading"
+              className="text-3xl sm:text-4xl font-extrabold text-kuota-deepnavy tracking-tight mb-2"
+            >
+              Descubre cuánto dinero recuperas cada mes
+            </h2>
+            <p className="text-base sm:text-lg font-semibold text-kuota-crayola">
+              Ajusta tu volumen mensual de ventas con tarjeta y compara al instante.
+            </p>
+          </div>
+        </ScrollReveal>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* Columna de Entradas */}
-          <div className="lg:col-span-6 rounded-3xl bg-white border-2 border-kuota-deepnavy p-6 sm:p-8 shadow-navy-hard-lg flex flex-col justify-between">
+          <ScrollReveal
+            delayMs={80}
+            direction="left"
+            className="lg:col-span-6 rounded-3xl bg-white border-2 border-kuota-deepnavy p-6 sm:p-8 shadow-navy-hard-lg flex flex-col justify-between"
+          >
             <div className="space-y-6">
               {/* Entrada 1: Venta mensual con tarjeta (campo numérico + deslizador) */}
               <div>
@@ -139,10 +149,20 @@ export const SavingsCalculatorSection: React.FC = () => {
                   className="w-full h-3 bg-kuota-palesky rounded-lg appearance-none cursor-pointer accent-kuota-dodger border border-kuota-deepnavy"
                 />
                 <div className="flex justify-between text-xs font-bold text-kuota-deepnavy/75 mt-1.5">
-                  <span>S/ 1,000</span>
-                  <span>S/ 50,000</span>
-                  <span>S/ 100,000</span>
-                  <span>S/ 200,000</span>
+                  {[1000, 20000, 50000, 100000, 200000].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => handleSalesChange(preset, true)}
+                      className={`hover:text-kuota-dodger transition-colors ${
+                        safeMonthlySales === preset
+                          ? 'text-kuota-dodger font-extrabold underline'
+                          : ''
+                      }`}
+                    >
+                      S/ {(preset / 1000).toLocaleString('es-PE')}k
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -192,24 +212,28 @@ export const SavingsCalculatorSection: React.FC = () => {
                 Cálculo referencial con una comisión promedio de POS de {posFeeText}. No incluye la suscripción del plan.
               </span>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Columna de Salida: Ahorro mensual y anual + Barra comparativa + CTA */}
-          <div className="lg:col-span-6 rounded-3xl bg-kuota-deepnavy text-white border-2 border-kuota-deepnavy p-6 sm:p-8 shadow-navy-hard-lg flex flex-col justify-between">
+          <ScrollReveal
+            delayMs={150}
+            direction="right"
+            className="lg:col-span-6 rounded-3xl bg-kuota-deepnavy text-white border-2 border-kuota-deepnavy p-6 sm:p-8 shadow-navy-hard-lg flex flex-col justify-between"
+          >
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-kuota-dodger/25 border border-kuota-palesky/30 text-kuota-palesky text-xs font-extrabold uppercase tracking-wider mb-5">
                 <TrendingUp className="w-3.5 h-3.5 text-kuota-dodger" aria-hidden="true" />
                 Tu ahorro estimado con Kuota
               </div>
 
-              {/* Ahorro mensual y anual en tamaño grande */}
+              {/* Ahorro mensual y anual en tamaño grande con transición de números */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div className="rounded-2xl bg-white/10 border border-white/20 p-4">
                   <span className="block text-xs font-extrabold uppercase tracking-wider text-kuota-palesky mb-1">
                     Ahorro mensual
                   </span>
                   <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                    {formatSoles(monthlySavings)}
+                    <AnimatedNumber value={Math.round(monthlySavings)} prefix="S/ " />
                   </div>
                   <span className="text-xs font-semibold text-kuota-palesky/80">
                     cada mes en tu caja
@@ -221,7 +245,7 @@ export const SavingsCalculatorSection: React.FC = () => {
                     Ahorro anual
                   </span>
                   <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                    {formatSoles(annualSavings)}
+                    <AnimatedNumber value={Math.round(annualSavings)} prefix="S/ " />
                   </div>
                   <span className="text-xs font-bold text-kuota-palesky">
                     en 12 meses de operación
@@ -236,7 +260,11 @@ export const SavingsCalculatorSection: React.FC = () => {
                     <span className="text-kuota-palesky">
                       Costo mensual con POS ({posFeeText})
                     </span>
-                    <span className="text-white">{formatSoles(posCost)}</span>
+                    <AnimatedNumber
+                      value={Math.round(posCost)}
+                      prefix="S/ "
+                      className="text-white"
+                    />
                   </div>
                   <div className="w-full h-4 rounded-full bg-white/15 overflow-hidden p-0.5">
                     <div className="h-full rounded-full bg-kuota-palesky/60 w-full transition-all duration-300" />
@@ -248,9 +276,11 @@ export const SavingsCalculatorSection: React.FC = () => {
                     <span className="text-kuota-dodger">
                       Costo mensual con Kuota ({kuotaFeeText})
                     </span>
-                    <span className="text-kuota-palesky">
-                      {formatSoles(kuotaCost)}
-                    </span>
+                    <AnimatedNumber
+                      value={Math.round(kuotaCost)}
+                      prefix="S/ "
+                      className="text-kuota-palesky"
+                    />
                   </div>
                   <div className="w-full h-4 rounded-full bg-white/15 overflow-hidden p-0.5">
                     <div
@@ -269,10 +299,9 @@ export const SavingsCalculatorSection: React.FC = () => {
               size="lg"
               className="w-full"
             />
-          </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>
   );
 };
-

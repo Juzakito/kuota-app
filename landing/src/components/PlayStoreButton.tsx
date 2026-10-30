@@ -4,7 +4,7 @@ import { trackEvent } from '../utils/analytics';
 import { kuotaSound } from '../utils/soundSystem';
 
 interface PlayStoreButtonProps {
-  section: 'navbar' | 'hero' | 'cta_final';
+  section: string;
   label?: string;
   size?: 'sm' | 'md' | 'lg';
   variant?: 'primary' | 'inverted';
