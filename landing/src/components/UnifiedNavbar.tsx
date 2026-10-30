@@ -123,16 +123,6 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
   const [isScrolled, setIsScrolled] = useState(false);
   const [soundState, setSoundState] = useState(() => kuotaSound.getState());
 
-  const ecoTabRef = useRef<HTMLButtonElement | null>(null);
-  const buyerTabRef = useRef<HTMLButtonElement | null>(null);
-  const supplierTabRef = useRef<HTMLButtonElement | null>(null);
-
-  const [pillBounds, setPillBounds] = useState<{
-    left: number;
-    width: number;
-    ready: boolean;
-  }>({ left: 4, width: 100, ready: false });
-
   const activeModeNormalized: 'ecosistema' | 'compradores' | 'comercios' =
     mode === 'proveedores' ? 'comercios' : mode;
 
@@ -184,22 +174,7 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
   }, [navLinks]);
 
   useEffect(() => {
-    const updatePillBounds = () => {
-      const activeBtn =
-        activeModeNormalized === 'ecosistema'
-          ? ecoTabRef.current
-          : activeModeNormalized === 'compradores'
-          ? buyerTabRef.current
-          : supplierTabRef.current;
-
-      if (activeBtn) {
-        setPillBounds({
-          left: activeBtn.offsetLeft,
-          width: activeBtn.offsetWidth,
-          ready: true,
-        });
-      }
-
+    const updateNavPillBounds = () => {
       const targetHref = hoveredNavHref || activeNavHref;
       const activeNavEl = navItemRefs.current[targetHref];
       if (activeNavEl) {
@@ -211,26 +186,17 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
       }
     };
 
-    updatePillBounds();
-    window.addEventListener('resize', updatePillBounds);
-
-    let ro: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(updatePillBounds);
-      if (ecoTabRef.current) ro.observe(ecoTabRef.current);
-      if (buyerTabRef.current) ro.observe(buyerTabRef.current);
-      if (supplierTabRef.current) ro.observe(supplierTabRef.current);
-    }
+    updateNavPillBounds();
+    window.addEventListener('resize', updateNavPillBounds);
 
     if (typeof document !== 'undefined' && 'fonts' in document) {
-      document.fonts.ready.then(updatePillBounds).catch(() => {});
+      document.fonts.ready.then(updateNavPillBounds).catch(() => {});
     }
 
     return () => {
-      window.removeEventListener('resize', updatePillBounds);
-      if (ro) ro.disconnect();
+      window.removeEventListener('resize', updateNavPillBounds);
     };
-  }, [activeModeNormalized, activeNavHref, hoveredNavHref]);
+  }, [activeNavHref, hoveredNavHref]);
 
   const handleLinkClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -294,79 +260,65 @@ export const UnifiedNavbar: React.FC<UnifiedNavbarProps> = ({
           <div
             role="tablist"
             aria-label="Seleccionar perfil del ecosistema"
-            className="relative inline-flex items-center gap-0.5 sm:gap-1 p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0"
+            className="inline-flex items-center gap-1 p-1 rounded-full bg-white border-2 border-kuota-deepnavy shadow-sm shrink-0"
           >
-            {pillBounds.ready && (
-              <span
-                aria-hidden="true"
-                style={{
-                  left: `${pillBounds.left}px`,
-                  width: `${pillBounds.width}px`,
-                  backgroundColor:
-                    activeModeNormalized === 'compradores'
-                      ? '#0391FD'
-                      : '#00235C',
-                  transition:
-                    'left 340ms cubic-bezier(0.22, 1, 0.36, 1), width 340ms cubic-bezier(0.22, 1, 0.36, 1), background-color 340ms cubic-bezier(0.22, 1, 0.36, 1)',
-                }}
-                className="pointer-events-none absolute top-1 bottom-1 rounded-full shadow-sm z-0"
-              />
-            )}
-
             {/* Pestaña 1: Ecosistema */}
             <button
-              ref={ecoTabRef}
               type="button"
               role="tab"
               aria-selected={activeModeNormalized === 'ecosistema'}
               onClick={() => handleSwitchMode('ecosistema', 'navbar_pill')}
-              className={`relative z-10 inline-flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation transition-colors duration-250 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation border-0 outline-none focus:outline-none transition-all duration-200 select-none active:scale-95 ${
                 activeModeNormalized === 'ecosistema'
-                  ? pillBounds.ready
-                    ? 'text-white'
-                    : 'bg-kuota-deepnavy text-white shadow-sm'
-                  : 'text-kuota-deepnavy hover:text-kuota-dodger'
+                  ? 'bg-kuota-deepnavy text-white shadow-sm'
+                  : 'bg-transparent text-kuota-deepnavy hover:text-kuota-dodger hover:bg-kuota-palesky/50'
               }`}
             >
-              <Layers className="w-3.5 h-3.5 shrink-0 hidden sm:inline-block" />
+              <Layers
+                className={`w-3.5 h-3.5 shrink-0 ${
+                  activeModeNormalized === 'ecosistema' ? 'text-kuota-dodger' : 'text-kuota-deepnavy/75'
+                }`}
+              />
               <span>Ecosistema</span>
             </button>
 
             {/* Pestaña 2: Compradores */}
             <button
-              ref={buyerTabRef}
               type="button"
               role="tab"
               aria-selected={activeModeNormalized === 'compradores'}
               onClick={() => handleSwitchMode('compradores', 'navbar_pill')}
-              className={`relative z-10 inline-flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation transition-colors duration-250 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation border-0 outline-none focus:outline-none transition-all duration-200 select-none active:scale-95 ${
                 activeModeNormalized === 'compradores'
-                  ? pillBounds.ready
-                    ? 'text-white'
-                    : 'bg-kuota-dodger text-white shadow-sm'
-                  : 'text-kuota-deepnavy hover:text-kuota-dodger'
+                  ? 'bg-kuota-dodger text-white shadow-sm'
+                  : 'bg-transparent text-kuota-deepnavy hover:text-kuota-dodger hover:bg-kuota-palesky/50'
               }`}
             >
-              <ShoppingBag className="w-3.5 h-3.5 shrink-0 hidden sm:inline-block" />
+              <ShoppingBag
+                className={`w-3.5 h-3.5 shrink-0 ${
+                  activeModeNormalized === 'compradores' ? 'text-white' : 'text-kuota-deepnavy/75'
+                }`}
+              />
               <span>Compradores</span>
             </button>
 
             {/* Pestaña 3: Comercios */}
             <button
-              ref={supplierTabRef}
               type="button"
               role="tab"
               aria-selected={activeModeNormalized === 'comercios'}
               onClick={() => handleSwitchMode('comercios', 'navbar_pill')}
-              className={`relative z-10 inline-flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation transition-colors duration-250 ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap shrink-0 touch-manipulation border-0 outline-none focus:outline-none transition-all duration-200 select-none active:scale-95 ${
                 activeModeNormalized === 'comercios'
-                  ? pillBounds.ready
-                    ? 'text-white'
-                    : 'bg-kuota-deepnavy text-white shadow-sm'
-                  : 'text-kuota-deepnavy hover:text-kuota-dodger'
+                  ? 'bg-kuota-deepnavy text-white shadow-sm'
+                  : 'bg-transparent text-kuota-deepnavy hover:text-kuota-dodger hover:bg-kuota-palesky/50'
               }`}
             >
-              <Store className="w-3.5 h-3.5 shrink-0 hidden sm:inline-block" />
+              <Store
+                className={`w-3.5 h-3.5 shrink-0 ${
+                  activeModeNormalized === 'comercios' ? 'text-kuota-palesky' : 'text-kuota-deepnavy/75'
+                }`}
+              />
               <span>Comercios</span>
             </button>
           </div>
