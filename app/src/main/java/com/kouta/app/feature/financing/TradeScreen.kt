@@ -319,7 +319,7 @@ fun TradeScreen(
                                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                                         ) {
                                             Text(
-                                                "PASO 1 DE 3: PAGO DE INICIAL",
+                                                "PASO 3 DE 3: PAGO DE INICIAL AL PROVEEDOR",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = Color(0xFFFFB300)
@@ -381,28 +381,83 @@ fun TradeScreen(
                                             )
                                         }
                                     }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("Monto Total de la compra:")
-                                        Text(PurchaseOffer.formatPen(p.totalAmountCents), fontWeight = FontWeight.Bold)
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("Cuota Inicial a pagar (${p.downPaymentPercent}%):", fontWeight = FontWeight.Bold)
-                                        Text(PurchaseOffer.formatPen(p.downPaymentCents), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("Saldo financiado por Kuota:")
-                                        Text(PurchaseOffer.formatPen(p.financedAmountCents), fontWeight = FontWeight.SemiBold, color = kuotaColors.accentTeal)
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("Comisión plana Kuota (5%):")
-                                        Text(PurchaseOffer.formatPen(p.kuotaFeeCents), fontWeight = FontWeight.SemiBold)
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    // Monto de Inicial Destacado (Paso 3)
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(14.dp))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+                                            .padding(14.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                "Cuota Inicial a Pagar (${p.downPaymentPercent}%):",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Spacer(Modifier.height(4.dp))
+                                            Text(
+                                                PurchaseOffer.formatPen(p.downPaymentCents),
+                                                style = MaterialTheme.typography.headlineMedium,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                "Saldo financiado: ${PurchaseOffer.formatPen(p.financedAmountCents)} · Comisión 5%: ${PurchaseOffer.formatPen(p.kuotaFeeCents)}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
 
-                                    Spacer(modifier = Modifier.height(18.dp))
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    // Botones Directos Yape y Plin (BUY-04)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                val phoneDigits = p.supplierPhone.filter { it.isDigit() }
+                                                clipboardManager.setText(AnnotatedString(phoneDigits))
+                                                val intent = context.packageManager.getLaunchIntentForPackage("com.bcp.innovacxion.yapeapp")
+                                                if (intent != null) {
+                                                    runCatching { context.startActivity(intent) }
+                                                } else {
+                                                    Toast.makeText(context, "Número $phoneDigits copiado. Abre Yape para pagar la inicial.", Toast.LENGTH_LONG).show()
+                                                }
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(12.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF742284))
+                                        ) {
+                                            Text("Pagar con Yape", fontWeight = FontWeight.Bold, color = Color.White)
+                                        }
+
+                                        Button(
+                                            onClick = {
+                                                val phoneDigits = p.supplierPhone.filter { it.isDigit() }
+                                                clipboardManager.setText(AnnotatedString(phoneDigits))
+                                                val intent = context.packageManager.getLaunchIntentForPackage("pe.com.interbank.plin")
+                                                if (intent != null) {
+                                                    runCatching { context.startActivity(intent) }
+                                                } else {
+                                                    Toast.makeText(context, "Número $phoneDigits copiado. Abre Plin para pagar la inicial.", Toast.LENGTH_LONG).show()
+                                                }
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(12.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00D2B5))
+                                        ) {
+                                            Text("Pagar con Plin", fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(14.dp))
 
                                     Button(
                                         onClick = { voucherPickerLauncher.launch("image/*") },
@@ -550,7 +605,7 @@ fun TradeScreen(
                                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                                         ) {
                                             Text(
-                                                "PASO 2 DE 3: CRONOGRAMA DE CUOTAS",
+                                                "PASO 3 DE 3: CONFIRMACIÓN Y ENTREGA",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = kuotaColors.accentTeal
@@ -829,7 +884,7 @@ fun TradeScreen(
                                     ) {
                                         Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Confirmar compra y activar cuotas", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                        Text("Confirmar recepción de mercadería y activar cuotas", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -888,6 +943,25 @@ fun TradeScreen(
                                         Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text("Ver mis cuotas y realizar pago")
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    OutlinedButton(
+                                        onClick = {
+                                            val msg = "Comprobante Kuota B2B: Compra a crédito en ${p.supplierName} por ${PurchaseOffer.formatPen(p.totalAmountCents)}. Inicial pagada: ${PurchaseOffer.formatPen(p.downPaymentCents)}. Saldo financiado a 0% en cuotas semanales."
+                                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(Intent.EXTRA_TEXT, msg)
+                                            }
+                                            runCatching { context.startActivity(Intent.createChooser(sendIntent, "Compartir comprobante")) }
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Compartir comprobante de compra")
                                     }
                                 }
                             }
@@ -955,6 +1029,19 @@ fun TradeScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Categorías de Proveedores
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text("PASO 1 DE 3", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Text("Elige tu Comercio Proveedor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
                     Text("Categorías de Comercio:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(
@@ -1040,7 +1127,21 @@ fun TradeScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Amount Input
+                    // Amount Input (Paso 2)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text("PASO 2 DE 3", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Text("Monto y Simulación Cashea B2B", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     OutlinedTextField(
                         value = purchaseAmountInput,
                         onValueChange = {
@@ -1211,7 +1312,7 @@ fun TradeScreen(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Continuar a pago de inicial →", fontWeight = FontWeight.Bold)
+                        Text("Continuar al Paso 3: Pago de Inicial →", fontWeight = FontWeight.Bold)
                     }
                 }
 

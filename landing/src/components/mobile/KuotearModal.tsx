@@ -30,11 +30,15 @@ export const KuotearModal: React.FC<KuotearModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Reglas oficiales PRD: 60% inicial y 40% restante en cuotas semanales (< 30 días)
-  const downPayment = Math.round(invoiceAmount * 0.6);
+  // Reglas oficiales PRD Kuota 2.0 (Modelo Cashea B2B)
+  const downPaymentPercent = 50; // Nivel 1 Brote: 50% inicial, 3 cuotas semanales
+  const downPayment = Math.round((invoiceAmount * downPaymentPercent) / 100);
   const financedAmount = invoiceAmount - downPayment;
-  const weeklyInstallment = Math.round(financedAmount / numWeeks);
-  const supplierFee = Math.round(invoiceAmount * 0.02); // 2% asumido por proveedor
+  const kuotaFee = Math.round(invoiceAmount * 0.05); // 5% comisión plana comprador
+  const totalToPay = invoiceAmount + kuotaFee;
+  const weeklyInstallment = Math.round((financedAmount + kuotaFee) / numWeeks);
+  const supplierFee = Math.round(invoiceAmount * 0.02); // 2% retenido por Kuota al comercio
+  const supplierPayout48h = invoiceAmount - downPayment - supplierFee;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +80,7 @@ export const KuotearModal: React.FC<KuotearModalProps> = ({
               Kuotear Pago de Factura
             </h2>
             <p className="text-xs text-slate-500 font-normal leading-relaxed mb-5">
-              Paga 60% al inicio y el 40% restante en cuotas semanales respaldadas en tus ventas.
+              Paga tu cuota inicial directamente y Kuota financia el saldo a 0% de interés en cuotas semanales.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,23 +118,27 @@ export const KuotearModal: React.FC<KuotearModalProps> = ({
                 </div>
               </div>
 
-              {/* Desglose Automático 60 / 40 Oficial Kuota */}
+              {/* Desglose Automático Modelo Cashea B2B Oficial Kuota */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
                 <div className="flex items-center justify-between text-xs font-semibold">
-                  <span className="text-slate-600">Pago Inicial (60% al contado):</span>
+                  <span className="text-slate-600">Cuota Inicial ({downPaymentPercent}% al contado):</span>
                   <span className="text-sm font-black text-[#0A192F]">S/ {downPayment.toLocaleString('es-PE')}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs font-semibold">
-                  <span className="text-slate-600">Saldo a Kuotear (40%):</span>
+                  <span className="text-slate-600">Saldo Financiado ({100 - downPaymentPercent}%):</span>
                   <span className="text-sm font-black text-[#2563EB]">S/ {financedAmount.toLocaleString('es-PE')}</span>
                 </div>
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-slate-600">Comisión Kuota (5% plana):</span>
+                  <span className="text-xs font-bold text-slate-700">+S/ {kuotaFee.toLocaleString('es-PE')}</span>
+                </div>
                 <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
-                  <span className="text-slate-500 font-medium">4 cuotas semanales de:</span>
+                  <span className="text-slate-500 font-medium">{numWeeks} cuotas semanales de:</span>
                   <span className="font-extrabold text-[#10B981]">S/ {weeklyInstallment} / semana</span>
                 </div>
                 <div className="pt-1 flex items-center justify-between text-[11px] text-slate-400">
-                  <span>Comisión 2% asumida por proveedor:</span>
-                  <span className="font-semibold text-slate-600">-S/ {supplierFee}</span>
+                  <span>Liquidación a proveedor en 48h (neto 98%):</span>
+                  <span className="font-semibold text-slate-600">S/ {supplierPayout48h.toLocaleString('es-PE')}</span>
                 </div>
               </div>
 
@@ -167,7 +175,7 @@ export const KuotearModal: React.FC<KuotearModalProps> = ({
             </div>
             <h3 className="text-xl font-black text-[#0A192F]">¡Pago Kuoteado con Éxito!</h3>
             <p className="text-xs text-slate-600 max-w-xs mx-auto">
-              Se emitió la conformidad a {supplierName}. Tu cuota inicial de S/ {downPayment} ha sido procesada y las 4 cuotas semanales quedaron programadas en tu panel.
+              Se emitió la conformidad a {supplierName}. Tu cuota inicial de S/ {downPayment} ha sido registrada y tus {numWeeks} cuotas semanales quedaron programadas en tu panel.
             </p>
           </div>
         )}
