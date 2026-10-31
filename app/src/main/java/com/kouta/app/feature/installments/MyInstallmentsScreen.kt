@@ -2,6 +2,7 @@ package com.kouta.app.feature.installments
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,21 +14,32 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -37,9 +49,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,7 +69,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kouta.app.core.designsystem.theme.kuotaColors
 import com.kouta.app.data.local.AppSettings
 import com.kouta.app.data.local.CreditPurchaseStore
@@ -105,48 +121,432 @@ fun MyInstallmentsScreen(
         reload()
     }
 
+    var autoDebitActive by remember { mutableStateOf(true) }
+    var ownerName by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        val prof = journalStore.readBusinessProfile()
+        ownerName = prof?.ownerName.orEmpty().ifBlank { prof?.businessName.orEmpty() }
+    }
+
     val currentLevel = CreditLevel.fromNumber(userLevelNumber)
+    val atmosphericBrush = Brush.verticalGradient(
+        listOf(
+            com.kouta.app.core.designsystem.theme.KuotaAtmosphericDeep,
+            com.kouta.app.core.designsystem.theme.KuotaAtmosphericMid,
+            com.kouta.app.core.designsystem.theme.KuotaAtmosphericLight
+        )
+    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
     ) {
-        // Header
-        Box(
+        // -------------------------------------------------------------
+        // 1. CABECERA ATMOSFÉRICA & TARJETA ESMERILADA (Estilo Vaulta)
+        // -------------------------------------------------------------
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(kuotaColors.headerGradient))
-                .padding(horizontal = 20.dp, vertical = 20.dp)
+                .background(atmosphericBrush)
+                .padding(horizontal = 20.dp)
+                .padding(top = 16.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = "Mis cuotas & Niveles",
+                    text = "Línea Kuota B2B",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = kuotaColors.headerContent
+                    color = Color.White
                 )
                 Text(
-                    text = "Sistema de crédito escalonado y gestión de pagos",
+                    text = "Underwriting dinámico respaldado por tus ventas reales",
                     style = MaterialTheme.typography.bodySmall,
-                    color = kuotaColors.headerContent.copy(alpha = 0.75f)
+                    color = Color.White.copy(alpha = 0.85f)
+                )
+            }
+
+            // Tarjeta Esmerilada Principal (Vaulta Glass Card)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 190.dp),
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White.copy(alpha = 0.16f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                shadowElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.25f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.CreditCard, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            }
+                            Text(
+                                "KUOTA B2B",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White,
+                                letterSpacing = 1.sp
+                            )
+                        }
+                        Icon(
+                            Icons.Default.Nfc,
+                            contentDescription = "Contactless",
+                            tint = Color.White.copy(alpha = 0.85f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    // Número de tarjeta
+                    Text(
+                        text = "••••  ••••  ••••  9000",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        letterSpacing = 2.sp
+                    )
+
+                    // Pie de tarjeta con titular, vencimiento y respaldo
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                "TITULAR COMERCIAL",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 9.sp
+                            )
+                            Text(
+                                ownerName.ifBlank { "MI NEGOCIO B2B" }.uppercase(),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = com.kouta.app.core.designsystem.theme.KuotaEmerald.copy(alpha = 0.25f),
+                            border = BorderStroke(1.dp, com.kouta.app.core.designsystem.theme.KuotaEmerald.copy(alpha = 0.5f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF6EE7B7))
+                                )
+                                Text(
+                                    "RESPALDO EN VENTAS",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // -------------------------------------------------------------
+        // 2. BOTONERA CIRCULAR DE CONTROL (Estilo Vaulta - 4 Botones Azules)
+        // -------------------------------------------------------------
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                "Control de Línea",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Botón 1: ⇄ Kuotear Factura
+                VaultaCircularButton(
+                    label = "Kuotear",
+                    sublabel = "Factura",
+                    icon = Icons.Default.SwapHoriz,
+                    onClick = onOpenTrade
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                // Botón 2: ⬆️ Subir Línea
+                VaultaCircularButton(
+                    label = "Subir",
+                    sublabel = "Línea",
+                    icon = Icons.Default.ArrowUpward,
+                    onClick = {
+                        Toast.makeText(context, "Sube de nivel registrando más ventas comprobadas (Nivel actual: ${currentLevel.levelNumber})", Toast.LENGTH_LONG).show()
+                    }
+                )
 
-                // Current Level Summary Card
-                CurrentLevelSummaryCard(
-                    level = currentLevel,
-                    verifiedSalesCents = totalVerifiedSalesCents
+                // Botón 3: 🔗 Crear Link
+                VaultaCircularButton(
+                    label = "Crear",
+                    sublabel = "Link",
+                    icon = Icons.Default.Link,
+                    onClick = onOpenTrade
+                )
+
+                // Botón 4: ⚡ Débito Auto
+                VaultaCircularButton(
+                    label = "Débito",
+                    sublabel = if (autoDebitActive) "Activo" else "Pausado",
+                    icon = Icons.Default.ElectricBolt,
+                    isActive = autoDebitActive,
+                    onClick = {
+                        autoDebitActive = !autoDebitActive
+                        Toast.makeText(context, if (autoDebitActive) "Débito automático activado" else "Débito automático pausado", Toast.LENGTH_SHORT).show()
+                    }
                 )
             }
         }
 
-        // Tabs: 0 = "Cuotas Activas", 1 = "Los 6 Niveles"
+        Spacer(Modifier.height(20.dp))
+
+        // -------------------------------------------------------------
+        // 3. TARJETAS GEMELAS DE RENDIMIENTO MENSUAL (This Month / Overall Uses)
+        // -------------------------------------------------------------
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Tarjeta 1: Ventas del Mes vs. Meta de Nivel
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Ventas del Mes",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue.copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                "50%",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+
+                    Text(
+                        "S/ 18,000 / 36,000",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    LinearProgressIndicator(
+                        progress = { 0.5f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+
+                    Text(
+                        "Meta para Nivel ${currentLevel.levelNumber + 1}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp
+                    )
+                }
+            }
+
+            // Tarjeta 2: Línea Utilizada vs. Cupo Total
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Línea Utilizada",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue.copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                "80%",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+
+                    Text(
+                        "S/ 2,880 / 3,600",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    LinearProgressIndicator(
+                        progress = { 0.8f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+
+                    Text(
+                        "Disponible: S/ 720.00",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = com.kouta.app.core.designsystem.theme.KuotaEmerald,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // -------------------------------------------------------------
+        // 4. ESTADO DE CUENTA Y TARJETA (Card Statement)
+        // -------------------------------------------------------------
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFEEF2FF)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.ReceiptLong, contentDescription = null, tint = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue, modifier = Modifier.size(20.dp))
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            "Card Statement",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Extracto de compras y cuotas semanales",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue.copy(alpha = 0.1f)
+                ) {
+                    Text(
+                        "Al día",
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(18.dp))
+
+        // -------------------------------------------------------------
+        // 5. SECCIÓN DE CUOTAS ACTIVAS & NIVELES DE CRÉDITO
+        // -------------------------------------------------------------
         TabRow(
             selectedTabIndex = selectedTabIndex,
             containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary
+            contentColor = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 20.dp).clip(RoundedCornerShape(16.dp))
         ) {
             Tab(
                 selected = selectedTabIndex == 0,
@@ -160,7 +560,7 @@ fun MyInstallmentsScreen(
                                 modifier = Modifier
                                     .size(8.dp)
                                     .clip(CircleShape)
-                                    .background(kuotaColors.accentTeal)
+                                    .background(com.kouta.app.core.designsystem.theme.KuotaCoral)
                             )
                         }
                     }
@@ -169,9 +569,11 @@ fun MyInstallmentsScreen(
             Tab(
                 selected = selectedTabIndex == 1,
                 onClick = { selectedTabIndex = 1 },
-                text = { Text("Niveles de Crédito") }
+                text = { Text("Los 6 Niveles") }
             )
         }
+
+        Spacer(Modifier.height(12.dp))
 
         if (selectedTabIndex == 0) {
             // Cuotas Activas Tab
@@ -193,6 +595,53 @@ fun MyInstallmentsScreen(
             // Niveles de Crédito Tab (All 6 levels)
             CreditLevelsTabContent(
                 userLevelNumber = userLevelNumber
+            )
+        }
+
+        Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun VaultaCircularButton(
+    label: String,
+    sublabel: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isActive: Boolean = true,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Surface(
+            modifier = Modifier.size(54.dp),
+            shape = CircleShape,
+            color = if (isActive) Color(0xFF2563EB) else Color(0xFFE2E8F0),
+            shadowElevation = 4.dp
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(
+                    icon,
+                    contentDescription = "$label $sublabel",
+                    tint = if (isActive) Color.White else Color(0xFF64748B),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                sublabel,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 10.sp
             )
         }
     }

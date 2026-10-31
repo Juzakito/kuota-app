@@ -19,12 +19,18 @@ sealed class NavDestination(
     val title: String,
     val icon: ImageVector
 ) {
-    // Vendedor flow
+    // Vendedor flow (5 Pestañas 100% Ventas & Financiamiento B2B)
     object Home : NavDestination("home", "Inicio", Icons.Default.Home)
+    object Sales : NavDestination("finance", "Ventas", Icons.AutoMirrored.Filled.ReceiptLong)
+    object Kuotear : NavDestination("trade", "Kuotear", Icons.Default.QrCodeScanner)
+    object CreditLine : NavDestination("installments", "Línea", Icons.Default.CalendarMonth)
+    object Account : NavDestination("profile", "Cuenta", Icons.Default.Person)
+
+    // Legacy / secondary destinations preserved for backward compatibility
     object Marketplace : NavDestination("marketplace", "Marketplace", Icons.Default.Storefront)
-    object Trade : NavDestination("trade", "Comprar y vender", Icons.Default.QrCodeScanner)
-    object Finance : NavDestination("finance", "Finanzas", Icons.AutoMirrored.Filled.ReceiptLong)
-    object Installments : NavDestination("installments", "Mis cuotas", Icons.Default.CalendarMonth)
+    object Trade : NavDestination("trade", "Kuotear", Icons.Default.QrCodeScanner)
+    object Finance : NavDestination("finance", "Ventas", Icons.AutoMirrored.Filled.ReceiptLong)
+    object Installments : NavDestination("installments", "Línea", Icons.Default.CalendarMonth)
     object MyProducts : NavDestination("my_products", "Mis productos", Icons.Default.Inventory2)
 
     // Proveedor flow
@@ -34,7 +40,7 @@ sealed class NavDestination(
     object SupplierSales : NavDestination("supplier_sales", "Ventas", Icons.AutoMirrored.Filled.ReceiptLong)
 
     // Common / Modal
-    object Profile : NavDestination("profile", "Menú", Icons.Default.Person)
+    object Profile : NavDestination("profile", "Cuenta", Icons.Default.Person)
     object Onboarding : NavDestination("onboarding", "Inicio", Icons.Default.Home)
     object Support : NavDestination("support?form={form}", "Ayuda", Icons.Default.HelpOutline)
     object Notifications : NavDestination("notifications", "Notificaciones", Icons.Default.NotificationsNone)
@@ -42,9 +48,8 @@ sealed class NavDestination(
 
     companion object {
         // Backward-compatibility aliases
-        val Cards: NavDestination get() = Installments
-        val Financing: NavDestination get() = Trade
-        val Sales: NavDestination get() = Finance
+        val Cards: NavDestination get() = CreditLine
+        val Financing: NavDestination get() = Kuotear
     }
 }
 

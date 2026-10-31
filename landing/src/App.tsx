@@ -19,6 +19,7 @@ import { InstitutionalFooter } from './components/ecosystem/InstitutionalFooter'
 import { MerchantAffiliationModal } from './components/ecosystem/MerchantAffiliationModal';
 import { PartnerContactModal } from './components/ecosystem/PartnerContactModal';
 import { FloatingLeadWidgets } from './components/landing/FloatingLeadWidgets';
+import { MobileAppSimulator } from './components/mobile/MobileAppSimulator';
 
 // Vistas especializadas de Compradores
 import { HeroSection as BuyerHeroSection } from './components/HeroSection';
@@ -68,6 +69,7 @@ export const App: React.FC = () => {
   const [evaluationModalOpen, setEvaluationModalOpen] = useState(false);
   const [merchantModalOpen, setMerchantModalOpen] = useState(false);
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
+  const [mobileSimulatorOpen, setMobileSimulatorOpen] = useState(false);
   const milestonesTracked = useRef<Set<number>>(new Set());
 
   useEffect(() => {
@@ -270,6 +272,34 @@ export const App: React.FC = () => {
             <SupplierFooterSection />
           </main>
         </>
+      )}
+
+      {/* BOTÓN FLOTANTE SIMULADOR APP ANDROID (PRD VENTAS B2B) */}
+      <div className="fixed bottom-6 left-6 z-40">
+        <button
+          type="button"
+          onClick={() => setMobileSimulatorOpen(true)}
+          className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#0F172A] text-white text-xs font-bold shadow-xl hover:bg-[#1E293B] hover:scale-105 active:scale-95 transition-all border border-slate-700/80 cursor-pointer"
+        >
+          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+          <span>📱 App Móvil (Simulador B2B)</span>
+        </button>
+      </div>
+
+      {/* MODAL SIMULADOR INTERACTIVO ANDROID */}
+      {mobileSimulatorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="relative max-w-sm w-full py-6">
+            <button
+              onClick={() => setMobileSimulatorOpen(false)}
+              className="absolute -top-1 -right-1 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-white text-slate-900 shadow-2xl hover:bg-slate-100 transition-all font-extrabold cursor-pointer text-sm"
+              aria-label="Cerrar simulador"
+            >
+              ✕
+            </button>
+            <MobileAppSimulator />
+          </div>
+        </div>
       )}
     </div>
   );

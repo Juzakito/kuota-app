@@ -13,8 +13,25 @@ import androidx.compose.ui.graphics.Color
 /** Negro del logo Kuota: base del modo oscuro. */
 val KuotaBlack = Color(0xFF05070A)
 
-/** Azul de marca. */
-val KuotaBlue = Color(0xFF5B8FF9)
+/** Azul de marca Kuota Royal Blue (PRD Ventas B2B). */
+val KuotaRoyalBlue = Color(0xFF2563EB)
+val KuotaRoyalBlueDark = Color(0xFF1D4ED8)
+val KuotaAtmosphericDeep = Color(0xFF1E3A8A)
+val KuotaAtmosphericMid = Color(0xFF2563EB)
+val KuotaAtmosphericLight = Color(0xFF3B82F6)
+val KuotaAtmosphericGlow = Color(0xFF60A5FA)
+
+/** Superficies y Semánticos B2B */
+val KuotaSurfaceIce = Color(0xFFF4F7FB)
+val KuotaEmerald = Color(0xFF10B981)
+val KuotaEmeraldContainer = Color(0xFFD1FAE5)
+val KuotaCoral = Color(0xFFEF4444)
+val KuotaCoralContainer = Color(0xFFFEE2E2)
+val KuotaAmber = Color(0xFFF59E0B)
+val KuotaAmberContainer = Color(0xFFFEF3C7)
+
+/** Azul de marca histórico. */
+val KuotaBlue = Color(0xFF2563EB)
 
 /** Celeste de marca. */
 val KuotaSky = Color(0xFFA8DFFF)
@@ -28,10 +45,10 @@ val KuotaWhite = Color(0xFFFFFFFF)
 val KuotaInk = Color(0xFF04101F)
 
 /** Variante accesible del azul para texto sobre fondos claros (contraste >= 5.5:1). */
-val KuotaBlueStrong = Color(0xFF2D5FCC)
+val KuotaBlueStrong = Color(0xFF1D4ED8)
 
 /** Degradado de identidad: azul -> celeste -> turquesa. */
-val KuotaBrandGradient = listOf(KuotaBlue, KuotaSky, KuotaTurquoise)
+val KuotaBrandGradient = listOf(KuotaRoyalBlue, KuotaSky, KuotaTurquoise)
 
 // ---------------------------------------------------------------------------
 // Esquemas Material 3
@@ -145,22 +162,22 @@ data class KuotaExtendedColors(
 internal val KuotaLightExtendedColors = KuotaExtendedColors(
     brandGradient = KuotaBrandGradient,
     onBrand = KuotaInk,
-    headerGradient = listOf(Color(0xFFEAF3FF), Color(0xFFE1F7F8)),
-    headerContent = Color(0xFF071426),
-    headerGlass = KuotaWhite.copy(alpha = .65f),
-    suggestionGradient = listOf(Color(0xFFE6F0FF), Color(0xFFDDF7F3)),
-    suggestionContent = Color(0xFF071426),
-    suggestionAccent = KuotaBlueStrong,
+    headerGradient = listOf(KuotaAtmosphericDeep, KuotaAtmosphericMid, KuotaAtmosphericLight),
+    headerContent = KuotaWhite,
+    headerGlass = KuotaWhite.copy(alpha = 0.16f),
+    suggestionGradient = listOf(Color(0xFFEBF5FF), Color(0xFFE0F2FE)),
+    suggestionContent = Color(0xFF0F172A),
+    suggestionAccent = KuotaRoyalBlue,
     mediaBackdrop = Color(0xFFE8F1FF),
-    avatarTint = KuotaBlueStrong,
-    warningAccent = Color(0xFFB45309),
-    warningContainer = Color(0xFFFFF4E5),
-    warningContent = Color(0xFF7C2D12),
-    success = Color(0xFF166534),
-    successContainer = Color(0xFFDCFCE7),
-    info = Color(0xFF1D4ED8),
+    avatarTint = KuotaRoyalBlue,
+    warningAccent = KuotaAmber,
+    warningContainer = KuotaAmberContainer,
+    warningContent = Color(0xFF92400E),
+    success = KuotaEmerald,
+    successContainer = KuotaEmeraldContainer,
+    info = KuotaRoyalBlue,
     infoContainer = Color(0xFFE1EAFE),
-    neutral = Color(0xFF4B5563)
+    neutral = Color(0xFF64748B)
 )
 
 internal val KuotaDarkExtendedColors = KuotaExtendedColors(

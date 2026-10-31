@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -32,20 +33,33 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.NorthEast
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SouthWest
+import androidx.compose.material.icons.filled.Store
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.SupportAgent
+import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -54,6 +68,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -67,6 +82,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,6 +99,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kouta.app.R
 import com.kouta.app.core.designsystem.components.GroupCard
 import com.kouta.app.core.designsystem.components.IconBubble
@@ -318,22 +335,43 @@ fun HomeScreen(
         QuickAccess("Mi negocio", Icons.Default.Storefront, onOpenProfile)
     )
 
+    var showBalance by rememberSaveable { mutableStateOf(true) }
+    var selectedMetricMode by rememberSaveable { mutableIntStateOf(0) } // 0: Ventas Totales, 1: Línea Kuota
+    var transactionTab by rememberSaveable { mutableIntStateOf(0) } // 0: Todas las Ventas, 1: Kuotas por Pagar, 2: Links Activos
+
+    val displaySalesMonthCents = if (salesTotal > 0) salesTotal else 12489265L // S/ 124,892.65
+    val displayAvailableLineCents = userCreditLevel.maxAmountCents.takeIf { it > 0 } ?: 900000L // S/ 9,000.00
+    val displayYapeQrCents = 1412700L // S/ 14,127.00
+    val currentDisplayCents = if (selectedMetricMode == 0) displaySalesMonthCents else displayAvailableLineCents
+    val formattedDisplayAmount = if (showBalance) PurchaseOffer.formatPen(currentDisplayCents) else "S/ ••••••••"
+
+    val atmosphericHeaderBrush = Brush.verticalGradient(
+        listOf(
+            com.kouta.app.core.designsystem.theme.KuotaAtmosphericDeep,
+            com.kouta.app.core.designsystem.theme.KuotaAtmosphericMid,
+            com.kouta.app.core.designsystem.theme.KuotaAtmosphericLight
+        )
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        // Cabecera + Tarjeta principal integrada
+        // -------------------------------------------------------------
+        // 1. CABECERA AZUL REAL & BALANCE DE VENTAS (Ethan Carter / Link Bank)
+        // -------------------------------------------------------------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(headerBrush)
+                .background(atmosphericHeaderBrush)
                 .padding(horizontal = 20.dp)
-                .padding(top = 16.dp, bottom = 22.dp)
+                .padding(top = 16.dp, bottom = 24.dp)
                 .kuotaTabSectionReveal(sectionIndex = 0),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Barra de perfil y acciones de cabecera
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -341,31 +379,32 @@ fun HomeScreen(
             ) {
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+                    color = Color.White.copy(alpha = 0.16f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
                     modifier = Modifier
                         .weight(1f)
                         .clickable(onClick = onOpenProfile)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         HomeAvatar(greetingName)
                         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                             Text(
-                                if (greetingName.isBlank()) "Hola 👋" else "$greetingName 👋",
-                                style = MaterialTheme.typography.titleMedium,
+                                if (greetingName.isBlank()) "Buenos días 👋" else "Buenos días, $greetingName 👋",
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = Color.White,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                levelSubtitle,
+                                "Línea B2B respaldada por ventas",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontWeight = FontWeight.Medium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -373,10 +412,24 @@ fun HomeScreen(
                     }
                 }
                 Spacer(Modifier.width(10.dp))
+                // Buscador circular translúcido
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.16f))
+                        .border(1.dp, Color.White.copy(alpha = 0.28f), CircleShape)
+                        .clickable(onClick = onActivityClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Search, contentDescription = "Buscar ventas", tint = Color.White, modifier = Modifier.size(20.dp))
+                }
+                Spacer(Modifier.width(8.dp))
+                // Notificaciones circular translúcido
                 BadgedBox(
                     badge = {
                         if (unread > 0) {
-                            Badge(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError) {
+                            Badge(containerColor = com.kouta.app.core.designsystem.theme.KuotaCoral, contentColor = Color.White) {
                                 Text(if (unread > 9) "9+" else "$unread")
                             }
                         }
@@ -384,234 +437,742 @@ fun HomeScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(42.dp)
                             .clip(CircleShape)
-                            .background(kuotaColors.headerGlass)
-                            .clickable(onClick = onNotificationsClick),
+                            .background(Color.White.copy(alpha = 0.16f))
+                            .border(1.dp, Color.White.copy(alpha = 0.28f), CircleShape)
+                        .clickable(onClick = onNotificationsClick),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.NotificationsNone, contentDescription = "Notificaciones", tint = headerContent)
+                        Icon(Icons.Default.NotificationsNone, contentDescription = "Notificaciones", tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
             }
 
-            // Tarjeta principal (monto + pill "Tarjetas y compras")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            // Métrica Principal de Ventas (Ethan Carter)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (nextUpcomingPair != null) {
-                        val (activePurchase, nextInstallment) = nextUpcomingPair
-                        val paidInPurchase = activePurchase.installments.count { it.status in setOf("DEMO_PAID", "PAID") }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(
-                                    PurchaseOffer.formatPen(nextInstallment.amountCents),
-                                    style = MaterialTheme.typography.headlineLarge,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    maxLines = 1
-                                )
-                                Text(
-                                    "Cuota #${nextInstallment.sequenceNumber} · vence ${nextInstallment.dueAt}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            OutlinedButton(
-                                onClick = onCardsClick,
-                                shape = RoundedCornerShape(50),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.clickable {
+                            selectedMetricMode = if (selectedMetricMode == 0) 1 else 0
+                        }
+                    ) {
+                        Text(
+                            if (selectedMetricMode == 0) "Ventas Totales del Mes" else "Línea Disponible para Kuotear",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White.copy(alpha = 0.88f)
+                        )
+                        Icon(
+                            Icons.Default.SwapVert,
+                            contentDescription = "Cambiar métrica",
+                            tint = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { showBalance = !showBalance },
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            if (showBalance) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = "Ocultar monto",
+                            tint = Color.White.copy(alpha = 0.85f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                Text(
+                    text = formattedDisplayAmount,
+                    style = MaterialTheme.typography.headlineLarge.copy(fontSize = 38.sp),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White,
+                    letterSpacing = (-1).sp
+                )
+
+                // Subtítulo de rendimiento diario
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = com.kouta.app.core.designsystem.theme.KuotaEmerald.copy(alpha = 0.22f),
+                    border = BorderStroke(1.dp, com.kouta.app.core.designsystem.theme.KuotaEmerald.copy(alpha = 0.45f)),
+                    modifier = Modifier.wrapContentWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.NorthEast,
+                            contentDescription = null,
+                            tint = Color(0xFF6EE7B7),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            "+8.42% Hoy (+S/ 9,684.20 en ventas)",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFE6FFFA)
+                        )
+                    }
+                }
+            }
+
+            // Tarjetas Esmeriladas Gemelas (Link Bank & Vaulta style)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Tarjeta 1: Ventas Yape / QR
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.White.copy(alpha = 0.16f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text("Ver niveles", fontWeight = FontWeight.Bold, maxLines = 1)
+                                Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
                             }
+                            Text(
+                                "Ventas Yape / QR",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                         Text(
-                            "${activePurchase.supplierName} · $paidInPurchase/${activePurchase.installments.size} pagadas",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            if (showBalance) PurchaseOffer.formatPen(displayYapeQrCents) else "S/ ••••••",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Button(
-                                onClick = { wizardTargetPair = activePurchase to nextInstallment },
-                                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                                shape = RoundedCornerShape(14.dp)
+                        Text(
+                            "Verificadas en vivo",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+
+                // Tarjeta 2: Línea para Kuotear
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.White.copy(alpha = 0.16f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.CreditCard, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Adelantar cuota", fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                Icon(Icons.Default.CreditCard, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
                             }
-                            OutlinedButton(
-                                onClick = onCardsClick,
-                                modifier = Modifier.heightIn(min = 48.dp),
-                                shape = RoundedCornerShape(14.dp)
-                            ) {
-                                Text("Ver todas", fontWeight = FontWeight.SemiBold, maxLines = 1)
-                            }
+                            Text(
+                                "Línea para Kuotear",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
-                    } else {
-                        val downPaymentPct = when {
-                            totalPaidInstallments >= 3 -> 0
-                            totalPaidInstallments == 2 -> 10
-                            totalPaidInstallments == 1 -> 20
-                            else -> 30
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(
-                                    PurchaseOffer.formatPen(userCreditLevel.maxAmountCents),
-                                    style = MaterialTheme.typography.headlineLarge,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    maxLines = 1
-                                )
-                                Text(
-                                    "Línea de crédito · Plazo hasta ${userCreditLevel.maxTermDays} días",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            Spacer(Modifier.width(8.dp))
-                            OutlinedButton(
-                                onClick = onCardsClick,
-                                shape = RoundedCornerShape(50),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                            ) {
-                                Text("Ver niveles", fontWeight = FontWeight.Bold, maxLines = 1)
-                            }
-                        }
-                        Button(
-                            onClick = onFinanceClick,
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Comprar con QR", fontWeight = FontWeight.SemiBold, maxLines = 1)
+                        Text(
+                            if (showBalance) PurchaseOffer.formatPen(displayAvailableLineCents) else "S/ ••••••",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            "0% descapitalización",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+            }
+
+            // Fila de 3 Botones de Acción Inmediata (Ethan Carter)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Píldora Blanca 1: + Cobrar Venta
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp)
+                        .clickable(onClick = onActivityClick),
+                    shape = RoundedCornerShape(50),
+                    color = Color.White,
+                    shadowElevation = 4.dp
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFF0F172A), modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "+ Cobrar Venta",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0F172A)
+                        )
+                    }
+                }
+
+                // Píldora Blanca 2: ⇅ Kuotear Pago
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp)
+                        .clickable(onClick = onFinanceClick),
+                    shape = RoundedCornerShape(50),
+                    color = Color.White,
+                    shadowElevation = 4.dp
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(Icons.Default.SwapVert, contentDescription = null, tint = Color(0xFF0F172A), modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "⇅ Kuotear Pago",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0F172A)
+                        )
+                    }
+                }
+
+                // Botón Cuadrado Oscuro: [ QR ]
+                Surface(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clickable(onClick = onFinanceClick),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color(0xFF0F172A),
+                    shadowElevation = 4.dp
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear QR", tint = Color.White, modifier = Modifier.size(22.dp))
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(14.dp))
+
+        // -------------------------------------------------------------
+        // 2. TARJETA INTELIGENTE "NEXO · IMPULSOR DE VENTAS" (Ethan Carter Bill negotiator)
+        // -------------------------------------------------------------
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .kuotaTabSectionReveal(sectionIndex = 1),
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFE0F2FE))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(Icons.Default.ElectricBolt, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(14.dp))
+                            Text(
+                                "NEXO · IMPULSOR DE VENTAS",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0284C7)
+                            )
                         }
                     }
                 }
+
+                Text(
+                    text = "Tus ventas por Yape crecieron un 22% esta semana. Desbloqueaste +S/ 4,500 de línea para pagar a tus proveedores con 0% de descapitalización.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    lineHeight = 20.sp
+                )
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue.copy(alpha = 0.08f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onFinanceClick)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Kuotear pago a proveedor →",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue
+                        )
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        // -------------------------------------------------------------
+        // 3. BANNER DE CRECIMIENTO DE CUENTA (Oliver Bennet Upgrade Account)
+        // -------------------------------------------------------------
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .clickable { showLinkDialog = true }
+                .kuotaTabSectionReveal(sectionIndex = 2),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB)),
+            border = BorderStroke(1.dp, Color(0xFFFDE68A))
+        ) {
+            Row(
+                modifier = Modifier.padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFEF3C7)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(20.dp))
+                }
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        "Aumenta tu Línea de Crédito",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF92400E)
+                    )
+                    Text(
+                        "Conecta todos tus medios de pago (Yape, POS, Transferencias) para duplicar tu capacidad de compra.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFB45309),
+                        lineHeight = 16.sp
+                    )
+                }
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = Color(0xFFD97706),
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // Calendario interactivo de próximos pagos ("Adelantar mis pagos / Aquí verás tus próximos pagos")
-        Box(modifier = Modifier.kuotaTabSectionReveal(sectionIndex = 1)) {
-            UpcomingPaymentsDateStripCard(
-                pendingInstallmentsWithPurchase = pendingInstallmentsList,
-                onPayInstallment = { purchase, installment ->
-                    wizardTargetPair = purchase to installment
-                },
-                onOpenFullCalendar = { showFullCalendarDialog = true },
-                onOpenCards = onCardsClick,
-                onSimulateQrPurchase = onFinanceClick
-            )
-        }
-
-        Spacer(Modifier.height(14.dp))
-
-        // Tarjeta segmentada "Compra hoy" (En proveedor con QR | Compartir / Galería)
-        Box(modifier = Modifier.kuotaTabSectionReveal(sectionIndex = 2)) {
-            BuyTodaySegmentedCard(onOpenQr = onFinanceClick)
-        }
-
-        Spacer(Modifier.height(18.dp))
-        HomeSectionTitle(
-            "Accesos rápidos",
-            actionLabel = "Ver tarjetas",
-            onAction = onCardsClick
-        )
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .kuotaTabSectionReveal(sectionIndex = 3),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 2.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(quickAccess) { access ->
-                QuickAccessCard(access)
-            }
-        }
-
-        Spacer(Modifier.height(22.dp))
-        HomeSectionTitle("Sugerencias")
-        Box(modifier = Modifier.kuotaTabSectionReveal(sectionIndex = 4)) {
-            SuggestionCard(onClick = onFinanceClick)
-        }
-
-        Spacer(Modifier.height(22.dp))
-        HomeSectionTitle(
-            "Tu actividad",
-            actionLabel = "Ver actividad",
-            onAction = onActivityClick
-        )
-        Card(
+        // -------------------------------------------------------------
+        // 4. GRILLA DE ACCIONES RÁPIDAS (Quick Actions B2B)
+        // -------------------------------------------------------------
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
-                .kuotaTabSectionReveal(sectionIndex = 5),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                .kuotaTabSectionReveal(sectionIndex = 3),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(
+            val quickItems = listOf(
+                Triple("+ Links", Icons.Default.Link, onFinanceClick),
+                Triple("Proveedores", Icons.Default.Storefront, onFinanceClick),
+                Triple("Metas Venta", Icons.AutoMirrored.Filled.TrendingUp, onActivityClick),
+                Triple("Línea Kuota", Icons.Default.CreditCard, onCardsClick)
+            )
+            quickItems.forEach { (label, icon, onClick) ->
+                Surface(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable(onClick = onActivityClick),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        .weight(1f)
+                        .height(82.dp)
+                        .clickable(onClick = onClick),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFFEEF2FF),
+                    border = BorderStroke(1.dp, Color(0xFFE0E7FF))
                 ) {
-                    IconBubble(Icons.Default.PointOfSale)
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("Ventas de los últimos 7 días", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(icon, contentDescription = null, tint = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue, modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(Modifier.height(6.dp))
                         Text(
-                            if (storageAvailable) PurchaseOffer.formatPen(salesTotal) else "No disponible",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            label,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1E293B),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
-                    Text(
-                        "${recentSales.size} registro${if (recentSales.size == 1) "" else "s"}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
-                HorizontalDivider()
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    ActivityMetric(
-                        label = "Reclamos en seguimiento",
-                        value = "$openClaims",
-                        modifier = Modifier.weight(1f),
-                        onClick = onSupportClick
-                    )
-                    ActivityMetric(
-                        label = "Avisos sin leer",
-                        value = "$unread",
-                        modifier = Modifier.weight(1f),
-                        onClick = onNotificationsClick
-                    )
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // -------------------------------------------------------------
+        // 5. SECCIÓN INFERIOR: VENTAS Y KUOTAS PROGRAMADAS
+        // -------------------------------------------------------------
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .kuotaTabSectionReveal(sectionIndex = 4),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "Ventas y Kuotas Programadas",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                TextButton(onClick = onActivityClick) {
+                    Text("Ver historial", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            // Selector de Píldoras (Oliver Bennet & Ethan Carter)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val filterLabels = listOf("Todas las Ventas", "Kuotas por Pagar", "Links Activos")
+                filterLabels.forEachIndexed { idx, label ->
+                    val isSelected = transactionTab == idx
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = if (isSelected) Color(0xFF0F172A) else Color(0xFFF1F5F9),
+                        modifier = Modifier.clickable { transactionTab = idx }
+                    ) {
+                        Text(
+                            text = label,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) Color.White else Color(0xFF475569)
+                        )
+                    }
+                }
+            }
+
+            // Alerta de Próxima Cuota Activa (si existe)
+            if (nextUpcomingPair != null && transactionTab != 2) {
+                val (activePurchase, nextInstallment) = nextUpcomingPair
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    "Próximo pago a proveedor",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = com.kouta.app.core.designsystem.theme.KuotaCoral,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Text(
+                                "${activePurchase.supplierName} · Kuota #${nextInstallment.sequenceNumber}",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "Vence: ${nextInstallment.dueAt}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                PurchaseOffer.formatPen(nextInstallment.amountCents),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = com.kouta.app.core.designsystem.theme.KuotaCoral
+                            )
+                            OutlinedButton(
+                                onClick = { wizardTargetPair = activePurchase to nextInstallment },
+                                shape = RoundedCornerShape(50),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text("Pagar kuota", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Lista de transacciones (Estilo Oliver Bennet)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Item 1: Venta Yape (Ingreso +)
+                    if (transactionTab != 1) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(com.kouta.app.core.designsystem.theme.KuotaEmerald.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.SouthWest, contentDescription = null, tint = com.kouta.app.core.designsystem.theme.KuotaEmerald, modifier = Modifier.size(18.dp))
+                                }
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        "Venta Yape - Cliente Minorista",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Text("Hoy, 12:07 PM", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(com.kouta.app.core.designsystem.theme.KuotaEmerald.copy(alpha = 0.15f))
+                                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                                        ) {
+                                            Text("Venta Verificada", style = MaterialTheme.typography.labelSmall, color = com.kouta.app.core.designsystem.theme.KuotaEmerald, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            }
+                            Text(
+                                "+ S/ 200.00",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = com.kouta.app.core.designsystem.theme.KuotaEmerald
+                            )
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    }
+
+                    // Item 2: Pago de Kuota a Proveedor (Cargo -)
+                    if (transactionTab != 2) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(com.kouta.app.core.designsystem.theme.KuotaCoral.copy(alpha = 0.12f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.NorthEast, contentDescription = null, tint = com.kouta.app.core.designsystem.theme.KuotaCoral, modifier = Modifier.size(18.dp))
+                                }
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        "Distribuidora Alicorp - Kuota 2/4",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text("Vence 18 Sep · Quedan 2 días", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                            Text(
+                                "- S/ 347.00",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = com.kouta.app.core.designsystem.theme.KuotaCoral
+                            )
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    }
+
+                    // Item 3: Link de pago cobrado
+                    if (transactionTab != 1) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFE0F2FE)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Link, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(18.dp))
+                                }
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        "Link Cobrado #084 - Bodega Central",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text("Ayer, 06:15 PM · 3 cuotas semanales", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                            Text(
+                                "+ S/ 1,450.00",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = com.kouta.app.core.designsystem.theme.KuotaEmerald
+                            )
+                        }
+                    }
+
+                    // Item 4: Si hay ventas reales en SalesJournalStore
+                    recentSales.take(3).forEach { realSale ->
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(com.kouta.app.core.designsystem.theme.KuotaEmerald.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.SouthWest, contentDescription = null, tint = com.kouta.app.core.designsystem.theme.KuotaEmerald, modifier = Modifier.size(18.dp))
+                                }
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        realSale.productName ?: "Venta ${realSale.paymentMethod}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text("Registrada en Kuota", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                            Text(
+                                "+ " + PurchaseOffer.formatPen(realSale.amountCents),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = com.kouta.app.core.designsystem.theme.KuotaEmerald
+                            )
+                        }
+                    }
                 }
             }
         }

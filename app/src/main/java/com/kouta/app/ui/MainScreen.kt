@@ -30,8 +30,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PendingActions
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Badge
@@ -128,10 +130,10 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
     } else {
         setOf(
             NavDestination.Home.route,
-            NavDestination.Marketplace.route,
-            NavDestination.Trade.route,
-            NavDestination.Finance.route,
-            NavDestination.Installments.route
+            NavDestination.Sales.route,
+            NavDestination.Kuotear.route,
+            NavDestination.CreditLine.route,
+            NavDestination.Account.route
         )
     }
     val showBottomNavigation = currentRoute in topLevelRoutes && !isSecurityBarrierActive
@@ -160,10 +162,10 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
                         VendedorBottomBar(
                             currentRoute = currentRoute,
                             onHome = { navigate(NavDestination.Home.route) },
-                            onMarketplace = { navigate(NavDestination.Marketplace.route) },
-                            onTrade = { navigate(NavDestination.Trade.route) },
-                            onFinance = { navigate(NavDestination.Finance.route) },
-                            onInstallments = { navigate(NavDestination.Installments.route) }
+                            onSales = { navigate(NavDestination.Sales.route) },
+                            onKuotear = { navigate(NavDestination.Kuotear.route) },
+                            onCreditLine = { navigate(NavDestination.CreditLine.route) },
+                            onAccount = { navigate(NavDestination.Account.route) }
                         )
                     }
                 }
@@ -205,10 +207,10 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
 private fun VendedorBottomBar(
     currentRoute: String?,
     onHome: () -> Unit,
-    onMarketplace: () -> Unit,
-    onTrade: () -> Unit,
-    onFinance: () -> Unit,
-    onInstallments: () -> Unit
+    onSales: () -> Unit,
+    onKuotear: () -> Unit,
+    onCreditLine: () -> Unit,
+    onAccount: () -> Unit
 ) {
     val barShape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
     Box(
@@ -233,30 +235,30 @@ private fun VendedorBottomBar(
                 modifier = Modifier.weight(1f)
             )
             BottomBarItem(
-                label = "Marketplace",
-                icon = Icons.Default.Storefront,
-                selected = currentRoute == NavDestination.Marketplace.route,
-                onClick = onMarketplace,
+                label = "Ventas",
+                icon = Icons.AutoMirrored.Filled.ReceiptLong,
+                selected = currentRoute == NavDestination.Sales.route,
+                onClick = onSales,
                 modifier = Modifier.weight(1f)
             )
             CenterActionButton(
-                label = "Comprar\ny vender",
-                selected = currentRoute == NavDestination.Trade.route,
-                onClick = onTrade,
+                label = "Kuotear",
+                selected = currentRoute == NavDestination.Kuotear.route,
+                onClick = onKuotear,
                 modifier = Modifier.weight(1.25f)
             )
             BottomBarItem(
-                label = "Finanzas",
-                icon = Icons.AutoMirrored.Filled.ReceiptLong,
-                selected = currentRoute == NavDestination.Finance.route,
-                onClick = onFinance,
+                label = "Línea",
+                icon = Icons.Default.CreditCard,
+                selected = currentRoute == NavDestination.CreditLine.route,
+                onClick = onCreditLine,
                 modifier = Modifier.weight(1f)
             )
             BottomBarItem(
-                label = "Mis cuotas",
-                icon = Icons.Default.CalendarMonth,
-                selected = currentRoute == NavDestination.Installments.route,
-                onClick = onInstallments,
+                label = "Cuenta",
+                icon = Icons.Default.Person,
+                selected = currentRoute == NavDestination.Account.route,
+                onClick = onAccount,
                 modifier = Modifier.weight(1f)
             )
         }
