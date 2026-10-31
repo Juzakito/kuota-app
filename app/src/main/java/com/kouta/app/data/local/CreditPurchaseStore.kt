@@ -260,6 +260,48 @@ class CreditPurchaseStore(private val context: Context) {
         }
     }
 
+        /**
+     * Adelanta y liquida todas las cuotas restantes de una compra (PRD LIN-05).
+     * Libera de inmediato el 100% de la línea de crédito disponible con 0% de penalidad.
+     */
+    suspend fun payAllRemainingInstallments(purchaseId: String): CreditPurchase? = withContext(Dispatchers.IO) {
+        synchronized(lock) {
+            val list = readInternal().toMutableList()
+            val index = list.indexOfFirst { it.id == purchaseId }
+            if (index == -1) return@withContext null
+
+            val p = list[index]
+            val now = System.currentTimeMillis()
+            val updatedInstallments = p.installments.map { inst ->
+                if (!inst.isPaid) inst.copy(isPaid = true, paidAtEpochMillis = now) else inst
+            }
+
+            val updated = p.copy(
+                installments = updatedInstallments,
+                phase = PurchasePhase.COMPLETED,
+                completedAtEpochMillis = now
+            )
+            list[index] = updated
+            writeInternal(list)
+
+            val level = CreditLevel.fromNumber(appSettings.creditLevelNumber)
+            appSettings.availableCreditLineCents = level.maxLineCents
+            journalStore.updateAvailableLine(level.maxLineCents)
+
+            journalStore.addNotification(
+                LocalNotificationItem(
+                    id = UUID.randomUUID().toString(),
+                    type = "PURCHASE",
+                    title = "¡Pago total adelantado!",
+                    body = "Liquidaste todas las cuotas de tu compra en ${p.supplierName} por adelantado. Tu línea de crédito se ha restaurado al 100% (${PurchaseOffer.formatPen(level.maxLineCents)}).",
+                    receivedAtEpochMillis = now
+                )
+            )
+
+            updated
+        }
+    }
+
     suspend fun cancelPurchase(purchaseId: String): Boolean = withContext(Dispatchers.IO) {
         synchronized(lock) {
             val list = readInternal().toMutableList()

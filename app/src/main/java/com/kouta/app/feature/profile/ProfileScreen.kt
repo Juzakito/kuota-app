@@ -52,6 +52,7 @@ import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -160,6 +161,12 @@ fun ProfileScreen(
     var showLinkDialog by remember { mutableStateOf(false) }
     var showKycDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var showPermissionsDialog by remember { mutableStateOf(false) }
+    var showClearLocalDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var notifPermEnabled by remember { mutableStateOf(true) }
+    var cameraPermEnabled by remember { mutableStateOf(true) }
+    var locationPermEnabled by remember { mutableStateOf(true) }
 
     var feedback by remember { mutableStateOf<String?>(null) }
     var isError by remember { mutableStateOf(false) }
@@ -385,30 +392,6 @@ fun ProfileScreen(
             SectionTitle("Mi negocio")
             GroupCard {
                 MenuRow(
-                    title = "Modo de operación",
-                    subtitle = if (existingProfile?.role == com.kouta.app.domain.model.UserRole.PROVEEDOR.name)
-                        "Proveedor (Cobros QR, liquidaciones 48h)"
-                    else
-                        "Vendedor (Compras a crédito, cuotas, link)",
-                    icon = Icons.Default.SwapHoriz,
-                    onClick = {
-                        scope.launch {
-                            val nextRole = if (existingProfile?.role == com.kouta.app.domain.model.UserRole.PROVEEDOR.name)
-                                com.kouta.app.domain.model.UserRole.VENDEDOR
-                            else
-                                com.kouta.app.domain.model.UserRole.PROVEEDOR
-                            val updated = existingProfile?.copy(role = nextRole.name) ?: com.kouta.app.data.local.LocalBusinessProfile(email = "", phone = "", ruc = "", role = nextRole.name)
-                            store.saveBusinessProfile(updated)
-                            appSettings.userRole = nextRole
-                            existingProfile = updated
-                            KuotaEvents.bump()
-                            Toast.makeText(context, "Modo cambiado a: ${if (nextRole == com.kouta.app.domain.model.UserRole.PROVEEDOR) "Proveedor" else "Vendedor"}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                )
-            }
-            GroupCard {
-                MenuRow(
                     title = "Datos del negocio",
                     subtitle = if (ruc.isNotBlank()) "RUC $ruc" else "Nombre, correo, celular y RUC",
                     icon = Icons.Default.Storefront,
@@ -553,6 +536,13 @@ fun ProfileScreen(
                     showDivider = true,
                     onClick = { showSecurityDialog = true }
                 )
+                MenuRow(
+                    title = "Permisos y privacidad",
+                    subtitle = "Ley N° 29733 · Notificaciones, cámara y ubicación",
+                    icon = Icons.Default.Gavel,
+                    showDivider = true,
+                    onClick = { showPermissionsDialog = true }
+                )
             }
         }
 
@@ -565,10 +555,9 @@ fun ProfileScreen(
             SectionTitle("Pagos y avisos")
             GroupCard {
                 MenuRow(
-                    title = "Tarjetas y cuotas",
-                    subtitle = "Preferencia: $preferredPaymentMethod",
+                    title = "Métodos de cobro y pago",
+                    subtitle = "Yape, Plin y transferencia bancaria",
                     icon = Icons.Default.CreditCard,
-                    badge = "4",
                     onClick = onOpenCards
                 )
                 MenuRow(
@@ -666,14 +655,23 @@ fun ProfileScreen(
             }
         }
 
-        Spacer(Modifier.height(110.dp))
+        Spacer(Modifier.height(16.dp))
+        OutlinedButton(
+            onClick = { showClearLocalDialog = true },
+            enabled = !isSaving,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text("Borrar datos de este teléfono", color = MaterialTheme.colorScheme.error)
+        }
         TextButton(
-            onClick = { showDeleteConfirmation = true },
+            onClick = { showDeleteAccountDialog = true },
             enabled = !isSaving,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Eliminar perfil local y reiniciar la app", color = MaterialTheme.colorScheme.error)
+            Text("Eliminar mi cuenta Kuota definitivamente", color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f))
         }
+        Spacer(Modifier.height(110.dp))
         Text(
             "Kuota Perú v${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE}) · targetSdk 36",
             style = MaterialTheme.typography.bodySmall,
@@ -939,6 +937,123 @@ fun ProfileScreen(
             confirmButton = {
                 TextButton(onClick = ::deleteProfile, enabled = !isSaving) {
                     Text(if (isSaving) "Eliminando…" else "Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        )
+    }
+
+    // Diálogo de Permisos Granulares (Ley 29733 - ACC-07)
+    if (showPermissionsDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermissionsDialog = false },
+            title = { Text("Permisos y Privacidad (Ley N° 29733)") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Text(
+                        "Tus datos comerciales están protegidos bajo la Ley de Protección de Datos Personales N° 29733. Controla aquí los accesos del dispositivo:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    HorizontalDivider()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Avisos y recordatorios", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                            Text("Recordatorios de cuotas 3 días antes y confirmaciones de pago.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(checked = notifPermEnabled, onCheckedChange = { notifPermEnabled = it })
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Cámara y escáner", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                            Text("Lectura de códigos QR de comercios y captura de vouchers.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(checked = cameraPermEnabled, onCheckedChange = { cameraPermEnabled = it })
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Geolocalización comercial", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                            Text("Confirmación de entrega en tienda de proveedores.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(checked = locationPermEnabled, onCheckedChange = { locationPermEnabled = it })
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showPermissionsDialog = false }) {
+                    Text("Guardar preferencias")
+                }
+            }
+        )
+    }
+
+    // Diálogo 1: Borrar datos de este teléfono (ACC-08)
+    if (showClearLocalDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearLocalDialog = false },
+            title = { Text("¿Borrar datos de este teléfono?") },
+            text = {
+                Text(
+                    "Esta acción cerrará la sesión y borrará el historial en caché local de este dispositivo. Si vinculaste tu cuenta con OTP, tu historial y línea de crédito siguen respaldados de forma segura en la nube.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showClearLocalDialog = false
+                        deleteProfile()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Sí, borrar datos locales")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearLocalDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    // Diálogo 2: Eliminar cuenta Kuota (ACC-08)
+    if (showDeleteAccountDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountDialog = false },
+            title = { Text("¿Eliminar mi cuenta Kuota definitivamente?") },
+            text = {
+                Text(
+                    "ADVERTENCIA: Esta acción es irreversible. Se revocarán todas tus líneas de crédito activas, historial de compras, y se eliminarán tus registros de la plataforma conforme a la Ley N° 29733.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteAccountDialog = false
+                        deleteProfile()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar cuenta definitiva")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAccountDialog = false }) {
+                    Text("Cancelar")
                 }
             }
         )
