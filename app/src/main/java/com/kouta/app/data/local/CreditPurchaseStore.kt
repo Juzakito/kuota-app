@@ -69,7 +69,7 @@ class CreditPurchaseStore(private val context: Context) {
 
             val downPaymentCents = (totalAmountCents * downPaymentPercent) / 100
             val financedCents = totalAmountCents - downPaymentCents
-            val kuotaFeeCents = (totalAmountCents * 2) / 100
+            val kuotaFeeCents = (totalAmountCents * 5) / 100 // Comisión plana Kuota 5%
             val supplierPayout48hCents = ((totalAmountCents * 98) / 100) - downPaymentCents
 
             val newPurchase = CreditPurchase(
@@ -157,14 +157,15 @@ class CreditPurchaseStore(private val context: Context) {
 
             val p = list[index]
             val count = installmentCount.coerceAtLeast(1)
-            val baseAmount = p.financedAmountCents / count
-            val remainder = p.financedAmountCents % count
+            val totalRepaymentCents = p.financedAmountCents + p.kuotaFeeCents
+            val baseAmount = totalRepaymentCents / count
+            val remainder = totalRepaymentCents % count
             val now = System.currentTimeMillis()
-            val intervalMillis = (termDays.toLong() * 24L * 60L * 60L * 1000L) / count
+            val oneWeekMillis = 7L * 24L * 60L * 60L * 1000L
 
             val installments = (1..count).map { num ->
-                val amount = if (num == 1) baseAmount + remainder else baseAmount
-                val due = now + (num * intervalMillis)
+                val amount = if (num == count) baseAmount + remainder else baseAmount
+                val due = now + (num * oneWeekMillis)
                 CreditInstallment(
                     number = num,
                     amountCents = amount,

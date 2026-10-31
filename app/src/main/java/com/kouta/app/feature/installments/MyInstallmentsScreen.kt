@@ -163,7 +163,7 @@ fun MyInstallmentsScreen(
                     color = Color.White
                 )
                 Text(
-                    text = "Underwriting dinámico respaldado por tus ventas reales",
+                    text = "Tu línea sube con tus ventas verificadas",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.85f)
                 )
@@ -216,14 +216,22 @@ fun MyInstallmentsScreen(
                         )
                     }
 
-                    // Número de tarjeta
-                    Text(
-                        text = "••••  ••••  ••••  9000",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        letterSpacing = 2.sp
-                    )
+                    // Nivel y cupo de financiamiento
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = "NIVEL ${currentLevel.levelNumber} · ${currentLevel.tierName.uppercase()}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF5EE0E8),
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "Puedes financiar hasta ${PurchaseOffer.formatPen(currentLevel.maxLineCents)}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                    }
 
                     // Pie de tarjeta con titular, vencimiento y respaldo
                     Row(
@@ -306,13 +314,13 @@ fun MyInstallmentsScreen(
                     onClick = onOpenTrade
                 )
 
-                // Botón 2: ⬆️ Subir Línea
+                // Botón 2: ⬆️ Subir de nivel
                 VaultaCircularButton(
                     label = "Subir",
-                    sublabel = "Línea",
+                    sublabel = "De nivel",
                     icon = Icons.Default.ArrowUpward,
                     onClick = {
-                        Toast.makeText(context, "Sube de nivel registrando más ventas comprobadas (Nivel actual: ${currentLevel.levelNumber})", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Sube de nivel registrando más ventas comprobadas (Nivel actual: ${currentLevel.tierName})", Toast.LENGTH_LONG).show()
                     }
                 )
 
@@ -511,7 +519,7 @@ fun MyInstallmentsScreen(
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            "Card Statement",
+                            "Estado de cuenta",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -598,7 +606,7 @@ fun MyInstallmentsScreen(
             )
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(110.dp))
     }
 }
 

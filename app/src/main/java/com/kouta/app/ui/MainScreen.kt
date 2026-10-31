@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,20 +29,27 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.PendingActions
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -78,6 +86,7 @@ import com.kouta.app.data.local.LocalBusinessProfile
 import com.kouta.app.data.local.SalesJournalStore
 import com.kouta.app.domain.model.PurchasePhase
 import com.kouta.app.domain.model.UserRole
+import com.kouta.app.feature.financing.TradeScreenNavState
 import com.kouta.app.feature.security.PinLockBarrierScreen
 import com.kouta.app.feature.security.PinSetupBarrierScreen
 import com.kouta.app.navigation.KoutaNavHost
@@ -86,6 +95,7 @@ import com.kouta.app.navigation.navigateToTopLevel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
     val context = LocalContext.current
@@ -99,6 +109,7 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
 
     var currentProfile by remember { mutableStateOf<LocalBusinessProfile?>(null) }
     var pendingBadgeCount by remember { mutableIntStateOf(0) }
+    var showKuotearActionSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(store, revision, currentRoute) {
         currentProfile = withContext(Dispatchers.IO) {
@@ -163,7 +174,7 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
                             currentRoute = currentRoute,
                             onHome = { navigate(NavDestination.Home.route) },
                             onSales = { navigate(NavDestination.Sales.route) },
-                            onKuotear = { navigate(NavDestination.Kuotear.route) },
+                            onKuotear = { showKuotearActionSheet = true },
                             onCreditLine = { navigate(NavDestination.CreditLine.route) },
                             onAccount = { navigate(NavDestination.Account.route) }
                         )
@@ -177,6 +188,108 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
                 deepLink = if (isSecurityBarrierActive) null else deepLink,
                 onDeepLinkHandled = onDeepLinkHandled
             )
+        }
+
+        if (showKuotearActionSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showKuotearActionSheet = false },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                dragHandle = {
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 12.dp)
+                            .width(42.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
+                    )
+                }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 22.dp)
+                        .padding(bottom = 36.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.QrCodeScanner,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = "Kuotear",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Haz que tus ventas financien tus compras y crecimiento",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    // Opción 1: Comprar a crédito
+                    KuotearSheetActionCard(
+                        title = "Comprar a crédito",
+                        subtitle = "Escanea el QR de tu proveedor y paga en cuotas semanales",
+                        badge = "Hasta tu línea disponible",
+                        badgeColor = Color(0xFF10B981),
+                        icon = Icons.Default.Storefront,
+                        onClick = {
+                            showKuotearActionSheet = false
+                            TradeScreenNavState.openBuy()
+                            navigate(NavDestination.Kuotear.route)
+                        }
+                    )
+
+                    // Opción 2: Cobrar con link o QR
+                    KuotearSheetActionCard(
+                        title = "Cobrar con link o QR",
+                        subtitle = "Cobra a tus clientes por Yape, Plin o tarjeta en minutos",
+                        badge = "Comisión 1%",
+                        badgeColor = Color(0xFF2457F0),
+                        icon = Icons.Default.Link,
+                        onClick = {
+                            showKuotearActionSheet = false
+                            TradeScreenNavState.openLink()
+                            navigate(NavDestination.Kuotear.route)
+                        }
+                    )
+
+                    // Opción 3: Registrar venta
+                    KuotearSheetActionCard(
+                        title = "Registrar venta",
+                        subtitle = "Anota ventas en efectivo o POS para aumentar tu nivel de crédito",
+                        badge = "Sube tu línea",
+                        badgeColor = Color(0xFFF5A524),
+                        icon = Icons.AutoMirrored.Filled.ReceiptLong,
+                        onClick = {
+                            showKuotearActionSheet = false
+                            navigate(NavDestination.Sales.route)
+                        }
+                    )
+                }
+            }
         }
 
         if (requiresPinSetup) {
@@ -528,3 +641,88 @@ private fun CenterActionButton(
         )
     }
 }
+
+@Composable
+private fun KuotearSheetActionCard(
+    title: String,
+    subtitle: String,
+    badge: String,
+    badgeColor: Color,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(CircleShape)
+                    .background(badgeColor.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = badgeColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = badgeColor.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            badge,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = badgeColor,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp
+                )
+            }
+
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+

@@ -401,7 +401,7 @@ fun HomeScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                "Línea B2B respaldada por ventas",
+                                "Tu línea sube con tus ventas verificadas",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White.copy(alpha = 0.85f),
                                 fontWeight = FontWeight.Medium,
@@ -614,7 +614,7 @@ fun HomeScreen(
                             color = Color.White
                         )
                         Text(
-                            "0% descapitalización",
+                            "Paga a proveedores sin gastar tu caja",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.7f),
                             fontSize = 10.sp
@@ -728,7 +728,7 @@ fun HomeScreen(
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Icon(Icons.Default.ElectricBolt, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(14.dp))
                             Text(
-                                "NEXO · IMPULSOR DE VENTAS",
+                                "CONSEJO DE KUOTA",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF0284C7)
@@ -738,7 +738,7 @@ fun HomeScreen(
                 }
 
                 Text(
-                    text = "Tus ventas por Yape crecieron un 22% esta semana. Desbloqueaste +S/ 4,500 de línea para pagar a tus proveedores con 0% de descapitalización.",
+                    text = "Tus ventas por Yape subieron 22 % esta semana. Si lo mantienes 2 semanas más, subes a Nivel 2.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     lineHeight = 20.sp
@@ -1251,7 +1251,7 @@ fun HomeScreen(
             textAlign = TextAlign.Center
         )
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(110.dp))
     }
 
     if (showLinkDialog) {

@@ -68,6 +68,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -103,10 +104,12 @@ import com.kouta.app.domain.model.MarketplaceSupplier
 import com.kouta.app.domain.model.MerchantProduct
 import com.kouta.app.domain.model.PaymentLink
 import com.kouta.app.domain.model.PaymentLinkStatus
+import com.kouta.app.domain.model.PurchaseEligibilityCheck
 import com.kouta.app.domain.model.PurchaseOffer
 import com.kouta.app.domain.model.PurchasePhase
 import com.kouta.app.domain.model.SeedSuppliers
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
@@ -131,12 +134,31 @@ fun TradeScreen(
     val clipboardManager = LocalClipboardManager.current
     val kuotaColors = MaterialTheme.kuotaColors
 
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(TradeScreenNavState.selectedTab) }
+    LaunchedEffect(TradeScreenNavState.selectedTab) {
+        selectedTab = TradeScreenNavState.selectedTab
+    }
     var activePurchase by remember { mutableStateOf<CreditPurchase?>(null) }
     var userCreditLevel by remember { mutableStateOf<CreditLevel>(CreditLevel.INITIAL_LEVEL) }
     var buyerName by remember { mutableStateOf("") }
     var buyerPhone by remember { mutableStateOf("") }
     var buyerId by remember { mutableStateOf("") }
+
+    // Cuenta regresiva de 10 min y términos para compra Cashea B2B
+    var countdownSeconds by remember { mutableIntStateOf(600) }
+    var termsAccepted by remember { mutableStateOf(false) }
+    var selectedCategory by remember { mutableStateOf("Todos") }
+    val supplierCategories = listOf("Todos", "Textil", "Tecnología", "Calzado", "Belleza", "Empaques")
+
+    LaunchedEffect(activePurchase?.phase) {
+        if (activePurchase?.phase == PurchasePhase.PHASE_1_DOWN_PAYMENT_PENDING) {
+            countdownSeconds = 600
+            while (countdownSeconds > 0) {
+                delay(1000)
+                countdownSeconds--
+            }
+        }
+    }
 
     // Phase 0: New Purchase Form
     var selectedSupplier by remember { mutableStateOf<MarketplaceSupplier>(initialSupplier ?: SeedSuppliers.items.first()) }
@@ -145,7 +167,7 @@ fun TradeScreen(
     var purchaseFormError by remember { mutableStateOf<String?>(null) }
 
     // Phase 2: Term and Installment configuration
-    var selectedTermDays by remember { mutableIntStateOf(7) }
+    var selectedTermDays by remember { mutableIntStateOf(21) }
     var selectedInstallmentCount by remember { mutableIntStateOf(3) }
     var showPhase2SuccessDialog by remember { mutableStateOf(false) }
 
@@ -237,10 +259,13 @@ fun TradeScreen(
         ) {
             Tab(
                 selected = selectedTab == 0,
-                onClick = { selectedTab = 0 },
+                onClick = {
+                    selectedTab = 0
+                    TradeScreenNavState.selectedTab = 0
+                },
                 text = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Storefront, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("Comprar al crédito")
                     }
@@ -248,7 +273,10 @@ fun TradeScreen(
             )
             Tab(
                 selected = selectedTab == 1,
-                onClick = { selectedTab = 1 },
+                onClick = {
+                    selectedTab = 1
+                    TradeScreenNavState.selectedTab = 1
+                },
                 text = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -279,18 +307,40 @@ fun TradeScreen(
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                             ) {
                                 Column(modifier = Modifier.padding(20.dp)) {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(Color(0xFFFFB300).copy(alpha = 0.15f))
-                                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(
-                                            "FASE 1: PAGO DE CUOTA INICIAL",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFFFFB300)
-                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color(0xFFFFB300).copy(alpha = 0.15f))
+                                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                "PASO 1 DE 3: PAGO DE INICIAL",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFFFFB300)
+                                            )
+                                        }
+
+                                        val minLeft = countdownSeconds / 60
+                                        val secLeft = countdownSeconds % 60
+                                        val timerDisplay = "⏱ ${minLeft.toString().padStart(2, '0')}:${secLeft.toString().padStart(2, '0')}"
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+                                        ) {
+                                            Text(
+                                                text = timerDisplay,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                        }
                                     }
 
                                     Spacer(modifier = Modifier.height(12.dp))
@@ -301,7 +351,7 @@ fun TradeScreen(
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        "Transfiere la cuota inicial directamente al proveedor. Kuota pagará el saldo restante en 48 horas.",
+                                        "Transfiere la cuota inicial directamente al proveedor vía Yape, Plin o transferencia. Kuota liquidará el saldo al comercio.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -315,7 +365,21 @@ fun TradeScreen(
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                         Text("Datos de pago:")
-                                        Text(p.supplierPaymentDetails, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary)
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(p.supplierPaymentDetails, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary)
+                                            Spacer(Modifier.width(6.dp))
+                                            Icon(
+                                                Icons.Default.ContentCopy,
+                                                contentDescription = "Copiar datos",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier
+                                                    .size(16.dp)
+                                                    .clickable {
+                                                        clipboardManager.setText(AnnotatedString(p.supplierPaymentDetails))
+                                                        Toast.makeText(context, "Datos de pago copiados", Toast.LENGTH_SHORT).show()
+                                                    }
+                                            )
+                                        }
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -326,6 +390,16 @@ fun TradeScreen(
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                         Text("Cuota Inicial a pagar (${p.downPaymentPercent}%):", fontWeight = FontWeight.Bold)
                                         Text(PurchaseOffer.formatPen(p.downPaymentCents), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Saldo financiado por Kuota:")
+                                        Text(PurchaseOffer.formatPen(p.financedAmountCents), fontWeight = FontWeight.SemiBold, color = kuotaColors.accentTeal)
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Comisión plana Kuota (5%):")
+                                        Text(PurchaseOffer.formatPen(p.kuotaFeeCents), fontWeight = FontWeight.SemiBold)
                                     }
 
                                     Spacer(modifier = Modifier.height(18.dp))
@@ -476,7 +550,7 @@ fun TradeScreen(
                                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                                         ) {
                                             Text(
-                                                "FASE 2: CRONOGRAMA DE CUOTAS",
+                                                "PASO 2 DE 3: CRONOGRAMA DE CUOTAS",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = kuotaColors.accentTeal
@@ -494,13 +568,13 @@ fun TradeScreen(
                                     Spacer(modifier = Modifier.height(12.dp))
 
                                     Text(
-                                        "Configura tu Plan de Pagos",
+                                        "Configura tu Plan de Cuotas Semanales",
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        "El proveedor ${p.supplierName} confirmó tu cuota inicial de ${PurchaseOffer.formatPen(p.downPaymentCents)}. Kuota financia el saldo restante a 0% comisiones.",
+                                        "El proveedor ${p.supplierName} confirmó tu inicial de ${PurchaseOffer.formatPen(p.downPaymentCents)}. Kuota financia el saldo restante a 0% intereses.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -551,19 +625,19 @@ fun TradeScreen(
 
                                     HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-                                    // Step 1: Plazo total selector (strictly from availableTermsDays)
+                                    // Step 1: Plazo en cuotas semanales
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            "1. Elige el plazo total:",
+                                            "Elige el número de cuotas semanales:",
                                             style = MaterialTheme.typography.labelMedium,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            "Nivel ${userCreditLevel.levelNumber} (${userCreditLevel.title})",
+                                            userCreditLevel.title,
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.SemiBold
@@ -572,39 +646,15 @@ fun TradeScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        availableTerms.forEach { days ->
-                                            FilterChip(
-                                                selected = selectedTermDays == days,
-                                                onClick = { selectedTermDays = days },
-                                                label = { Text("$days días") },
-                                                colors = FilterChipDefaults.filterChipColors(
-                                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                                                )
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    // Step 2: Número de cuotas (1, 2, 3, 4)
-                                    Text(
-                                        "2. Elige en cuántas cuotas pagar el saldo:",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        installmentOptions.forEach { optCount ->
+                                        userCreditLevel.availableInstallmentCounts.forEach { optCount ->
                                             FilterChip(
                                                 selected = selectedInstallmentCount == optCount,
-                                                onClick = { selectedInstallmentCount = optCount },
+                                                onClick = {
+                                                    selectedInstallmentCount = optCount
+                                                    selectedTermDays = optCount * 7
+                                                },
                                                 label = {
-                                                    Text(
-                                                        if (optCount == 1) "1 cuota"
-                                                        else "$optCount cuotas"
-                                                    )
+                                                    Text("$optCount cuotas semanales")
                                                 },
                                                 colors = FilterChipDefaults.filterChipColors(
                                                     selectedContainerColor = MaterialTheme.colorScheme.primary,
@@ -616,9 +666,9 @@ fun TradeScreen(
 
                                     Spacer(modifier = Modifier.height(18.dp))
 
-                                    // Step 3: Cronograma Visual Detallado
+                                    // Step 2: Cronograma Visual Detallado
                                     Text(
-                                        "Cronograma de Pagos Proyectado",
+                                        "Cronograma Semanal Proyectado",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -630,10 +680,16 @@ fun TradeScreen(
 
                                     Spacer(modifier = Modifier.height(10.dp))
 
+                                    val totalRepaymentCents = p.financedAmountCents + p.kuotaFeeCents
+                                    val count = selectedInstallmentCount.coerceAtLeast(1)
+                                    val baseAmount = totalRepaymentCents / count
+                                    val remainder = totalRepaymentCents % count
+                                    val oneWeekMillis = 7L * 24L * 60L * 60L * 1000L
+
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         (1..count).forEach { num ->
-                                            val installmentAmount = if (num == 1) baseAmount + remainder else baseAmount
-                                            val dueEpoch = now + (num * intervalMillis)
+                                            val installmentAmount = if (num == count) baseAmount + remainder else baseAmount
+                                            val dueEpoch = now + (num * oneWeekMillis)
                                             val daysUntil = ((dueEpoch - now) / (24L * 3600_000L)).coerceAtLeast(1L)
                                             val formattedDate = scheduleDateFormatter.format(Date(dueEpoch))
 
@@ -669,7 +725,7 @@ fun TradeScreen(
                                                             }
                                                             Spacer(modifier = Modifier.width(8.dp))
                                                             Text(
-                                                                "Cuota #$num de $count",
+                                                                "Semana #$num de $count",
                                                                 style = MaterialTheme.typography.bodySmall,
                                                                 fontWeight = FontWeight.Bold
                                                             )
@@ -728,21 +784,44 @@ fun TradeScreen(
                                         }
                                     }
 
-                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                                    // Button: "Aceptar cronograma" (matches PRD 6.2 item 2)
+                                    // Promissory note and terms acceptance
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { termsAccepted = !termsAccepted }
+                                            .padding(vertical = 4.dp)
+                                    ) {
+                                        Checkbox(
+                                            checked = termsAccepted,
+                                            onCheckedChange = { termsAccepted = it }
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            "Acepto las condiciones comerciales, el cronograma y el pagaré digital Kuota 2.0 (versión registrada).",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    // Button: "Confirmar compra y activar cuotas"
                                     Button(
                                         onClick = {
                                             scope.launch {
                                                 creditStore.confirmInstallmentPlan(
                                                     p.id,
-                                                    selectedTermDays,
+                                                    selectedInstallmentCount * 7,
                                                     selectedInstallmentCount
                                                 )
                                                 showPhase2SuccessDialog = true
                                                 reload()
                                             }
                                         },
+                                        enabled = termsAccepted,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .heightIn(min = 50.dp),
@@ -750,7 +829,7 @@ fun TradeScreen(
                                     ) {
                                         Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Aceptar cronograma", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                        Text("Confirmar compra y activar cuotas", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -837,6 +916,7 @@ fun TradeScreen(
                         shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
+                        val availableLineCents = appSettings.availableCreditLineCents.takeIf { it > 0 } ?: userCreditLevel.maxLineCents
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -852,7 +932,7 @@ fun TradeScreen(
                                     color = Color(userCreditLevel.badgeColorHex)
                                 )
                                 Text(
-                                    "Línea máxima: ${PurchaseOffer.formatPen(userCreditLevel.maxAmountCents)}",
+                                    "Puedes financiar hasta: ${PurchaseOffer.formatPen(availableLineCents)}",
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -874,9 +954,38 @@ fun TradeScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // Categorías de Proveedores
+                    Text("Categorías de Comercio:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        supplierCategories.forEach { cat ->
+                            FilterChip(
+                                selected = selectedCategory == cat,
+                                onClick = { selectedCategory = cat },
+                                label = { Text(cat) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
                     // Supplier selector
                     Text("Selecciona el Proveedor:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(6.dp))
+
+                    val filteredSuppliers = remember(selectedCategory) {
+                        if (selectedCategory == "Todos") SeedSuppliers.items
+                        else SeedSuppliers.items.filter { it.commercialCategory.contains(selectedCategory, ignoreCase = true) || it.displaySubtitle.contains(selectedCategory, ignoreCase = true) }
+                    }
 
                     ExposedDropdownMenuBox(
                         expanded = supplierDropdownExpanded,
@@ -896,11 +1005,15 @@ fun TradeScreen(
                             expanded = supplierDropdownExpanded,
                             onDismissRequest = { supplierDropdownExpanded = false }
                         ) {
-                            SeedSuppliers.items.forEach { sup ->
+                            filteredSuppliers.forEach { sup ->
                                 DropdownMenuItem(
                                     text = {
                                         Column {
-                                            Text(sup.name, fontWeight = FontWeight.Bold)
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(sup.name, fontWeight = FontWeight.Bold)
+                                                Spacer(Modifier.width(6.dp))
+                                                Text("✓ Verificado", style = MaterialTheme.typography.labelSmall, color = Color(0xFF10B981))
+                                            }
                                             Text(sup.displaySubtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                     },
@@ -943,27 +1056,113 @@ fun TradeScreen(
 
                     val enteredAmount = purchaseAmountInput.replace(",", ".").toDoubleOrNull() ?: 0.0
                     val enteredCents = (enteredAmount * 100).toLong()
+                    val availableLineCents = appSettings.availableCreditLineCents.takeIf { it > 0 } ?: userCreditLevel.maxLineCents
+                    val check = PurchaseEligibilityCheck.validate(
+                        totalAmountCents = enteredCents,
+                        currentLevel = userCreditLevel,
+                        availableLineCents = availableLineCents,
+                        hasActiveOpenTransaction = activePurchase != null,
+                        installmentCount = selectedInstallmentCount
+                    )
 
                     if (enteredCents > 0) {
-                        val downCents = (enteredCents * userCreditLevel.downPaymentPercent) / 100
-                        val financedCents = enteredCents - downCents
-
                         Spacer(modifier = Modifier.height(14.dp))
 
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                         ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
+                            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    "Simulación Cashea B2B en Tiempo Real",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("Cuota inicial directa al proveedor:")
-                                    Text(PurchaseOffer.formatPen(downCents), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    Text("Cuota inicial directa (${userCreditLevel.downPaymentPercent}%):")
+                                    Text(PurchaseOffer.formatPen(check.downPaymentCents), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                 }
-                                Spacer(modifier = Modifier.height(4.dp))
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("Financiado por Kuota:")
-                                    Text(PurchaseOffer.formatPen(financedCents), fontWeight = FontWeight.Bold, color = kuotaColors.accentTeal)
+                                    Text("Saldo financiado por Kuota:")
+                                    Text(PurchaseOffer.formatPen(check.financedCents), fontWeight = FontWeight.Bold, color = kuotaColors.accentTeal)
+                                }
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Comisión plana Kuota (5%):")
+                                    Text(PurchaseOffer.formatPen(check.kuotaFeeCents), fontWeight = FontWeight.SemiBold)
+                                }
+
+                                Spacer(Modifier.height(4.dp))
+
+                                // Installment count chips
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Cuotas semanales:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        userCreditLevel.availableInstallmentCounts.forEach { opt ->
+                                            FilterChip(
+                                                selected = selectedInstallmentCount == opt,
+                                                onClick = {
+                                                    selectedInstallmentCount = opt
+                                                    selectedTermDays = opt * 7
+                                                },
+                                                label = { Text("$opt cuotas") },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Cuota semanal estimada:", fontWeight = FontWeight.Bold)
+                                    Text(
+                                        "${PurchaseOffer.formatPen(check.weeklyInstallmentCents)} / sem",
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Total a pagar (Inicial + Cuotas):", style = MaterialTheme.typography.labelSmall)
+                                    Text(PurchaseOffer.formatPen(check.totalToPayCents), fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+
+                    if (!check.isEligible && check.errorMessage != null && enteredCents > 0) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    check.errorMessage,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                if (check.financedCents > availableLineCents) {
+                                    Button(
+                                        onClick = {
+                                            purchaseAmountInput = String.format(Locale.US, "%.2f", check.maxPurchaseCents / 100.0)
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                    ) {
+                                        Text("Ajustar al monto máximo (${PurchaseOffer.formatPen(check.maxPurchaseCents)})")
+                                    }
                                 }
                             }
                         }
@@ -982,12 +1181,12 @@ fun TradeScreen(
 
                     Button(
                         onClick = {
-                            if (enteredCents < 5000) {
-                                purchaseFormError = "El monto mínimo de compra es S/ 50.00."
+                            if (!check.isEligible) {
+                                purchaseFormError = check.errorMessage
                                 return@Button
                             }
-                            if (enteredCents > userCreditLevel.maxAmountCents) {
-                                purchaseFormError = "El monto supera tu línea disponible de ${PurchaseOffer.formatPen(userCreditLevel.maxAmountCents)}."
+                            if (enteredCents < 5000) {
+                                purchaseFormError = "El monto mínimo de compra es S/ 50.00."
                                 return@Button
                             }
 
@@ -1004,18 +1203,19 @@ fun TradeScreen(
                                     creditLevelNumber = userCreditLevel.levelNumber,
                                     downPaymentPercent = userCreditLevel.downPaymentPercent
                                 )
-                                Toast.makeText(context, "Compra iniciada. Procede con la Fase 1 (Cuota inicial).", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Compra iniciada. Procede con el pago de la cuota inicial.", Toast.LENGTH_SHORT).show()
                                 reload()
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        enabled = check.isEligible && enteredCents >= 5000,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Iniciar compra al crédito (Fase 1)", fontWeight = FontWeight.Bold)
+                        Text("Continuar a pago de inicial →", fontWeight = FontWeight.Bold)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(80.dp))
+                Spacer(modifier = Modifier.height(110.dp))
             }
         } else {
             // TAB 1: VENDER CON LINK DE PAGO (1% COMISIÓN - PRD 6.4 B)
@@ -1541,7 +1741,7 @@ fun TradeScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(80.dp))
+                Spacer(modifier = Modifier.height(110.dp))
             }
         }
     }

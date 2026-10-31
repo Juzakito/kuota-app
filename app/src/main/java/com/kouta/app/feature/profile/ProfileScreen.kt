@@ -350,9 +350,16 @@ fun ProfileScreen(
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val completeness = listOf(
+                        ownerName.isNotBlank() || businessName.isNotBlank(),
+                        phone.isNotBlank(),
+                        email.isNotBlank(),
+                        kycSummary != null,
+                        hasSession
+                    ).count { it } * 20
                     StatusPill(
-                        text = if (hasSession) "Cuenta vinculada" else "Solo local",
-                        container = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .12f),
+                        text = "Perfil $completeness% completo",
+                        container = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .18f),
                         content = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     StatusPill(
@@ -361,8 +368,8 @@ fun ProfileScreen(
                         content = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     StatusPill(
-                        text = if (existingProfile?.role == com.kouta.app.domain.model.UserRole.PROVEEDOR.name) "Proveedor" else "Vendedor",
-                        container = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .18f),
+                        text = if (hasSession) "Respaldado en nube" else "Vincula con OTP",
+                        container = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .12f),
                         content = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
@@ -659,7 +666,7 @@ fun ProfileScreen(
             }
         }
 
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(110.dp))
         TextButton(
             onClick = { showDeleteConfirmation = true },
             enabled = !isSaving,

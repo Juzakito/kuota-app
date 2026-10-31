@@ -13,42 +13,64 @@ import androidx.compose.ui.graphics.Color
 /** Negro del logo Kuota: base del modo oscuro. */
 val KuotaBlack = Color(0xFF05070A)
 
-/** Azul de marca Kuota Royal Blue (PRD Ventas B2B). */
-val KuotaRoyalBlue = Color(0xFF2563EB)
-val KuotaRoyalBlueDark = Color(0xFF1D4ED8)
-val KuotaAtmosphericDeep = Color(0xFF1E3A8A)
-val KuotaAtmosphericMid = Color(0xFF2563EB)
-val KuotaAtmosphericLight = Color(0xFF3B82F6)
-val KuotaAtmosphericGlow = Color(0xFF60A5FA)
+/** Tokens Kuota 2.0 (PRD B2B Modelo Cashea) */
+val KuotaNavy900 = Color(0xFF0A1530)
+val KuotaNavy700 = Color(0xFF0F2748)
+val KuotaCobalt600 = Color(0xFF1B35A5)
+val KuotaAction500 = Color(0xFF2457F0)
+val KuotaCian300 = Color(0xFF5EE0E8)
+val KuotaSky300 = Color(0xFF7FB2FF)
+
+val KuotaBgLight = Color(0xFFF5F8FF)
+val KuotaSurfaceLight = Color(0xFFFFFFFF)
+val KuotaSurface2Light = Color(0xFFEAF0FF)
+val KuotaTextLight = Color(0xFF0B1226)
+val KuotaTextMutedLight = Color(0xFF5B6785)
+
+val KuotaSuccess = Color(0xFF12B76A)
+val KuotaSuccessContainer = Color(0xFFD1FAE5)
+val KuotaWarning = Color(0xFFF5A524)
+val KuotaWarningContainer = Color(0xFFFEF3C7)
+val KuotaDanger = Color(0xFFE5484D)
+val KuotaDangerContainer = Color(0xFFFEE2E2)
+
+// Modo Oscuro Oficial
+val KuotaBgDark = Color(0xFF070D1F)
+val KuotaSurfaceDark = Color(0xFF0E1730)
+val KuotaSurface2Dark = Color(0xFF16224A)
+val KuotaTextDark = Color(0xFFEAF0FF)
+val KuotaTextMutedDark = Color(0xFF8FA0C8)
+
+// Degradado Hero Oficial Kuota 2.0: 180° de Navy 700 a Cobalt 600 a Action 500
+val KuotaHeroGradient = listOf(KuotaNavy700, KuotaCobalt600, KuotaAction500)
+val KuotaVoltageGradient = listOf(KuotaCian300, KuotaAction500)
+
+/** Azul de marca Kuota Royal Blue (Retrocompatibilidad). */
+val KuotaRoyalBlue = KuotaAction500
+val KuotaRoyalBlueDark = KuotaCobalt600
+val KuotaAtmosphericDeep = KuotaNavy700
+val KuotaAtmosphericMid = KuotaCobalt600
+val KuotaAtmosphericLight = KuotaAction500
+val KuotaAtmosphericGlow = KuotaCian300
 
 /** Superficies y Semánticos B2B */
-val KuotaSurfaceIce = Color(0xFFF4F7FB)
-val KuotaEmerald = Color(0xFF10B981)
-val KuotaEmeraldContainer = Color(0xFFD1FAE5)
-val KuotaCoral = Color(0xFFEF4444)
-val KuotaCoralContainer = Color(0xFFFEE2E2)
-val KuotaAmber = Color(0xFFF59E0B)
-val KuotaAmberContainer = Color(0xFFFEF3C7)
+val KuotaSurfaceIce = KuotaBgLight
+val KuotaEmerald = KuotaSuccess
+val KuotaEmeraldContainer = KuotaSuccessContainer
+val KuotaCoral = KuotaDanger
+val KuotaCoralContainer = KuotaDangerContainer
+val KuotaAmber = KuotaWarning
+val KuotaAmberContainer = KuotaWarningContainer
 
-/** Azul de marca histórico. */
-val KuotaBlue = Color(0xFF2563EB)
-
-/** Celeste de marca. */
-val KuotaSky = Color(0xFFA8DFFF)
-
-/** Turquesa de marca. */
-val KuotaTurquoise = Color(0xFF55DDE0)
-
+val KuotaBlue = KuotaAction500
+val KuotaSky = KuotaSky300
+val KuotaTurquoise = KuotaCian300
 val KuotaWhite = Color(0xFFFFFFFF)
-
-/** Tinta sobre superficies de marca (azul, celeste o turquesa). */
-val KuotaInk = Color(0xFF04101F)
-
-/** Variante accesible del azul para texto sobre fondos claros (contraste >= 5.5:1). */
-val KuotaBlueStrong = Color(0xFF1D4ED8)
+val KuotaInk = KuotaNavy900
+val KuotaBlueStrong = KuotaAction500
 
 /** Degradado de identidad: azul -> celeste -> turquesa. */
-val KuotaBrandGradient = listOf(KuotaRoyalBlue, KuotaSky, KuotaTurquoise)
+val KuotaBrandGradient = listOf(KuotaCobalt600, KuotaAction500, KuotaCian300)
 
 // ---------------------------------------------------------------------------
 // Esquemas Material 3

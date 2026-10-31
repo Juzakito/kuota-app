@@ -401,59 +401,6 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
                 onSyncNow = { syncNow() }
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Compras demo", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(
-                        if (demoPurchases.isEmpty()) "Sin registros" else "${demoPurchases.size} registro(s)",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                when {
-                    !hasSession -> DemoPurchaseEmptyCard(
-                        title = "Cuenta sin vincular",
-                        message = "Vincula tu celular para ver tus compras con QR.",
-                        actionLabel = "Vincular",
-                        onAction = { showLinkDialog = true }
-                    )
-                    isLoadingPurchases -> KuotaLoadingRow(visible = true, label = "Cargando compras…")
-                    purchaseHistoryError != null -> Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                purchaseHistoryError.orEmpty(),
-                                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            OutlinedButton(onClick = { purchaseReloadNonce += 1 }) { Text("Reintentar") }
-                        }
-                    }
-                    demoPurchases.isEmpty() -> DemoPurchaseEmptyCard(
-                        title = "Sin compras con QR",
-                        message = "Tus compras financiadas por QR aparecerán aquí.",
-                        actionLabel = null,
-                        onAction = {}
-                    )
-                    else -> demoPurchases.forEach { purchase ->
-                        DemoPurchaseCard(
-                            purchase = purchase,
-                            expanded = expandedPurchaseId == purchase.purchaseId,
-                            onToggle = {
-                                expandedPurchaseId = if (expandedPurchaseId == purchase.purchaseId) null else purchase.purchaseId
-                            }
-                        )
-                    }
-                }
-            }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -587,7 +534,7 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(110.dp))
         }
     }
 
