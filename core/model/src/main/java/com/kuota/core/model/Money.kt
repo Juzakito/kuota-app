@@ -40,3 +40,6 @@ value class Money(val cents: Long) : Comparable<Money> {
         fun fromSoles(soles: Long): Money = Money(soles * 100L)
     }
 }
+
+fun Long.toPriceString(): String = Money(this).toFormattedString()
+

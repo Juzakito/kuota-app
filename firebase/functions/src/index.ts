@@ -12,6 +12,9 @@ import { SandboxPaymentGateway } from "./credit/gateway";
 import { generateSignedQr, verifySignedQr } from "./supplier/qr";
 import { calculatePaymentLinkQuote, calculatePosSavings } from "./supplier/payments";
 import { createAdvancePayoutRecord } from "./supplier/payouts";
+import { registerSalesBatchCore, SalesBatchSchema } from "./sales/sales";
+import { computeUserScoreCore } from "./scoring/engine";
+import { runInstallmentsTickCore } from "./collections/installmentsTick";
 if (!admin.apps.length) {
   admin.initializeApp();
 }
@@ -1738,6 +1741,67 @@ export const triggerPayoutsManual = onCall({ region: "us-central1" }, async (req
     throw new HttpsError("unauthenticated", "Requiere autenticación.");
   }
   const result = await processDuePayouts();
+  return { success: true, ...result };
+});
+
+// ---------------------------------------------------------------------------
+// 12. FASE 4: VENTAS, SCORING Y RECORDATORIOS DE COBRANZA
+// ---------------------------------------------------------------------------
+
+/**
+ * Callable: registerSalesBatch
+ * Ingesta de lote de ventas parseadas en dispositivo.
+ * Idempotente mediante txHash, descarta crudo de notificación y actualiza estadísticas.
+ */
+export const registerSalesBatch = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Requiere autenticación.");
+  }
+  const parseResult = SalesBatchSchema.safeParse(request.data);
+  if (!parseResult.success) {
+    throw new HttpsError("invalid-argument", "Datos del lote de ventas inválidos", parseResult.error.format());
+  }
+  const result = await registerSalesBatchCore(db, request.auth.uid, parseResult.data.sales);
+  return { success: true, ...result };
+});
+
+/**
+ * Callable: computeScore
+ * Evalúa el score crediticio y actualiza el nivel del usuario en summary/current.
+ */
+export const computeScore = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Requiere autenticación.");
+  }
+  const result = await computeUserScoreCore(db, request.auth.uid);
+  return { success: true, ...result };
+});
+
+/**
+ * Cron: scheduledInstallmentsTick
+ * Se ejecuta diariamente a las 06:00 (hora de Lima).
+ * Evalúa vencimientos y envía recordatorios T-3, T-1, T0, T+1, T+3, y marca moras.
+ */
+export const scheduledInstallmentsTick = onSchedule(
+  { schedule: "0 6 * * *", timeZone: "America/Lima" },
+  async () => {
+    console.log("[SCHEDULER] Iniciando scheduledInstallmentsTick (06:00 Lima)");
+    const messaging = admin.messaging();
+    const result = await runInstallmentsTickCore(db, messaging);
+    console.log(`[SCHEDULER] Cuotas evaluadas: ${result.evaluatedCount}, Notificaciones: ${result.notifiedCount}, Moras marcadas: ${result.overdueCount}`);
+  }
+);
+
+/**
+ * Callable: triggerInstallmentsTickManual
+ * Para pruebas controladas de recordatorios y cobranza en emulador / staging.
+ */
+export const triggerInstallmentsTickManual = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Requiere autenticación.");
+  }
+  const messaging = admin.messaging();
+  const result = await runInstallmentsTickCore(db, messaging);
   return { success: true, ...result };
 });
 

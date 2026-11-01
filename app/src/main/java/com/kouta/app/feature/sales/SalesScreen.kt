@@ -1,18 +1,14 @@
 package com.kouta.app.feature.sales
 
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.provider.Settings
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,280 +16,183 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Inventory2
-import com.kouta.app.data.local.ProductCatalogStore
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
 import com.kouta.app.R
-import com.kouta.app.core.analytics.KuotaAnalytics
-import com.kouta.app.core.analytics.KuotaAnalyticsEvent
-import com.kouta.app.core.designsystem.components.KuotaLoadingRow
-import com.kouta.app.core.designsystem.components.KuotaSummaryRow
-import com.kouta.app.core.designsystem.motion.KuotaMotion
-import com.kouta.app.core.designsystem.motion.kuotaTabSectionReveal
-import com.kouta.app.core.designsystem.motion.rememberSystemAnimatorScale
-import com.kouta.app.core.designsystem.theme.kuotaColors
-import com.kouta.app.core.push.KuotaEvents
-import com.kouta.app.core.sync.KuotaSync
-import com.kouta.app.data.firebase.KuotaFirestoreService
-import com.kouta.app.data.local.AppSettings
-import com.kouta.app.data.local.ManualSale
-import com.kouta.app.data.local.SaleSource
-import com.kouta.app.data.local.SaleSyncStatus
-import com.kouta.app.data.local.SalesJournalStore
-import com.kouta.app.data.remote.ApiOutcome
-import com.kouta.app.data.remote.KuotaApiClient
-import com.kouta.app.data.remote.PurchaseHistoryItemDto
-import com.kouta.app.domain.model.MerchantProduct
-import com.kouta.app.domain.model.PurchaseOffer
-import com.kouta.app.feature.account.AccountLinkDialog
-import com.kouta.app.feature.account.unreachableMessage
-import kotlinx.coroutines.Dispatchers
+import com.kouta.app.di.AppEntryPoint
+import com.kuota.core.model.SaleRecord
+import com.kuota.core.model.SaleSource
+import com.kuota.core.model.SalesMonthSummary
+import com.kuota.core.ui.components.AmountInput
+import com.kuota.core.ui.components.ChipPill
+import com.kuota.core.ui.components.EmptyState
+import com.kuota.core.ui.components.KuotaCard
+import com.kuota.core.ui.components.KuotaCardVariant
+import com.kuota.core.ui.components.PillButton
+import com.kuota.core.ui.components.PillButtonVariant
+import com.kuota.core.ui.theme.KuotaColors
+import com.kuota.core.ui.theme.KuotaRadii
+import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
+fun SalesScreen(
+    onOpenMyProducts: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
-    val store = remember(context) { SalesJournalStore(context) }
-    val catalogStore = remember(context) { ProductCatalogStore(context) }
-    val settings = remember(context) { AppSettings(context) }
     val scope = rememberCoroutineScope()
-    var sales by remember { mutableStateOf<List<ManualSale>>(emptyList()) }
-    var catalogProducts by remember { mutableStateOf<List<MerchantProduct>>(emptyList()) }
-    var selectedCatalogProduct by remember { mutableStateOf<MerchantProduct?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-    var isSaving by remember { mutableStateOf(false) }
-    var storageError by rememberSaveable { mutableStateOf<String?>(null) }
-    var showEntryDialog by rememberSaveable { mutableStateOf(false) }
-    var amountText by rememberSaveable { mutableStateOf("") }
-    var editingSale by remember { mutableStateOf<ManualSale?>(null) }
-    var pendingDelete by remember { mutableStateOf<ManualSale?>(null) }
-    var hasSession by remember { mutableStateOf(KuotaApiClient.hasSession(context)) }
-    var autoSync by remember { mutableStateOf(settings.salesAutoSync) }
-    var lastSyncAt by remember { mutableStateOf(settings.lastSalesSyncEpochMillis) }
-    var initialPhone by remember { mutableStateOf("") }
-    var showLinkDialog by remember { mutableStateOf(false) }
-    var showSourceDialog by remember { mutableStateOf(false) }
-    var isSyncing by remember { mutableStateOf(false) }
-    var syncMessage by remember { mutableStateOf<String?>(null) }
-    var syncMessageIsError by remember { mutableStateOf(false) }
-    var searchQuery by rememberSaveable { mutableStateOf("") }
-    var isSearchExpanded by rememberSaveable { mutableStateOf(false) }
-    var activityFilter by rememberSaveable { mutableStateOf("todas") }
-    var demoPurchases by remember { mutableStateOf<List<PurchaseHistoryItemDto>>(emptyList()) }
-    var isLoadingPurchases by remember { mutableStateOf(false) }
-    var purchaseHistoryError by remember { mutableStateOf<String?>(null) }
-    var purchaseReloadNonce by remember { mutableIntStateOf(0) }
-    var expandedPurchaseId by remember { mutableStateOf<String?>(null) }
-    val eventsRevision by KuotaEvents.revision.collectAsState()
-    val listFadeMs = KuotaMotion.resolveDurationMs(220, rememberSystemAnimatorScale())
 
-    LaunchedEffect(store, eventsRevision) {
-        try {
-            sales = withContext(Dispatchers.IO) {
-                val prods = catalogStore.getAll()
-                catalogProducts = prods
-                val catalogPrices = prods.map { it.priceCents }.toSet()
-                store.recalculateVerificationWithCatalog(catalogPrices)
-            }
-            initialPhone = withContext(Dispatchers.IO) {
-                store.readBusinessProfile()?.phone.orEmpty().filter(Char::isDigit).takeLast(9)
-            }
-            lastSyncAt = settings.lastSalesSyncEpochMillis
-            hasSession = KuotaApiClient.hasSession(context)
-            autoSync = settings.salesAutoSync
-            storageError = null
-        } catch (_: Exception) {
-            storageError = "No se pudo abrir el registro cifrado. No se borraron tus datos."
-        } finally {
-            isLoading = false
-        }
-    }
-
-    LaunchedEffect(hasSession, eventsRevision, purchaseReloadNonce) {
-        if (!hasSession) {
-            demoPurchases = emptyList()
-            purchaseHistoryError = null
-            isLoadingPurchases = false
-            return@LaunchedEffect
-        }
-        isLoadingPurchases = true
-        val outcome = withContext(Dispatchers.IO) { KuotaApiClient.call(context) { listPurchases() } }
-        isLoadingPurchases = false
-        when (outcome) {
-            is ApiOutcome.Ok -> {
-                demoPurchases = outcome.value
-                purchaseHistoryError = null
-            }
-            is ApiOutcome.Rejected -> purchaseHistoryError = buildString {
-                append(outcome.message.ifBlank { "No pudimos cargar las compras demo." })
-                if (outcome.requestId.isNotBlank()) append("\nReferencia para soporte: ${outcome.requestId}")
-            }
-            is ApiOutcome.Unreachable -> purchaseHistoryError = unreachableMessage(outcome.serverUrl)
-            ApiOutcome.SessionExpired -> {
-                hasSession = false
-                purchaseHistoryError = "La sesión venció. Vuelve a vincular tu cuenta para ver las compras demo."
-            }
-        }
-    }
-
-    fun syncNow() {
-        if (isSyncing) return
-        isSyncing = true
-        syncMessage = null
-        scope.launch {
-            val report = withContext(Dispatchers.IO) { KuotaSync.runOnce(context, forceSalesBackup = true) }
-            sales = withContext(Dispatchers.IO) { runCatching { store.readAll() }.getOrDefault(sales) }
-            hasSession = KuotaApiClient.hasSession(context)
-            autoSync = settings.salesAutoSync
-            lastSyncAt = settings.lastSalesSyncEpochMillis
-            isSyncing = false
-            val failed = report.sales.needsSession || report.sales.unreachable ||
-                report.sales.rejected > 0 || report.sales.message != null
-            syncMessageIsError = failed
-            KuotaAnalytics.track(
-                KuotaAnalyticsEvent.SALES_SYNC_STATUS,
-                mapOf(
-                    "source" to "MANUAL",
-                    "sync_outcome" to if (failed) "FAILED" else "OK"
-                )
+    val entryPoint = remember(context) {
+        runCatching {
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                AppEntryPoint::class.java
             )
-            syncMessage = when {
-                report.sales.needsSession -> "Tu sesión venció. Vuelve a vincular tu cuenta para respaldar."
-                report.sales.unreachable -> "Sin conexión con el servidor. Tus ventas siguen cifradas en este teléfono."
-                report.sales.rejected > 0 -> "${report.sales.rejected} venta(s) necesitan revisión: ${report.sales.message ?: "el servidor las rechazó"}."
-                report.sales.message != null -> report.sales.message
-                report.sales.sent == 0 -> "Todo estaba respaldado."
-                else -> "${report.sales.sent} venta(s) respaldada(s) en tu cuenta."
+        }.getOrNull()
+    }
+
+    val authRepo = entryPoint?.authRepository()
+    val salesRepo = entryPoint?.salesRepository()
+    val userRepo = entryPoint?.userRepository()
+    val uid = userRepo?.getCurrentUid().orEmpty()
+
+    val userSummary by (userRepo?.observeUserSummary() ?: flowOf(null)).collectAsState(initial = null)
+    val salesList by (if (uid.isNotBlank() && salesRepo != null) salesRepo.observeRecentSales(uid) else flowOf(emptyList())).collectAsState(initial = emptyList())
+    val monthSummary by (if (uid.isNotBlank() && salesRepo != null) salesRepo.observeSalesSummary(uid) else flowOf(SalesMonthSummary())).collectAsState(initial = SalesMonthSummary())
+
+    // Estado de permisos de notificación
+    var hasNotificationPermission by remember {
+        mutableStateOf(NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName))
+    }
+
+    // Filtros de búsqueda
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedFilterIndex by remember { mutableIntStateOf(0) } // 0: Todas, 1: Comprobadas, 2: Manuales
+    var isSearchExpanded by remember { mutableStateOf(false) }
+
+    // Diálogos modales
+    var showManualSaleDialog by remember { mutableStateOf(false) }
+    var showOcrConfirmDialog by remember { mutableStateOf(false) }
+    var ocrDetectedAmountCents by remember { mutableLongStateOf(0L) }
+    var ocrDetectedSource by remember { mutableStateOf(SaleSource.YAPE) }
+    var isProcessingScore by remember { mutableStateOf(false) }
+
+    // Launcher para selector de comprobante OCR
+    val receiptPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                runCatching {
+                    val stream = context.contentResolver.openInputStream(uri)
+                    val bitmap = BitmapFactory.decodeStream(stream)
+                    if (bitmap != null) {
+                        val result = ReceiptOcrScanner.scanReceiptBitmap(bitmap)
+                        if (result.isSuccess && result.amountCents > 0L) {
+                            ocrDetectedAmountCents = result.amountCents
+                            ocrDetectedSource = result.source
+                            showOcrConfirmDialog = true
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "No se detectó un monto claro en la imagen. Intenta con una captura más nítida.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }.onFailure {
+                    Toast.makeText(context, "Error al procesar comprobante: ${it.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
-    val now = System.currentTimeMillis()
-    val sevenDaysMillis = 7L * 24 * 60 * 60 * 1000
-    val recentSales = sales.filter { it.recordedAtEpochMillis >= now - sevenDaysMillis }
-    val recentTotal = recentSales.sumOf { it.amountCents }
-    val recentVerifiedSales = recentSales.filter { it.isVerified }
-    val recentVerifiedTotal = recentVerifiedSales.sumOf { it.amountCents }
-    val recentVerifiedCount = recentVerifiedSales.size
-    val verifiedPercent = if (recentSales.isNotEmpty()) {
-        ((recentVerifiedCount.toDouble() / recentSales.size) * 100).toInt()
-    } else 0
-    val pendingBackup = sales.count { it.syncStatus != SaleSyncStatus.SYNCED }
-    val filteredSales = sales.filter { sale ->
-        val matchesQuery = searchQuery.isBlank() ||
-            PurchaseOffer.formatPen(sale.amountCents).contains(searchQuery.trim(), ignoreCase = true) ||
-            (sale.productName ?: "").contains(searchQuery.trim(), ignoreCase = true) ||
-            formatSaleDate(sale.recordedAtEpochMillis).contains(searchQuery.trim(), ignoreCase = true)
-        val matchesFilter = when (activityFilter) {
-            "semana" -> sale.recordedAtEpochMillis >= now - sevenDaysMillis
-            "comprobadas" -> sale.isVerified
-            "no_comprobadas" -> !sale.isVerified
-            "link_pago" -> sale.source == SaleSource.LINK_PAGO
-            "locales" -> sale.syncStatus == SaleSyncStatus.LOCAL_ONLY
-            else -> true
+    // Filtrado en memoria reactivo
+    val filteredSales = remember(salesList, searchQuery, selectedFilterIndex) {
+        salesList.filter { sale ->
+            val matchesFilter = when (selectedFilterIndex) {
+                1 -> sale.isVerified
+                2 -> !sale.isVerified
+                else -> true
+            }
+            val matchesSearch = if (searchQuery.isBlank()) {
+                true
+            } else {
+                sale.amountInSoles.contains(searchQuery, ignoreCase = true) ||
+                        (sale.customerSnippet?.contains(searchQuery, ignoreCase = true) == true) ||
+                        (sale.productName?.contains(searchQuery, ignoreCase = true) == true)
+            }
+            matchesFilter && matchesSearch
         }
-        matchesQuery && matchesFilter
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(KuotaColors.Paper)
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    "Finanzas",
-                    modifier = Modifier.semantics { heading() },
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "Registro de ventas y comprobación automática",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
-            }
-
-            // =========================================================
-            // 1. TARJETA PRINCIPAL ("Total ventas" - Cuadro Azul Protagonista)
-            // =========================================================
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-            ) {
+            // CABECERA
+            item {
                 Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -301,950 +200,548 @@ fun SalesScreen(onOpenMyProducts: () -> Unit = {}) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "TOTAL VENTAS · ÚLTIMOS 7 DÍAS",
-                            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 0.5.sp),
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
-                            fontWeight = FontWeight.Bold
+                            text = stringResource(R.string.sales_title),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.ForestInk
                         )
-
-                        // Ícono de lupa colapsable integrado
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = if (isSearchExpanded || searchQuery.isNotBlank()) 0.28f else 0.16f))
-                                .clickable {
-                                    isSearchExpanded = !isSearchExpanded
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                if (isSearchExpanded && searchQuery.isBlank()) Icons.Default.Close else Icons.Default.Search,
-                                contentDescription = "Buscar ventas",
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-
-                    // Monto gigante para mayor jerarquía
-                    Text(
-                        text = PurchaseOffer.formatPen(recentTotal),
-                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 38.sp),
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White,
-                        letterSpacing = (-0.5).sp
-                    )
-
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
-
-                    // Desglose de métricas secundarias
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(
-                                "Comprobadas",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
-                            Text(
-                                "${PurchaseOffer.formatPen(recentVerifiedTotal)} ($verifiedPercent%)",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                "Ventas cruzadas",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
-                            Text(
-                                "$recentVerifiedCount de ${recentSales.size}",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Buscador colapsable desplegado al tocar la lupa
-            AnimatedVisibility(
-                visible = isSearchExpanded || searchQuery.isNotBlank(),
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it.take(40) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(6.dp),
-                        placeholder = { Text("Buscar por monto, producto o fecha...", style = MaterialTheme.typography.bodyMedium) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                        trailingIcon = {
-                            if (searchQuery.isNotBlank()) {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda")
-                                }
-                            } else {
-                                IconButton(onClick = { isSearchExpanded = false }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Cerrar buscador")
-                                }
-                            }
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-            }
-
-            // Pestañas / Chips de filtro (Comprobadas, No comprobadas, etc.)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                listOf(
-                    "todas" to "Todas",
-                    "comprobadas" to "Comprobadas",
-                    "no_comprobadas" to "No comprobadas",
-                    "link_pago" to "Link de Pago",
-                    "semana" to "Esta semana",
-                    "locales" to "Solo local"
-                ).forEach { (key, label) ->
-                    FilterChip(
-                        selected = activityFilter == key,
-                        onClick = { activityFilter = key },
-                        label = { Text(label, fontWeight = if (activityFilter == key) FontWeight.Bold else FontWeight.Medium) },
-                        shape = RoundedCornerShape(50),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = Color.White,
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            labelColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        border = null
-                    )
-                }
-            }
-
-            Button(
-                onClick = {
-                    editingSale = null
-                    amountText = ""
-                    selectedCatalogProduct = null
-                    showEntryDialog = true
-                },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Registrar venta", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-            }
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .clickable { onOpenMyProducts() },
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
+                        IconButton(
+                            onClick = onOpenMyProducts,
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)),
-                            contentAlignment = Alignment.Center
+                                .background(KuotaColors.Fog)
                         ) {
-                            Icon(Icons.Default.Inventory2, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text("Mis productos", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-                            Text("Gestiona artículos para comprobar ventas", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(
+                                imageVector = Icons.Default.ReceiptLong,
+                                contentDescription = "Mis productos",
+                                tint = KuotaColors.ForestInk
+                            )
                         }
                     }
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                 }
             }
 
-            BackupCard(
-                hasSession = hasSession,
-                autoSync = autoSync,
-                lastSyncAt = lastSyncAt,
-                pendingBackup = pendingBackup,
-                isSyncing = isSyncing,
-                message = syncMessage,
-                messageIsError = syncMessageIsError,
-                onLink = { showLinkDialog = true },
-                onToggleAutoSync = { enabled ->
-                    autoSync = enabled
-                    settings.salesAutoSync = enabled
-                    syncMessageIsError = false
-                    KuotaAnalytics.track(
-                        KuotaAnalyticsEvent.SALES_SOURCE_AUTHORIZED,
-                        mapOf("source" to "MANUAL_BACKUP", "status" to if (enabled) "ENABLED" else "DISABLED")
-                    )
-                    if (enabled) {
-                        KuotaSync.schedulePeriodic(context)
-                        KuotaSync.enqueue(context)
-                        syncMessage = "Respaldo automático activo: se ejecuta cada 15 minutos con conexión."
-                    } else {
-                        syncMessage = "Respaldo automático desactivado. Tus ventas siguen cifradas en este teléfono."
-                    }
-                },
-                onSyncNow = { syncNow() }
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Ventas registradas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(
-                    if (sales.isEmpty()) "Sin registros" else "${filteredSales.size} de ${sales.size}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            // Transición discreta entre estados reales de la lista (carga, error, vacío, filtro sin resultados, contenido)
-            // y al cambiar de filtro. La búsqueda por texto no dispara el fundido para no distraer al escribir.
-            val listBucket = when {
-                isLoading -> "loading"
-                storageError != null -> "error"
-                sales.isEmpty() -> "empty"
-                filteredSales.isEmpty() -> "filtered_empty"
-                else -> "content"
-            }
-            Crossfade(
-                targetState = listBucket to activityFilter,
-                animationSpec = tween(listFadeMs, easing = KuotaMotion.StandardEasing),
-                label = "activityListState"
-            ) { (bucket, _) ->
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            when (bucket) {
-                "loading" -> KuotaLoadingRow(visible = true, label = "Cargando registros…")
-                "error" -> Text(storageError.orEmpty(), color = MaterialTheme.colorScheme.error)
-                "empty" -> EmptyActivityState()
-                "filtered_empty" -> FilteredActivityState(
-                    onClear = {
-                        searchQuery = ""
-                        activityFilter = "todas"
-                    }
-                )
-                else -> filteredSales.forEachIndexed { index, sale ->
-                    key(sale.id) {
-                    val (syncLabel, syncColor) = saleSyncLabel(sale)
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .kuotaTabSectionReveal(sectionIndex = index.coerceAtMost(5)),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            // TARJETA HÉROE CON DESGLOSE COMPROBADAS VS NO COMPROBADAS
+            item {
+                Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
+                    KuotaCard(
+                        variant = KuotaCardVariant.Forest,
+                        isLargeRadius = true,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(PurchaseOffer.formatPen(sale.amountCents), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    if (sale.source == SaleSource.LINK_PAGO) {
-                                        Text(
-                                            "LINK DE PAGO",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                    if (sale.isVerified) {
-                                        Text("COMPROBADA", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.kuotaColors.accentTeal, fontWeight = FontWeight.Bold)
-                                    } else {
-                                        Text("NO COMPROBADA", style = MaterialTheme.typography.labelSmall, color = Color(0xFFFFB300), fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
-                            if (!sale.productName.isNullOrBlank()) {
                                 Text(
-                                    "Artículo: ${sale.productName}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Medium
+                                    text = stringResource(R.string.sales_hero_title),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = KuotaColors.Pebble
+                                )
+                                ChipPill(
+                                    label = if (hasNotificationPermission) "Captura activa" else "Sin conexión",
+                                    isSelected = hasNotificationPermission,
+                                    onClick = {}
                                 )
                             }
-                            Text(formatSaleDate(sale.recordedAtEpochMillis), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
                             Text(
-                                syncLabel,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = syncColor,
-                                fontWeight = FontWeight.SemiBold
+                                text = monthSummary.totalInSoles,
+                                fontSize = 34.sp,
+                                fontWeight = FontWeight.Black,
+                                color = KuotaColors.LimeVoltage
                             )
-                            if (sale.syncStatus == SaleSyncStatus.REJECTED && sale.syncError != null) {
-                                Text(
-                                    sale.syncError,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                TextButton(onClick = {
-                                    editingSale = sale
-                                    amountText = formatAmountInput(sale.amountCents)
-                                    showEntryDialog = true
-                                }) { Text("Corregir") }
-                                TextButton(onClick = { pendingDelete = sale }) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
-                            }
-                        }
-                    }
-                    }
-                }
-            }
-                }
-            }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("Origen de ventas", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        Text("Registro manual cifrado (AES-256)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    TextButton(onClick = { showSourceDialog = true }) { Text("Opciones", fontWeight = FontWeight.Bold) }
-                }
-            }
+                            Spacer(modifier = Modifier.height(14.dp))
 
-            Text(
-                "Ingresos declarados cifrados en este teléfono · No modifican tu score",
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(110.dp))
-        }
-    }
-
-    if (showLinkDialog) {
-        AccountLinkDialog(
-            initialPhone = initialPhone,
-            onDismiss = { showLinkDialog = false },
-            onLinked = {
-                showLinkDialog = false
-                hasSession = true
-                syncNow()
-            }
-        )
-    }
-
-    if (showSourceDialog) {
-        AlertDialog(
-            onDismissRequest = { showSourceDialog = false },
-            title = { Text("Origen de ventas") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SourceOption(
-                        title = "Registro manual cifrado",
-                        description = "Activo. Tú ingresas cada venta y se guarda cifrada en este teléfono.",
-                        status = "ACTIVO",
-                        active = true
-                    )
-                    SourceOption(
-                        title = "POS o agregador",
-                        description = "Niubiz, Izipay, Culqi u otro. Requiere contrato y credenciales del comercio.",
-                        status = "NO DISPONIBLE",
-                        active = false
-                    )
-                    SourceOption(
-                        title = "Yape / Plin",
-                        description = "Sin API pública abierta. Requiere convenio con el proveedor o un agregador autorizado.",
-                        status = "NO DISPONIBLE",
-                        active = false
-                    )
-                    SourceOption(
-                        title = "Extractos bancarios",
-                        description = "Requiere autorización del banco y validación legal del tratamiento de datos.",
-                        status = "NO DISPONIBLE",
-                        active = false
-                    )
-                    Text(
-                        "No simulamos conexiones: cuando se defina el proveedor, la integración aparecerá aquí.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            },
-            confirmButton = { TextButton(onClick = { showSourceDialog = false }) { Text("Entendido") } }
-        )
-    }
-
-    if (showEntryDialog) {
-        val parsedAmount = parseAmountToCents(amountText)
-        AlertDialog(
-            onDismissRequest = { if (!isSaving) showEntryDialog = false },
-            title = { Text(if (editingSale == null) "Registrar venta" else "Corregir venta") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        "Ingresa el total en soles o selecciona un producto de tu catálogo para comprobación inmediata.",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    if (catalogProducts.isNotEmpty()) {
-                        Text(
-                            "Productos de tu catálogo:",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            catalogProducts.take(6).forEach { prod ->
-                                val isSelected = selectedCatalogProduct?.id == prod.id || parsedAmount == prod.priceCents
-                                FilterChip(
-                                    selected = isSelected,
-                                    onClick = {
-                                        selectedCatalogProduct = prod
-                                        amountText = formatAmountInput(prod.priceCents)
-                                    },
-                                    label = { Text("${prod.name} (${PurchaseOffer.formatPen(prod.priceCents)})") }
-                                )
-                            }
-                        }
-                    }
-                    OutlinedTextField(
-                        value = amountText,
-                        onValueChange = { value ->
-                            if (value.length <= 14 && value.all { it.isDigit() || it == '.' || it == ',' }) {
-                                amountText = value
-                                selectedCatalogProduct = null
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Monto de venta") },
-                        prefix = { Text("S/ ") },
-                        placeholder = { Text("0.00") },
-                        singleLine = true,
-                        isError = amountText.isNotBlank() && parsedAmount == null,
-                        supportingText = {
-                            val isMatched = parsedAmount != null && (selectedCatalogProduct != null || catalogProducts.any { it.priceCents == parsedAmount })
-                            if (isMatched) {
-                                Text("Comprobada con Mis productos", color = MaterialTheme.kuotaColors.accentTeal)
-                            } else {
-                                Text("Registro manual · monto libre")
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    enabled = parsedAmount != null && !isSaving,
-                    onClick = {
-                        val cents = parsedAmount ?: return@Button
-                        val original = editingSale
-                        scope.launch {
-                            isSaving = true
-                            try {
-                                sales = withContext(Dispatchers.IO) {
-                                    val matchedProduct = selectedCatalogProduct ?: catalogProducts.firstOrNull { it.priceCents == cents }
-                                    val isVerified = matchedProduct != null
-                                    val prodName = matchedProduct?.name
-                                    val updated = store.saveSale(
-                                        existing = original,
-                                        amountCents = cents,
-                                        isVerified = isVerified,
-                                        productName = prodName
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(KuotaRadii.Card))
+                                    .background(KuotaColors.Spruce)
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Comprobadas (Yape/Plin)",
+                                        fontSize = 11.sp,
+                                        color = KuotaColors.Pebble
                                     )
-                                    val savedSale = updated.firstOrNull { it.id == (original?.id ?: updated.firstOrNull()?.id) } ?: updated.firstOrNull()
-                                    if (savedSale != null) {
-                                        KuotaFirestoreService.saveSale(context, savedSale)
-                                    }
-                                    if (autoSync && hasSession) store.markLocalSalesPending() else updated
+                                    Text(
+                                        text = monthSummary.verifiedInSoles,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = KuotaColors.Paper
+                                    )
                                 }
-                                storageError = null
-                                if (autoSync && hasSession) KuotaSync.enqueue(context)
-                                showEntryDialog = false
-                            } catch (_: Exception) {
-                                storageError = "No se pudo guardar la venta cifrada. Intenta de nuevo."
-                            } finally {
-                                isSaving = false
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "Declaradas manual",
+                                        fontSize = 11.sp,
+                                        color = KuotaColors.Pebble
+                                    )
+                                    Text(
+                                        text = monthSummary.unverifiedInSoles,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = KuotaColors.Paper
+                                    )
+                                }
                             }
                         }
                     }
-                ) { Text(if (isSaving) "Guardando…" else "Guardar") }
-            },
-            dismissButton = { TextButton(enabled = !isSaving, onClick = { showEntryDialog = false }) { Text("Cancelar") } }
-        )
-    }
-
-    pendingDelete?.let { sale ->
-        AlertDialog(
-            onDismissRequest = { pendingDelete = null },
-            title = { Text("Eliminar registro") },
-            text = {
-                Text(
-                    if (sale.syncStatus == SaleSyncStatus.SYNCED) {
-                        "Se quitará ${PurchaseOffer.formatPen(sale.amountCents)} del historial y, en el próximo respaldo, también del servidor. Esto no afecta ninguna compra ni evaluación."
-                    } else {
-                        "Se quitará ${PurchaseOffer.formatPen(sale.amountCents)} del historial manual. Esto no afecta ninguna compra ni evaluación."
-                    }
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    scope.launch {
-                        try {
-                            sales = withContext(Dispatchers.IO) {
-                                KuotaFirestoreService.deleteSale(context, sale.id)
-                                store.delete(sale.id)
-                            }
-                            storageError = null
-                            if (autoSync && hasSession) KuotaSync.enqueue(context)
-                        } catch (_: Exception) {
-                            storageError = "No se pudo actualizar el registro cifrado."
-                        } finally {
-                            pendingDelete = null
-                        }
-                    }
-                }) { Text("Eliminar") }
-            },
-            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("Cancelar") } }
-        )
-    }
-}
-
-@Composable
-private fun EmptyActivityState() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 22.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Image(
-                painter = painterResource(R.drawable.kuota_onboarding_avatar),
-                contentDescription = null,
-                modifier = Modifier.size(132.dp),
-                contentScale = ContentScale.Fit
-            )
-            Text(
-                "Aún no hay actividad",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Usa «Registrar venta» para anotar tus ventas del día.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-private fun FilteredActivityState(onClear: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Icon(
-                Icons.Default.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp)
-            )
-            Text(
-                "No encontramos actividad",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Prueba con otro monto, fecha o filtro.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            TextButton(onClick = onClear) { Text("Limpiar filtros") }
-        }
-    }
-}
-
-@Composable
-private fun DemoPurchaseEmptyCard(
-    title: String,
-    message: String,
-    actionLabel: String?,
-    onAction: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f).padding(end = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (actionLabel != null) {
-                OutlinedButton(onClick = onAction, shape = RoundedCornerShape(12.dp)) {
-                    Text(actionLabel, fontWeight = FontWeight.SemiBold, maxLines = 1)
                 }
             }
-        }
-    }
-}
 
-@Composable
-private fun DemoPurchaseCard(
-    purchase: PurchaseHistoryItemDto,
-    expanded: Boolean,
-    onToggle: () -> Unit
-) {
-    val paymentsByInstallment = remember(purchase.payments) {
-        purchase.payments.groupBy { it.installmentId }.mapValues { (_, list) -> list.last() }
-    }
-    val paidCount = purchase.installments.count { it.status in setOf("DEMO_PAID", "PAID") }
-    val animatorScale = rememberSystemAnimatorScale()
-    val expandMs = KuotaMotion.resolveDurationMs(240, animatorScale).coerceAtLeast(60)
-    val chevronRotation by animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f,
-        animationSpec = tween(KuotaMotion.resolveDurationMs(200, animatorScale)),
-        label = "purchaseChevron"
-    )
+            // AVISO / PERMISOS DE NOTIFICACIONES BANCARIAS
+            if (!hasNotificationPermission) {
+                item {
+                    Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+                        KuotaCard(
+                            variant = KuotaCardVariant.Linen,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.NotificationsActive,
+                                        contentDescription = null,
+                                        tint = KuotaColors.ForestInk,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = stringResource(R.string.sales_notification_permission_title),
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = KuotaColors.ForestInk
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = stringResource(R.string.sales_notification_permission_desc),
+                                    fontSize = 12.sp,
+                                    lineHeight = 16.sp,
+                                    color = KuotaColors.Charcoal
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                PillButton(
+                                    text = stringResource(R.string.sales_notification_permission_btn),
+                                    variant = PillButtonVariant.Primary,
+                                    onClick = {
+                                        runCatching {
+                                            context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    purchase.supplierName.ifBlank { "Proveedor demo" },
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Text("DEMO", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            }
-            Text(
-                PurchaseOffer.formatPen(purchase.purchaseAmountCents),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Estado ${purchase.status} · inicial ${PurchaseOffer.formatPen(purchase.buyerDownPaymentCents)} · $paidCount/${purchase.installments.size} cuotas pagadas",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                "Operación ${purchase.purchaseId.takeLast(10)} · actualizado ${purchase.updatedAt}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            TextButton(onClick = onToggle) {
-                Text(if (expanded) "Ocultar desglose y cuotas" else "Ver desglose completo y cuotas")
-                Icon(
-                    Icons.Default.ExpandMore,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(start = 4.dp)
-                        .rotate(chevronRotation)
-                )
-            }
-            AnimatedVisibility(
-                visible = expanded,
-                enter = fadeIn(tween(expandMs)) + expandVertically(tween(expandMs, easing = KuotaMotion.StandardEasing)),
-                exit = fadeOut(tween(expandMs - 40)) + shrinkVertically(tween(expandMs - 40, easing = KuotaMotion.StandardEasing))
-            ) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Column(
+            // BOTONES DE ACCIÓN: OCR & MANUAL
+            item {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        "Desglose B2B de la operación (PRD §18.18 / §18.20)",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
+                    PillButton(
+                        text = stringResource(R.string.sales_btn_scan_ocr),
+                        variant = PillButtonVariant.Secondary,
+                        onClick = { receiptPickerLauncher.launch("image/*") },
+                        modifier = Modifier.weight(1f)
                     )
-                    KuotaSummaryRow("Total compra inventario", PurchaseOffer.formatPen(purchase.purchaseAmountCents))
-                    KuotaSummaryRow("Inicial comprador MYPE", PurchaseOffer.formatPen(purchase.buyerDownPaymentCents))
-                    KuotaSummaryRow("Aporte inicial Kouta", PurchaseOffer.formatPen(purchase.koutaInitialContributionCents))
-                    KuotaSummaryRow("Abono inmediato proveedor (60%)", PurchaseOffer.formatPen(purchase.supplierImmediatePayoutCents))
-                    KuotaSummaryRow("Abono diferido proveedor (40%)", PurchaseOffer.formatPen(purchase.supplierDeferredPayoutCents))
-                    KuotaSummaryRow("Comisión proveedor (4%)", PurchaseOffer.formatPen(purchase.supplierFeeCents))
-                    HorizontalDivider()
-                    KuotaSummaryRow("Total posterior en cuotas MYPE", PurchaseOffer.formatPen(purchase.buyerTotalAfterDownPaymentCents), emphasize = true)
+                    PillButton(
+                        text = stringResource(R.string.sales_btn_manual),
+                        variant = PillButtonVariant.Tertiary,
+                        onClick = { showManualSaleDialog = true },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
+            }
 
-                purchase.installments.forEach { installment ->
-                    val payment = paymentsByInstallment[installment.installmentId]
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
+            // CARD DE SCORE CREDITICIO Y RECALCULAR
+            item {
+                val score = userSummary?.riskScore ?: 650
+                val level = userSummary?.level ?: 1
+                Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
+                    KuotaCard(
+                        variant = KuotaCardVariant.Fog,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Speed,
+                                        contentDescription = null,
+                                        tint = KuotaColors.ForestInk,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = stringResource(R.string.sales_score_card_title),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = KuotaColors.ForestInk
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    "Cuota ${installment.sequenceNumber} · ${installment.status}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                    "Vence ${formatPurchaseDueDate(installment.dueAt)}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = "Nivel $level • Score $score pts",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = KuotaColors.ForestInk
                                 )
                             }
-                            Text(
-                                PurchaseOffer.formatPen(installment.amountCents),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                        payment?.let { p ->
-                            Text(
-                                "Comprobante #${p.paymentId.takeLast(8)} · ${p.status} · Conciliación: ${p.reconciliationStatus}" +
-                                    (p.providerReference?.let { " · Ref: $it" } ?: ""),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+
+                            if (isProcessingScore) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = KuotaColors.ForestInk,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                PillButton(
+                                    text = "Actualizar",
+                                    variant = PillButtonVariant.Secondary,
+                                    onClick = {
+                                        scope.launch {
+                                            isProcessingScore = true
+                                            salesRepo?.recomputeScore()
+                                                ?.onSuccess { eval ->
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Score actualizado: ${eval.score} pts (Nivel ${eval.level})",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                }
+                                                ?.onFailure { err ->
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Error al actualizar score: ${err.message}",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            isProcessingScore = false
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
-            }
-            Text(
-                "Registro demo: no es una venta, una deuda, un desembolso ni un ingreso real. Puedes pagar o simular eventos de estas cuotas en Tarjetas.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
 
-private fun formatPurchaseDueDate(raw: String): String = runCatching {
-    LocalDate.parse(raw).format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.forLanguageTag("es-PE")))
-}.getOrDefault(raw)
-
-@Composable
-private fun BackupCard(
-    hasSession: Boolean,
-    autoSync: Boolean,
-    lastSyncAt: Long,
-    pendingBackup: Int,
-    isSyncing: Boolean,
-    message: String?,
-    messageIsError: Boolean,
-    onLink: () -> Unit,
-    onToggleAutoSync: (Boolean) -> Unit,
-    onSyncNow: () -> Unit
-) {
-    val colors = MaterialTheme.kuotaColors
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Respaldo de ventas", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Text(
-                    if (hasSession) "VINCULADA" else "SOLO LOCAL",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (hasSession) colors.success else colors.neutral,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            if (!hasSession) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            // BUSCADOR Y FILTROS
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
                 ) {
-                    Text(
-                        "Copia tus ventas en la nube de Kuota.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f).padding(end = 8.dp)
-                    )
-                    Button(onClick = onLink, shape = RoundedCornerShape(12.dp)) {
-                        Text("Vincular", maxLines = 1)
-                    }
-                }
-            } else {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Respaldo automático", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            if (lastSyncAt > 0) "Último: ${formatSaleDate(lastSyncAt)}" else "Cada 15 min con conexión",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = "Historial de cobros",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.ForestInk
+                        )
+                        IconButton(onClick = { isSearchExpanded = !isSearchExpanded }) {
+                            Icon(
+                                imageVector = if (isSearchExpanded) Icons.Default.Close else Icons.Default.Search,
+                                contentDescription = "Buscar",
+                                tint = KuotaColors.ForestInk
+                            )
+                        }
+                    }
+
+                    AnimatedVisibility(visible = isSearchExpanded) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { Text(stringResource(R.string.sales_search_placeholder), fontSize = 13.sp) },
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            shape = RoundedCornerShape(KuotaRadii.Pill),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = KuotaColors.ForestInk,
+                                unfocusedBorderColor = KuotaColors.Fog
+                            )
                         )
                     }
-                    Switch(checked = autoSync, onCheckedChange = onToggleAutoSync)
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        if (pendingBackup > 0) "$pendingBackup pendiente(s)" else "Al día",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (pendingBackup > 0) colors.warningAccent else colors.success,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    OutlinedButton(
-                        onClick = onSyncNow,
-                        enabled = !isSyncing,
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text(if (isSyncing) "Sincronizando…" else "Sincronizar") }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ChipPill(
+                            label = stringResource(R.string.sales_chip_all),
+                            isSelected = selectedFilterIndex == 0,
+                            onClick = { selectedFilterIndex = 0 }
+                        )
+                        ChipPill(
+                            label = stringResource(R.string.sales_chip_verified),
+                            isSelected = selectedFilterIndex == 1,
+                            onClick = { selectedFilterIndex = 1 }
+                        )
+                        ChipPill(
+                            label = stringResource(R.string.sales_chip_unverified),
+                            isSelected = selectedFilterIndex == 2,
+                            onClick = { selectedFilterIndex = 2 }
+                        )
+                    }
                 }
             }
-            message?.let {
+
+            // LISTA DE VENTAS
+            if (filteredSales.isEmpty()) {
+                item {
+                    EmptyState(
+                        title = stringResource(R.string.sales_empty_title),
+                        description = stringResource(R.string.sales_empty_desc),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 40.dp)
+                    )
+                }
+            } else {
+                items(filteredSales, key = { it.id }) { sale ->
+                    SaleItemRow(sale = sale)
+                }
+            }
+        }
+    }
+
+    // MODAL REGISTRO MANUAL
+    if (showManualSaleDialog) {
+        var manualAmountCents by remember { mutableLongStateOf(0L) }
+        var manualConcept by remember { mutableStateOf("") }
+        var isSaving by remember { mutableStateOf(false) }
+
+        AlertDialog(
+            onDismissRequest = { if (!isSaving) showManualSaleDialog = false },
+            title = {
                 Text(
-                    it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (messageIsError) MaterialTheme.colorScheme.error else colors.success
+                    text = stringResource(R.string.sales_manual_dialog_title),
+                    fontWeight = FontWeight.Bold,
+                    color = KuotaColors.ForestInk
+                )
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.sales_manual_amount_label),
+                        fontSize = 12.sp,
+                        color = KuotaColors.Charcoal
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    AmountInput(
+                        cents = manualAmountCents,
+                        onCentsChange = { manualAmountCents = it }
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    OutlinedTextField(
+                        value = manualConcept,
+                        onValueChange = { manualConcept = it },
+                        label = { Text(stringResource(R.string.sales_manual_concept_label)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(KuotaRadii.Card)
+                    )
+                }
+            },
+            confirmButton = {
+                PillButton(
+                    text = stringResource(R.string.sales_manual_btn_save),
+                    variant = PillButtonVariant.Primary,
+                    isLoading = isSaving,
+                    enabled = manualAmountCents > 0L && !isSaving,
+                    onClick = {
+                        scope.launch {
+                            isSaving = true
+                            salesRepo?.registerManualSale(manualAmountCents, manualConcept, isOcr = false)
+                                ?.onSuccess {
+                                    Toast.makeText(context, "Venta registrada", Toast.LENGTH_SHORT).show()
+                                    showManualSaleDialog = false
+                                }
+                                ?.onFailure {
+                                    Toast.makeText(context, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            isSaving = false
+                        }
+                    }
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = { showManualSaleDialog = false }) {
+                    Text("Cancelar", color = KuotaColors.Charcoal)
+                }
+            }
+        )
+    }
+
+    // MODAL CONFIRMACIÓN OCR
+    if (showOcrConfirmDialog) {
+        var isSavingOcr by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!isSavingOcr) showOcrConfirmDialog = false },
+            title = {
+                Text(
+                    text = "Comprobante Detectado",
+                    fontWeight = FontWeight.Bold,
+                    color = KuotaColors.ForestInk
+                )
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Inteligencia artificial en dispositivo detectó:",
+                        fontSize = 13.sp,
+                        color = KuotaColors.Charcoal
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "S/ ${(ocrDetectedAmountCents / 100.0).toString()}",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        color = KuotaColors.ForestInk
+                    )
+                    Text(
+                        text = "Canal: ${ocrDetectedSource.name} (Verificado)",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = KuotaColors.Spruce
+                    )
+                }
+            },
+            confirmButton = {
+                PillButton(
+                    text = "Confirmar y registrar",
+                    variant = PillButtonVariant.Primary,
+                    isLoading = isSavingOcr,
+                    onClick = {
+                        scope.launch {
+                            isSavingOcr = true
+                            salesRepo?.registerManualSale(ocrDetectedAmountCents, "Comprobante ${ocrDetectedSource.name}", isOcr = true)
+                                ?.onSuccess {
+                                    Toast.makeText(context, "Comprobante verificado registrado", Toast.LENGTH_SHORT).show()
+                                    showOcrConfirmDialog = false
+                                }
+                                ?.onFailure {
+                                    Toast.makeText(context, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            isSavingOcr = false
+                        }
+                    }
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = { showOcrConfirmDialog = false }) {
+                    Text("Descartar", color = KuotaColors.Charcoal)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun SaleItemRow(
+    sale: SaleRecord,
+    modifier: Modifier = Modifier
+) {
+    val formatter = remember { SimpleDateFormat("dd MMM, hh:mm a", Locale("es", "PE")) }
+    val formattedDate = remember(sale.timestampMs) {
+        if (sale.timestampMs > 0L) formatter.format(Date(sale.timestampMs)) else "Hoy"
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 5.dp)
+    ) {
+        KuotaCard(
+            variant = KuotaCardVariant.Paper,
+            contentPadding = 12.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(if (sale.isVerified) KuotaColors.LinenMist else KuotaColors.Fog),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (sale.isVerified) Icons.Default.CheckCircle else Icons.Default.ReceiptLong,
+                            contentDescription = null,
+                            tint = if (sale.isVerified) KuotaColors.ForestInk else KuotaColors.Charcoal,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
+                        Text(
+                            text = sale.productName ?: "Cobro ${sale.source.name}",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.ForestInk
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "${sale.source.name} • $formattedDate",
+                                fontSize = 11.sp,
+                                color = KuotaColors.Pebble
+                            )
+                            if (sale.customerSnippet != null) {
+                                Text(
+                                    text = " • ${sale.customerSnippet}",
+                                    fontSize = 11.sp,
+                                    color = KuotaColors.Charcoal
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Text(
+                    text = sale.amountInSoles,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Black,
+                    color = if (sale.isVerified) KuotaColors.ForestInk else KuotaColors.Charcoal
                 )
             }
         }
     }
 }
-
-@Composable
-private fun SourceOption(title: String, description: String, status: String, active: Boolean) {
-    val colors = MaterialTheme.kuotaColors
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (active) colors.infoContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .5f),
-                RoundedCornerShape(12.dp)
-            )
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp)
-    ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-            Text(
-                status,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (active) colors.info else colors.neutral,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-@Composable
-private fun saleSyncLabel(sale: ManualSale): Pair<String, Color> {
-    val colors = MaterialTheme.kuotaColors
-    return when (sale.syncStatus) {
-        SaleSyncStatus.SYNCED -> "Respaldada · no verificada" to colors.success
-        SaleSyncStatus.PENDING -> "Por respaldar" to colors.warningAccent
-        SaleSyncStatus.REJECTED -> "Respaldo rechazado" to MaterialTheme.colorScheme.error
-        else -> "Solo en este teléfono" to colors.neutral
-    }
-}
-
-@Composable
-private fun Metric(label: String, value: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = .82f))
-        Text(value, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
-    }
-}
-
-private fun parseAmountToCents(input: String): Long? {
-    val normalized = input.trim().replace(',', '.')
-    if (!normalized.matches(Regex("\\d+(?:\\.\\d{0,2})?"))) return null
-    val parts = normalized.split('.', limit = 2)
-    val soles = parts[0].toLongOrNull() ?: return null
-    val cents = parts.getOrNull(1)?.padEnd(2, '0')?.toLongOrNull() ?: 0L
-    if (soles == 0L && cents == 0L) return null
-    return runCatching { Math.addExact(Math.multiplyExact(soles, 100L), cents) }.getOrNull()
-}
-
-private fun formatAmountInput(cents: Long): String = "${cents / 100}.${(cents % 100).toString().padStart(2, '0')}"
-
-private fun formatSaleDate(epochMillis: Long): String = DateTimeFormatter
-    .ofPattern("dd MMM yyyy · HH:mm", Locale.forLanguageTag("es-PE"))
-    .withZone(ZoneId.systemDefault())
-    .format(Instant.ofEpochMilli(epochMillis))

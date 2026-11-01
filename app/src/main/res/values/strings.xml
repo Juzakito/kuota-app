@@ -150,4 +150,29 @@
     <string name="directory_search_placeholder">Buscar por proveedor, rubro o distrito…</string>
     <string name="directory_category_all">Todos</string>
     <string name="directory_btn_buy">Comprar con este proveedor</string>
+
+    <!-- Fase 4: Ventas, Score y Cobranza (PRD §8.3, §10, §11) -->
+    <string name="sales_title">Ventas de mi negocio</string>
+    <string name="sales_hero_title">Total vendido este mes</string>
+    <string name="sales_chip_all">Todas</string>
+    <string name="sales_chip_verified">Comprobadas (Yape / Plin)</string>
+    <string name="sales_chip_unverified">Declaradas manual</string>
+    <string name="sales_search_placeholder">Buscar por monto, emisor o producto…</string>
+    <string name="sales_notification_permission_title">Conecta tus cobros automáticos</string>
+    <string name="sales_notification_permission_desc">Activa la lectura de notificaciones para validar tus cobros de Yape y Plin al instante y aumentar tu línea de crédito.</string>
+    <string name="sales_notification_permission_btn">Habilitar en Ajustes</string>
+    <string name="sales_btn_scan_ocr">Escanear comprobante (OCR)</string>
+    <string name="sales_btn_manual">Registrar venta rápida</string>
+    <string name="sales_btn_recompute_score">Actualizar mi Score Kuota</string>
+    <string name="sales_score_card_title">Score Crediticio Kuota</string>
+    <string name="sales_score_card_desc">Evaluado según tus ventas comprobadas y puntualidad en cuotas.</string>
+    <string name="sales_empty_title">Sin ventas registradas este mes</string>
+    <string name="sales_empty_desc">Tus cobros automáticos por Yape, Plin y bancos aparecerán aquí en tiempo real.</string>
+    <string name="sales_ocr_dialog_title">Escanear comprobante</string>
+    <string name="sales_ocr_dialog_desc">Selecciona una captura de pantalla del comprobante para verificar el pago en tu dispositivo.</string>
+    <string name="sales_ocr_btn_select">Seleccionar comprobante</string>
+    <string name="sales_manual_dialog_title">Registrar venta manual</string>
+    <string name="sales_manual_amount_label">Monto de la venta</string>
+    <string name="sales_manual_concept_label">Descripción o producto</string>
+    <string name="sales_manual_btn_save">Guardar venta</string>
 </resources>
