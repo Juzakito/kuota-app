@@ -78,4 +78,43 @@
     <string name="btn_continue">Continuar</string>
     <string name="btn_back">Atrás</string>
     <string name="btn_retry">Reintentar</string>
+
+    <!-- Fase 2: Compra al Crédito (PRD §8.5) -->
+    <string name="purchase_title">Comprar al crédito</string>
+    <string name="purchase_step1_title">Detalle de la compra</string>
+    <string name="purchase_step1_subtitle">Ingresa el monto de mercadería o escanea el QR del proveedor.</string>
+    <string name="purchase_amount_label">Monto total de compra (S/)</string>
+    <string name="purchase_supplier_label">Proveedor MYPE</string>
+    <string name="purchase_installments_label">Plazo de cuotas semanales</string>
+    <string name="purchase_btn_quote">Calcular financiamiento</string>
+    <string name="purchase_breakdown_title">Desglose de financiamiento</string>
+    <string name="purchase_down_payment_label">Inicial a pagar al proveedor hoy</string>
+    <string name="purchase_financed_label">Saldo a financiar con Kuota</string>
+    <string name="purchase_fee_label">Costo fijo de financiamiento (5%)</string>
+    <string name="purchase_total_debt_label">Total financiado a pagar en cuotas</string>
+    <string name="purchase_installments_schedule_title">Cronograma semanal de cuotas</string>
+    <string name="purchase_legal_disclaimer">Costo total visible en soles antes de confirmar. En proceso de afiliación ante la SBS como empresa de crédito. Kuota no guarda tu dinero.</string>
+    <string name="purchase_btn_submit">Solicitar compra al crédito</string>
+    <string name="purchase_step2_title">Paga la inicial al proveedor</string>
+    <string name="purchase_step2_subtitle">Entrega la cuota inicial a tu proveedor en efectivo, Yape o Plin. El proveedor confirmará la recepción desde su app Kuota.</string>
+    <string name="purchase_waiting_provider">Esperando confirmación del proveedor…</string>
+    <string name="purchase_ttl_countdown">Tiempo restante de validez:</string>
+    <string name="purchase_btn_cancel">Cancelar solicitud</string>
+    <string name="purchase_step3_title">Confirmación del Comprador</string>
+    <string name="purchase_step3_subtitle">Tu proveedor ha confirmado el pago de la inicial. Revisa tu cronograma semanal antes de activar tu crédito.</string>
+    <string name="purchase_btn_confirm">Aprobar y activar crédito</string>
+    <string name="purchase_success_title">¡Compra confirmada con éxito!</string>
+    <string name="purchase_success_subtitle">Tu crédito está activo. Puedes retirar tu mercadería con el proveedor.</string>
+    <string name="purchase_success_first_due">Primera cuota:</string>
+    <string name="purchase_btn_finish">Ir al Inicio</string>
+
+    <!-- Fase 2: Línea de Crédito & Niveles (PRD §8.4) -->
+    <string name="credit_line_title">Mi Línea de Crédito</string>
+    <string name="credit_line_available">Crédito disponible</string>
+    <string name="credit_line_used">Crédito en uso</string>
+    <string name="credit_line_total">Línea total</string>
+    <string name="credit_line_level">Nivel actual</string>
+    <string name="credit_line_levels_info">Conoce los 6 niveles de crecimiento</string>
+    <string name="credit_line_modal_title">Escalera de Niveles Kuota</string>
+    <string name="credit_line_modal_close">Entendido</string>
 </resources>

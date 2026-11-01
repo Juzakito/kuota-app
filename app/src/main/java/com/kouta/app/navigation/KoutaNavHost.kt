@@ -133,7 +133,7 @@ fun KoutaNavHost(
             composable(NavDestination.Home.route) {
                 HomeScreen(
                     onFinanceClick = {
-                        navController.navigateToTopLevel(NavDestination.Trade.route)
+                        navController.navigate(NavDestination.PurchaseWizard.route) { launchSingleTop = true }
                     },
                     onCardsClick = {
                         navController.navigateToTopLevel(NavDestination.Installments.route)
@@ -156,7 +156,18 @@ fun KoutaNavHost(
             composable(NavDestination.Marketplace.route) {
                 MarketplaceScreen(
                     onSelectSupplierForPurchase = { supplier ->
-                        navController.navigateToTopLevel(NavDestination.Trade.route)
+                        navController.navigate(NavDestination.PurchaseWizard.route) { launchSingleTop = true }
+                    }
+                )
+            }
+
+            composable(NavDestination.PurchaseWizard.route) {
+                val purchaseViewModel: com.kouta.app.feature.purchase.PurchaseViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                com.kouta.app.feature.purchase.PurchaseFlowScreen(
+                    viewModel = purchaseViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onFinishToHome = {
+                        navController.navigateToTopLevel(NavDestination.Home.route)
                     }
                 )
             }
@@ -178,9 +189,10 @@ fun KoutaNavHost(
             }
 
             composable(NavDestination.Installments.route) {
-                MyInstallmentsScreen(
-                    onOpenTrade = {
-                        navController.navigateToTopLevel(NavDestination.Trade.route)
+                com.kouta.app.feature.creditline.CreditLineScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToPurchase = {
+                        navController.navigate(NavDestination.PurchaseWizard.route) { launchSingleTop = true }
                     }
                 )
             }

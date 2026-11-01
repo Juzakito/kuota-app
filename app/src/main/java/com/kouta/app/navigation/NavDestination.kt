@@ -25,6 +25,7 @@ sealed class NavDestination(
     object Kuotear : NavDestination("trade", "Kuotear", Icons.Default.QrCodeScanner)
     object CreditLine : NavDestination("installments", "Línea", Icons.Default.CalendarMonth)
     object Account : NavDestination("profile", "Cuenta", Icons.Default.Person)
+    object PurchaseWizard : NavDestination("purchase_wizard", "Comprar al crédito", Icons.Default.QrCodeScanner)
 
     // Legacy / secondary destinations preserved for backward compatibility
     object Marketplace : NavDestination("marketplace", "Marketplace", Icons.Default.Storefront)

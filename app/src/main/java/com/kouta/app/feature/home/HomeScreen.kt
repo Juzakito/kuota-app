@@ -104,6 +104,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kouta.app.R
+import com.kouta.app.di.AppEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import com.kouta.app.core.designsystem.components.GroupCard
 import com.kouta.app.core.designsystem.components.IconBubble
 import com.kouta.app.core.designsystem.components.StatusPill
@@ -152,6 +154,18 @@ fun HomeScreen(
     onOpenProfile: () -> Unit
 ) {
     val context = LocalContext.current
+    val appEntryPoint = remember(context) {
+        runCatching {
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                AppEntryPoint::class.java
+            )
+        }.getOrNull()
+    }
+    val userSummary by (appEntryPoint?.userRepository()?.observeUserSummary()
+        ?: kotlinx.coroutines.flow.flowOf(null))
+        .collectAsState(initial = null)
+
     val store = remember(context) { SalesJournalStore(context) }
     val appSettings = remember(context) { AppSettings(context) }
     val scope = rememberCoroutineScope()
@@ -295,8 +309,8 @@ fun HomeScreen(
         KuotaCardCatalog.firstOrNull { it.id == tierId } ?: KuotaCardCatalog.first()
     }
 
-    val userCreditLevel = remember(revision) {
-        val lvl = appSettings.creditLevelNumber
+    val userCreditLevel = remember(userSummary, revision) {
+        val lvl = userSummary?.level ?: appSettings.creditLevelNumber
         com.kouta.app.domain.model.CreditLevel.fromNumber(lvl)
     }
 
@@ -342,8 +356,8 @@ fun HomeScreen(
     var transactionTab by rememberSaveable { mutableIntStateOf(0) } // 0: Movimientos, 1: Cuotas por pagar
 
     // Datos coherentes PRD HOME-01 y HOME-02
-    val availableLineCents = remember(userCreditLevel, appSettings.availableCreditLineCents) {
-        appSettings.availableCreditLineCents.takeIf { it > 0 } ?: userCreditLevel.maxLineCents
+    val availableLineCents = remember(userSummary, userCreditLevel) {
+        userSummary?.availableCreditCents ?: appSettings.availableCreditLineCents.takeIf { it > 0 } ?: userCreditLevel.maxLineCents
     }
     val maxPurchaseCapacityCents = remember(userCreditLevel, availableLineCents) {
         userCreditLevel.calculateMaxPurchaseCents(availableLineCents)

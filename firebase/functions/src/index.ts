@@ -5,6 +5,9 @@ import * as admin from "firebase-admin";
 import express from "express";
 import cors from "cors";
 import * as crypto from "crypto";
+import { calculateQuote, PurchaseQuote } from "./credit/quotes";
+import { createPurchaseLedgerEntries, validateDoubleEntryBalance, LedgerEntry } from "./credit/ledger";
+import { SandboxPaymentGateway } from "./credit/gateway";
 if (!admin.apps.length) {
   admin.initializeApp();
 }
@@ -836,3 +839,587 @@ export const submitKyc = onCall({ region: "us-central1" }, async (request) => {
     message: "Verificación enviada correctamente. Estamos validando tus datos.",
   };
 });
+
+// ---------------------------------------------------------------------------
+// 13. FASE 2: MOTOR DE CRÉDITO Y COMPRA AL CRÉDITO (PRD §8.5 & AGENTS.md)
+// ---------------------------------------------------------------------------
+
+interface BusinessConfigData {
+  levels: Array<{ level: number; downPaymentBasisPoints: number; maxCreditCents: number }>;
+  fees: {
+    buyerFinancingBasisPoints: number;
+    providerTransactionBasisPoints: number;
+    minPurchaseCents: number;
+  };
+  terms: Array<{ days: number; installmentsCount: number }>;
+}
+
+async function getBusinessConfig(): Promise<BusinessConfigData> {
+  const [levelsDoc, feesDoc, termsDoc] = await Promise.all([
+    db.collection("config").doc("levels").get(),
+    db.collection("config").doc("fees").get(),
+    db.collection("config").doc("terms").get(),
+  ]);
+
+  const defaultLevels = [
+    { level: 1, downPaymentBasisPoints: 5000, maxCreditCents: 70000 },
+    { level: 2, downPaymentBasisPoints: 4000, maxCreditCents: 150000 },
+    { level: 3, downPaymentBasisPoints: 3000, maxCreditCents: 300000 },
+    { level: 4, downPaymentBasisPoints: 2500, maxCreditCents: 500000 },
+    { level: 5, downPaymentBasisPoints: 2000, maxCreditCents: 800000 },
+    { level: 6, downPaymentBasisPoints: 1000, maxCreditCents: 1200000 },
+  ];
+
+  const levels = levelsDoc.exists && levelsDoc.data()?.tiers ? levelsDoc.data()?.tiers : defaultLevels;
+
+  const defaultFees = {
+    buyerFinancingBasisPoints: 500, // 5% fijo
+    providerTransactionBasisPoints: 200, // 2% pasarela/comisión
+    minPurchaseCents: 19900, // S/ 199.00
+  };
+
+  const fees = feesDoc.exists ? { ...defaultFees, ...feesDoc.data() } : defaultFees;
+
+  const defaultTerms = [
+    { days: 21, installmentsCount: 3 },
+    { days: 28, installmentsCount: 4 },
+    { days: 42, installmentsCount: 6 },
+  ];
+
+  const terms = termsDoc.exists && termsDoc.data()?.terms ? termsDoc.data()?.terms : defaultTerms;
+
+  return { levels, fees, terms };
+}
+
+/**
+ * Callable: quotePurchase
+ * Cotiza una compra de crédito según el nivel del usuario y las reglas de negocio.
+ */
+export const quotePurchase = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Debe iniciar sesión para cotizar compras al crédito.");
+  }
+
+  const uid = request.auth.uid;
+  const { totalAmountCents, installmentsCount = 4 } = request.data || {};
+
+  if (!Number.isInteger(totalAmountCents) || totalAmountCents <= 0) {
+    throw new HttpsError("invalid-argument", "Monto de compra inválido en céntimos.");
+  }
+
+  const [summarySnap, config] = await Promise.all([
+    db.doc(`users/${uid}/summary/current`).get(),
+    getBusinessConfig(),
+  ]);
+
+  if (!summarySnap.exists) {
+    throw new HttpsError("failed-precondition", "Perfil de crédito no inicializado.");
+  }
+
+  const summary = summarySnap.data() || {};
+  if (summary.kycStatus !== "approved") {
+    throw new HttpsError("permission-denied", "Tu verificación de identidad (KYC) debe estar aprobada para comprar al crédito.");
+  }
+
+  if ((summary.overdueCount || 0) > 0 || (summary.overdueInstallmentsCount || 0) > 0) {
+    throw new HttpsError("failed-precondition", "Tienes cuotas vencidas pendientes de regularización.");
+  }
+
+  if (totalAmountCents < config.fees.minPurchaseCents) {
+    throw new HttpsError(
+      "invalid-argument",
+      `El monto mínimo de compra al crédito es S/ ${(config.fees.minPurchaseCents / 100).toFixed(2)}.`
+    );
+  }
+
+  const userLevel = summary.level || 1;
+  const levelTier = config.levels.find(l => l.level === userLevel) || config.levels[0];
+  const downPaymentBps = levelTier.downPaymentBasisPoints;
+
+  const quote = calculateQuote({
+    totalAmountCents,
+    downPaymentBps,
+    buyerFeeBps: config.fees.buyerFinancingBasisPoints,
+    providerFeeBps: config.fees.providerTransactionBasisPoints,
+    providerAdvanceBps: 6000, // 60%
+    installmentsCount,
+    startDate: new Date(),
+  });
+
+  const availableCreditCents = summary.availableCreditCents || 0;
+  const isEligible = quote.financedAmountCents <= availableCreditCents;
+
+  return {
+    success: true,
+    isEligible,
+    userLevel,
+    availableCreditCents,
+    quote,
+    message: isEligible
+      ? "Cotización generada exitosamente."
+      : `El monto financiado (S/ ${(quote.financedAmountCents / 100).toFixed(2)}) supera tu crédito disponible (S/ ${(availableCreditCents / 100).toFixed(2)}).`,
+  };
+});
+
+/**
+ * Callable: createPurchase
+ * Crea la orden de compra al crédito en estado QUOTED con TTL de 15 minutos.
+ */
+export const createPurchase = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Debe iniciar sesión para solicitar compras al crédito.");
+  }
+
+  const uid = request.auth.uid;
+  const { supplierId, supplierName, totalAmountCents, installmentsCount = 4, notes } = request.data || {};
+
+  if (!supplierId) {
+    throw new HttpsError("invalid-argument", "El identificador del proveedor es obligatorio.");
+  }
+
+  if (!Number.isInteger(totalAmountCents) || totalAmountCents <= 0) {
+    throw new HttpsError("invalid-argument", "Monto de compra inválido.");
+  }
+
+  const [summarySnap, config] = await Promise.all([
+    db.doc(`users/${uid}/summary/current`).get(),
+    getBusinessConfig(),
+  ]);
+
+  if (!summarySnap.exists) {
+    throw new HttpsError("failed-precondition", "Perfil de crédito no disponible.");
+  }
+
+  const summary = summarySnap.data() || {};
+  if (summary.kycStatus !== "approved") {
+    throw new HttpsError("permission-denied", "Tu verificación de identidad (KYC) debe estar aprobada.");
+  }
+
+  if ((summary.overdueCount || 0) > 0 || (summary.overdueInstallmentsCount || 0) > 0) {
+    throw new HttpsError("failed-precondition", "Tienes cuotas vencidas pendientes de pago.");
+  }
+
+  const userLevel = summary.level || 1;
+  const levelTier = config.levels.find(l => l.level === userLevel) || config.levels[0];
+  const downPaymentBps = levelTier.downPaymentBasisPoints;
+
+  // Calculamos la cotización autoritativa en el backend
+  const quote = calculateQuote({
+    totalAmountCents,
+    downPaymentBps,
+    buyerFeeBps: config.fees.buyerFinancingBasisPoints,
+    providerFeeBps: config.fees.providerTransactionBasisPoints,
+    providerAdvanceBps: 6000,
+    installmentsCount,
+    startDate: new Date(),
+  });
+
+  const availableCreditCents = summary.availableCreditCents || 0;
+  if (quote.financedAmountCents > availableCreditCents) {
+    throw new HttpsError(
+      "failed-precondition",
+      `Línea de crédito insuficiente: disponible S/ ${(availableCreditCents / 100).toFixed(2)}, financiado requerido S/ ${(quote.financedAmountCents / 100).toFixed(2)}.`
+    );
+  }
+
+  const purchaseId = `PUR-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const expiresAtEpochMillis = Date.now() + 15 * 60 * 1000; // TTL 15 min
+  const expiresAt = admin.firestore.Timestamp.fromMillis(expiresAtEpochMillis);
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  const purchaseRecord = {
+    purchaseId,
+    buyerUid: uid,
+    providerUid: supplierId,
+    supplierName: supplierName || "Proveedor Autorizado",
+    notes: notes || null,
+    status: "QUOTED", // QUOTED -> DOWN_PAYMENT_CONFIRMED -> CONFIRMED / CANCELLED / EXPIRED
+    totalAmountCents: quote.totalAmountCents,
+    downPaymentCents: quote.downPaymentCents,
+    downPaymentPercent: quote.downPaymentPercent,
+    financedAmountCents: quote.financedAmountCents,
+    buyerFeeCents: quote.buyerFeeCents,
+    totalDebtCents: quote.totalDebtCents,
+    installmentsCount: quote.installmentsCount,
+    providerFeeCents: quote.providerFeeCents,
+    providerNetCents: quote.providerNetCents,
+    providerAdvanceCents: quote.providerAdvanceCents,
+    providerDeferredCents: quote.providerDeferredCents,
+    quote,
+    expiresAt,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await db.collection("purchases").doc(purchaseId).set(purchaseRecord);
+
+  // Notificar al proveedor para confirmar recepción de la inicial
+  await sendUserPush(supplierId, {
+    title: "Nueva solicitud de compra al crédito",
+    body: `El cliente solicita compra por S/ ${(quote.totalAmountCents / 100).toFixed(2)}. Verifica la inicial de S/ ${(quote.downPaymentCents / 100).toFixed(2)}.`,
+  });
+
+  return {
+    success: true,
+    purchaseId,
+    status: "QUOTED",
+    expiresAtEpochMillis,
+    quote,
+  };
+});
+
+/**
+ * Callable: providerApprovePurchase
+ * El proveedor confirma que recibió la inicial del cliente en efectivo / Yape / Plin / POS.
+ */
+export const providerApprovePurchase = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Debe iniciar sesión para confirmar recepción de inicial.");
+  }
+
+  const { purchaseId } = request.data || {};
+  if (!purchaseId) {
+    throw new HttpsError("invalid-argument", "ID de compra requerido.");
+  }
+
+  const purchaseRef = db.collection("purchases").doc(purchaseId);
+  const purchaseDoc = await purchaseRef.get();
+
+  if (!purchaseDoc.exists) {
+    throw new HttpsError("not-found", "Orden de compra no encontrada.");
+  }
+
+  const purchase = purchaseDoc.data() || {};
+  const isAuthorized = purchase.providerUid === request.auth.uid || request.auth.token.role === "admin";
+  if (!isAuthorized) {
+    throw new HttpsError("permission-denied", "No tienes permisos para aprobar esta orden de compra.");
+  }
+
+  if (purchase.status !== "QUOTED") {
+    throw new HttpsError("failed-precondition", `Estado inválido para confirmación: ${purchase.status}`);
+  }
+
+  const nowEpoch = Date.now();
+  const expiresEpoch = purchase.expiresAt?.toMillis() || 0;
+  if (nowEpoch > expiresEpoch) {
+    await purchaseRef.update({
+      status: "EXPIRED",
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    throw new HttpsError("deadline-exceeded", "La cotización ha expirado (límite de 15 minutos superado).");
+  }
+
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  await purchaseRef.update({
+    status: "DOWN_PAYMENT_CONFIRMED",
+    providerApprovedAt: now,
+    updatedAt: now,
+  });
+
+  // Notificar al comprador para que confirme el cronograma de pago
+  await sendUserPush(purchase.buyerUid, {
+    title: "¡Inicial confirmada por tu proveedor!",
+    body: `Tu proveedor confirmó la inicial de S/ ${(purchase.downPaymentCents / 100).toFixed(2)}. Confirma tu cronograma para finalizar.`,
+  });
+
+  return {
+    success: true,
+    purchaseId,
+    status: "DOWN_PAYMENT_CONFIRMED",
+  };
+});
+
+/**
+ * Callable: buyerConfirmPurchase
+ * El comprador aprueba el cronograma de cuotas semanales.
+ * Se descuenta la línea disponible, se crea el cronograma y se genera el libro contable de doble entrada.
+ */
+export const buyerConfirmPurchase = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Debe iniciar sesión para confirmar la compra.");
+  }
+
+  const buyerUid = request.auth.uid;
+  const { purchaseId } = request.data || {};
+  if (!purchaseId) {
+    throw new HttpsError("invalid-argument", "ID de compra requerido.");
+  }
+
+  const purchaseRef = db.collection("purchases").doc(purchaseId);
+  const summaryRef = db.doc(`users/${buyerUid}/summary/current`);
+
+  const result = await db.runTransaction(async (transaction) => {
+    const [purchaseDoc, summaryDoc] = await Promise.all([
+      transaction.get(purchaseRef),
+      transaction.get(summaryRef),
+    ]);
+
+    if (!purchaseDoc.exists) {
+      throw new HttpsError("not-found", "Orden de compra no encontrada.");
+    }
+
+    const purchase = purchaseDoc.data() || {};
+    if (purchase.buyerUid !== buyerUid) {
+      throw new HttpsError("permission-denied", "No puedes confirmar una compra ajena.");
+    }
+
+    if (purchase.status !== "DOWN_PAYMENT_CONFIRMED") {
+      throw new HttpsError(
+        "failed-precondition",
+        `La compra debe estar en estado DOWN_PAYMENT_CONFIRMED para finalizarse (estado actual: ${purchase.status}).`
+      );
+    }
+
+    if (Date.now() > (purchase.expiresAt?.toMillis() || 0)) {
+      throw new HttpsError("deadline-exceeded", "La cotización ha expirado.");
+    }
+
+    if (!summaryDoc.exists) {
+      throw new HttpsError("failed-precondition", "Perfil de crédito no encontrado.");
+    }
+
+    const summary = summaryDoc.data() || {};
+    const available = summary.availableCreditCents || 0;
+    const financed = purchase.financedAmountCents || 0;
+
+    if (available < financed) {
+      throw new HttpsError("failed-precondition", "Línea de crédito insuficiente en el momento de la confirmación.");
+    }
+
+    const newAvailable = available - financed;
+    const newUsed = (summary.usedCreditCents || 0) + financed;
+    const firstInstallment = purchase.quote.installments[0];
+
+    // 1. Asientos de partida doble en el ledger
+    const ledgerEntries = createPurchaseLedgerEntries(purchaseId, purchase.quote);
+    for (const entry of ledgerEntries) {
+      const entryRef = db.collection("ledger").doc();
+      transaction.set(entryRef, {
+        ...entry,
+        entryId: entryRef.id,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    // 2. Registro de cuotas en subcolección y colección raíz para consultas eficientes
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    for (const inst of purchase.quote.installments) {
+      const instData = {
+        installmentId: `${purchaseId}_${inst.installmentNumber}`,
+        purchaseId,
+        buyerUid,
+        providerUid: purchase.providerUid,
+        supplierName: purchase.supplierName,
+        installmentNumber: inst.installmentNumber,
+        totalInstallments: purchase.installmentsCount,
+        dueDate: inst.dueDate,
+        amountCents: inst.amountCents,
+        status: "PENDING",
+        createdAt: now,
+      };
+
+      const subRef = purchaseRef.collection("installments").doc(String(inst.installmentNumber));
+      const topRef = db.collection("installments").doc(`${purchaseId}_${inst.installmentNumber}`);
+
+      transaction.set(subRef, instData);
+      transaction.set(topRef, instData);
+    }
+
+    // 3. Actualizar estado de compra
+    transaction.update(purchaseRef, {
+      status: "CONFIRMED",
+      confirmedAt: now,
+      updatedAt: now,
+    });
+
+    // 4. Actualizar resumen de crédito del comprador (Home en 1 lectura)
+    transaction.update(summaryRef, {
+      availableCreditCents: newAvailable,
+      usedCreditCents: newUsed,
+      nextDueInstallmentCents: firstInstallment.amountCents,
+      nextDueDate: firstInstallment.dueDate,
+      updatedAt: now,
+    });
+
+    return {
+      purchaseId,
+      status: "CONFIRMED",
+      firstDueDate: firstInstallment.dueDate,
+      firstInstallmentAmountCents: firstInstallment.amountCents,
+      providerUid: purchase.providerUid,
+      totalAmountCents: purchase.totalAmountCents,
+    };
+  });
+
+  // Notificar push a ambas partes
+  await Promise.all([
+    sendUserPush(buyerUid, {
+      title: "¡Compra al crédito confirmada!",
+      body: `Tu compra de S/ ${(result.totalAmountCents / 100).toFixed(2)} está activa. Tu primera cuota de S/ ${(result.firstInstallmentAmountCents / 100).toFixed(2)} vence el ${result.firstDueDate.split("T")[0]}.`,
+    }),
+    sendUserPush(result.providerUid, {
+      title: "Venta al crédito confirmada",
+      body: `El cliente confirmó la compra por S/ ${(result.totalAmountCents / 100).toFixed(2)}. Pronto recibirás el adelanto según cronograma.`,
+    }),
+  ]);
+
+  return {
+    success: true,
+    purchaseId: result.purchaseId,
+    status: result.status,
+  };
+});
+
+/**
+ * Callable: cancelPurchase
+ * Cancela una compra si aún no ha sido confirmada por ambas partes.
+ */
+export const cancelPurchase = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Debe iniciar sesión para cancelar una orden.");
+  }
+
+  const { purchaseId, reason } = request.data || {};
+  if (!purchaseId) {
+    throw new HttpsError("invalid-argument", "ID de compra requerido.");
+  }
+
+  const purchaseRef = db.collection("purchases").doc(purchaseId);
+  const doc = await purchaseRef.get();
+
+  if (!doc.exists) {
+    throw new HttpsError("not-found", "Orden de compra no encontrada.");
+  }
+
+  const purchase = doc.data() || {};
+  const uid = request.auth.uid;
+  const isParty = purchase.buyerUid === uid || purchase.providerUid === uid || request.auth.token.role === "admin";
+
+  if (!isParty) {
+    throw new HttpsError("permission-denied", "No tienes permisos para cancelar esta compra.");
+  }
+
+  if (purchase.status !== "QUOTED" && purchase.status !== "DOWN_PAYMENT_CONFIRMED") {
+    throw new HttpsError("failed-precondition", `No se puede cancelar una compra en estado ${purchase.status}.`);
+  }
+
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  await purchaseRef.update({
+    status: "CANCELLED",
+    cancellationReason: reason || "Cancelado por el usuario",
+    cancelledAt: now,
+    updatedAt: now,
+  });
+
+  return {
+    success: true,
+    purchaseId,
+    status: "CANCELLED",
+  };
+});
+
+// ---------------------------------------------------------------------------
+// 14. WEBHOOK UNIVERSAL DE PASARELA (PAYMENT GATEWAY CON HMAC E IDEMPOTENCIA)
+// ---------------------------------------------------------------------------
+app.post("/api/v1/webhooks/gateway", async (req, res) => {
+  try {
+    const signature = (req.headers["x-kuota-signature"] as string) || "";
+    const rawPayload = JSON.stringify(req.body);
+    const gateway = new SandboxPaymentGateway();
+
+    // Verificación de firma criptográfica
+    if (!signature || !gateway.verifyWebhookSignature(rawPayload, signature)) {
+      return res.status(401).json({ code: "INVALID_SIGNATURE", message: "Firma inválida o ausente." });
+    }
+
+    const { eventId, eventType, installmentId, amountCents, buyerUid } = req.body;
+    if (!eventId || !installmentId || !amountCents) {
+      return res.status(400).json({ code: "INVALID_PAYLOAD", message: "Faltan parámetros requeridos." });
+    }
+
+    // Deduplicación idempotente
+    const eventRef = db.collection("webhook_processed_events").doc(eventId);
+    const existing = await eventRef.get();
+    if (existing.exists) {
+      return res.status(200).json({ status: "DUPLICATE", message: "Notificación previamente procesada." });
+    }
+
+    const now = admin.firestore.FieldValue.serverTimestamp();
+
+    await db.runTransaction(async (transaction) => {
+      // 1. Marcar evento como procesado
+      transaction.set(eventRef, {
+        eventId,
+        eventType: eventType || "PAYMENT_APPROVED",
+        installmentId,
+        amountCents,
+        processedAt: now,
+      });
+
+      // 2. Marcar cuota como pagada
+      const instRef = db.collection("installments").doc(installmentId);
+      const instDoc = await transaction.get(instRef);
+
+      if (instDoc.exists) {
+        const instData = instDoc.data() || {};
+        transaction.update(instRef, {
+          status: "PAID",
+          paidAt: now,
+          paidAmountCents: amountCents,
+        });
+
+        // 3. Restaurar línea en summary del comprador
+        const targetBuyerUid = buyerUid || instData.buyerUid;
+        if (targetBuyerUid) {
+          const sumRef = db.doc(`users/${targetBuyerUid}/summary/current`);
+          const sumDoc = await transaction.get(sumRef);
+          if (sumDoc.exists) {
+            const sumData = sumDoc.data() || {};
+            const restoredAvailable = Math.min(
+              sumData.maxCreditCents || 70000,
+              (sumData.availableCreditCents || 0) + amountCents
+            );
+            const reducedUsed = Math.max(0, (sumData.usedCreditCents || 0) - amountCents);
+
+            transaction.update(sumRef, {
+              availableCreditCents: restoredAvailable,
+              usedCreditCents: reducedUsed,
+              updatedAt: now,
+            });
+          }
+        }
+
+        // 4. Asiento contable de cobranza
+        const ledgerRef = db.collection("ledger").doc();
+        transaction.set(ledgerRef, {
+          entryId: ledgerRef.id,
+          transactionId: `tx_payment_${installmentId}`,
+          account: "CAJA_RECAUDACION",
+          entryType: "DEBIT",
+          amountCents,
+          currency: "PEN",
+          description: `Cobranza de cuota ${installmentId}`,
+          createdAt: now,
+        });
+
+        const ledgerRef2 = db.collection("ledger").doc();
+        transaction.set(ledgerRef2, {
+          entryId: ledgerRef2.id,
+          transactionId: `tx_payment_${installmentId}`,
+          account: "CUENTAS_POR_COBRAR_COMPRADOR",
+          entryType: "CREDIT",
+          amountCents,
+          currency: "PEN",
+          description: `Amortización de cuenta por cobrar por cuota ${installmentId}`,
+          createdAt: now,
+        });
+      }
+    });
+
+    return res.status(200).json({ status: "SUCCESS", eventId, installmentId });
+  } catch (error) {
+    console.error("Error en gateway webhook:", error);
+    return res.status(500).json({ code: "GATEWAY_ERROR", message: "Error procesando webhook de pasarela." });
+  }
+});
+
