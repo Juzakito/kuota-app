@@ -39,6 +39,7 @@ sealed class NavDestination(
     object SupplierPending : NavDestination("supplier_pending", "Por confirmar", Icons.Default.PendingActions)
     object SupplierCharge : NavDestination("supplier_charge", "Cobrar", Icons.Default.QrCodeScanner)
     object SupplierSales : NavDestination("supplier_sales", "Ventas", Icons.AutoMirrored.Filled.ReceiptLong)
+    object SupplierQr : NavDestination("supplier_qr", "Mi QR", Icons.Default.QrCodeScanner)
 
     // Common / Modal
     object Profile : NavDestination("profile", "Cuenta", Icons.Default.Person)

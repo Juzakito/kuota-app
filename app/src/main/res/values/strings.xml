@@ -117,4 +117,37 @@
     <string name="credit_line_levels_info">Conoce los 6 niveles de crecimiento</string>
     <string name="credit_line_modal_title">Escalera de Niveles Kuota</string>
     <string name="credit_line_modal_close">Entendido</string>
+
+    <!-- Fase 3: Proveedor & Kuota Payments (PRD §3, §4, §8.5) -->
+    <string name="supplier_qr_title">Mi QR de cobro</string>
+    <string name="supplier_qr_tab_static">QR mostrador</string>
+    <string name="supplier_qr_tab_dynamic">QR con monto</string>
+    <string name="supplier_qr_static_desc">Coloca este QR en tu puesto o mostrador para que tus clientes soliciten compras al crédito al instante.</string>
+    <string name="supplier_qr_dynamic_desc">Genera un QR con monto exacto. Tiene una validez de 15 minutos para ser escaneado por el cliente.</string>
+    <string name="supplier_qr_share">Compartir código QR</string>
+    <string name="supplier_earnings_title">Cobros esperados</string>
+    <string name="supplier_advance_label">Adelanto (60%) en 48h</string>
+    <string name="supplier_deferred_label">Cuotas diferidas semanales</string>
+    <string name="supplier_pending_approvals_title">Compras por confirmar inicial</string>
+    <string name="supplier_btn_approve_initial">Confirmar recepción de inicial</string>
+    <string name="supplier_payments_title">Cobrar con Kuota Payments</string>
+    <string name="supplier_payments_subtitle">Cobra por WhatsApp con tarjeta o financiamiento Kuota.</string>
+    <string name="supplier_payments_amount_label">Monto de cobro (mínimo S/ 199.00)</string>
+    <string name="supplier_payments_phone_label">Celular del cliente (+51)</string>
+    <string name="supplier_payments_dni_label">DNI del cliente (opcional)</string>
+    <string name="supplier_payments_concept_label">Concepto de la venta (opcional)</string>
+    <string name="supplier_payments_fee_label">Comisión Kuota (2%)</string>
+    <string name="supplier_payments_net_label">Recibirás neto</string>
+    <string name="supplier_payments_btn_whatsapp">Enviar link por WhatsApp</string>
+    <string name="pos_calc_title">Calculadora de ahorro vs POS</string>
+    <string name="pos_calc_subtitle">Compara tu costo actual de POS con la comisión plana del 2% de Kuota.</string>
+    <string name="pos_calc_sales_label">Ventas mensuales estimadas con tarjeta</string>
+    <string name="pos_calc_pos_cost">Costo con POS tradicional (~3.5%)</string>
+    <string name="pos_calc_kuota_cost">Costo con Kuota (2% + suscripción)</string>
+    <string name="pos_calc_savings_label">Ahorro mensual estimado</string>
+    <string name="pos_calc_threshold_warning">Para maximizar el ahorro frente al POS tradicional, tu negocio debe facturar al menos S/ 6,300 mensuales con tarjeta.</string>
+    <string name="directory_title">Proveedores Verificados</string>
+    <string name="directory_search_placeholder">Buscar por proveedor, rubro o distrito…</string>
+    <string name="directory_category_all">Todos</string>
+    <string name="directory_btn_buy">Comprar con este proveedor</string>
 </resources>

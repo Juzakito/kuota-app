@@ -4,6 +4,7 @@ import com.kuota.core.data.repository.AuthRepository
 import com.kuota.core.data.repository.ConfigRepository
 import com.kuota.core.data.repository.KycRepository
 import com.kuota.core.data.repository.PurchaseRepository
+import com.kuota.core.data.repository.SupplierRepository
 import com.kuota.core.data.repository.UserRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -17,4 +18,5 @@ interface AppEntryPoint {
     fun configRepository(): ConfigRepository
     fun kycRepository(): KycRepository
     fun purchaseRepository(): PurchaseRepository
+    fun supplierRepository(): SupplierRepository
 }

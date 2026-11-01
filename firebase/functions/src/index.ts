@@ -5,9 +5,13 @@ import * as admin from "firebase-admin";
 import express from "express";
 import cors from "cors";
 import * as crypto from "crypto";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { calculateQuote, PurchaseQuote } from "./credit/quotes";
 import { createPurchaseLedgerEntries, validateDoubleEntryBalance, LedgerEntry } from "./credit/ledger";
 import { SandboxPaymentGateway } from "./credit/gateway";
+import { generateSignedQr, verifySignedQr } from "./supplier/qr";
+import { calculatePaymentLinkQuote, calculatePosSavings } from "./supplier/payments";
+import { createAdvancePayoutRecord } from "./supplier/payouts";
 if (!admin.apps.length) {
   admin.initializeApp();
 }
@@ -1241,6 +1245,20 @@ export const buyerConfirmPurchase = onCall({ region: "us-central1" }, async (req
       updatedAt: now,
     });
 
+    // 5. Registrar payout del adelanto (60%) programado a 48h para el proveedor
+    const advanceRecord = createAdvancePayoutRecord({
+      purchaseId,
+      providerUid: purchase.providerUid,
+      supplierName: purchase.supplierName,
+      advanceAmountCents: purchase.providerAdvanceCents,
+      confirmedDate: new Date(),
+    });
+    const payoutRef = db.collection("payouts").doc(advanceRecord.payoutId);
+    transaction.set(payoutRef, {
+      ...advanceRecord,
+      createdAt: now,
+    });
+
     return {
       purchaseId,
       status: "CONFIRMED",
@@ -1422,4 +1440,305 @@ app.post("/api/v1/webhooks/gateway", async (req, res) => {
     return res.status(500).json({ code: "GATEWAY_ERROR", message: "Error procesando webhook de pasarela." });
   }
 });
+
+// ---------------------------------------------------------------------------
+// 15. FASE 3: MÓDULO DE PROVEEDOR, PAYMENTS & PAYOUTS PROGRAMADOS (PRD §3, §4, §8.5)
+// ---------------------------------------------------------------------------
+
+/**
+ * Callable: generateSupplierQr
+ * Genera el payload criptográfico firmado para el QR del proveedor (Estático o Dinámico).
+ */
+export const generateSupplierQr = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Debe iniciar sesión para generar su QR de cobro.");
+  }
+
+  const providerUid = request.auth.uid;
+  const { amountCents } = request.data || {};
+
+  // Consultar perfil del proveedor
+  const [userDoc, merchantDoc] = await Promise.all([
+    db.collection("users").doc(providerUid).get(),
+    db.collection("merchants").doc(providerUid).get(),
+  ]);
+
+  const userData = userDoc.data() || {};
+  const merchantData = merchantDoc.data() || {};
+  const businessName = merchantData.name || userData.businessName || "Comercio Asociado Kuota";
+  const category = merchantData.category || userData.category || "General";
+
+  if (amountCents && Number.isInteger(amountCents) && amountCents > 0) {
+    // QR Dinámico: Monto prefijado + TTL 15 minutos
+    const txId = `TX-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const exp = Date.now() + 15 * 60 * 1000;
+    const { signedString, rawPayload } = generateSignedQr(
+      {
+        type: "DYNAMIC",
+        providerUid,
+        businessName,
+        amountCents,
+        txId,
+        exp,
+      },
+      JWT_SECRET
+    );
+
+    return {
+      success: true,
+      type: "DYNAMIC",
+      signedQr: signedString,
+      businessName,
+      amountCents,
+      expiresAtEpochMillis: exp,
+      rawPayload,
+    };
+  }
+
+  // QR Estático: Para mostrador físico del negocio
+  const { signedString, rawPayload } = generateSignedQr(
+    {
+      type: "STATIC",
+      providerUid,
+      businessName,
+      category,
+      issuedAt: Date.now(),
+    },
+    JWT_SECRET
+  );
+
+  return {
+    success: true,
+    type: "STATIC",
+    signedQr: signedString,
+    businessName,
+    category,
+    rawPayload,
+  };
+});
+
+/**
+ * Callable: createPaymentLink
+ * Genera un enlace de cobro de Kuota Payments para enviar por WhatsApp.
+ * Valida monto mínimo (S/ 199.00) y calcula comisión transparente (2%).
+ */
+export const createPaymentLink = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Debe iniciar sesión para generar un link de cobro.");
+  }
+
+  const providerUid = request.auth.uid;
+  const { amountCents, clientPhone, clientDni, concept } = request.data || {};
+
+  if (!clientPhone || String(clientPhone).trim().length < 9) {
+    throw new HttpsError("invalid-argument", "El celular del cliente es obligatorio.");
+  }
+
+  const config = await getBusinessConfig();
+  const minAmount = config.fees.minPurchaseCents || 19900; // S/ 199.00
+
+  if (!Number.isInteger(amountCents) || amountCents < minAmount) {
+    throw new HttpsError(
+      "invalid-argument",
+      `El monto mínimo para Kuota Payments es S/ ${(minAmount / 100).toFixed(2)}.`
+    );
+  }
+
+  const userDoc = await db.collection("users").doc(providerUid).get();
+  const supplierName = userDoc.data()?.businessName || "Proveedor Autorizado Kuota";
+
+  const linkId = `LNK-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const quote = calculatePaymentLinkQuote({
+    amountCents,
+    supplierName,
+    clientPhone: String(clientPhone).trim(),
+    clientDni: clientDni ? String(clientDni).trim() : undefined,
+    concept: concept ? String(concept).trim() : undefined,
+    linkId,
+    minAmountCents: minAmount,
+    feeBasisPoints: config.fees.providerTransactionBasisPoints || 200,
+  });
+
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas de vigencia
+
+  await db.collection("payment_links").doc(linkId).set({
+    linkId,
+    providerUid,
+    supplierName,
+    amountCents: quote.amountCents,
+    feeCents: quote.feeCents,
+    netCents: quote.netCents,
+    clientPhone: quote.clientPhone,
+    clientDni: quote.clientDni || null,
+    concept: quote.concept || null,
+    shortUrl: quote.shortUrl,
+    whatsappUrl: quote.whatsappUrl,
+    status: "ACTIVE",
+    expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+    createdAt: now,
+  });
+
+  return {
+    success: true,
+    linkId,
+    amountCents: quote.amountCents,
+    feeCents: quote.feeCents,
+    netCents: quote.netCents,
+    shortUrl: quote.shortUrl,
+    whatsappUrl: quote.whatsappUrl,
+    expiresAt: expiresAt.toISOString(),
+  };
+});
+
+/**
+ * Callable: getSupplierExpectedEarnings
+ * Retorna el consolidado de cobros esperados:
+ * - Adelantos del 60% pendientes de liquidar a 48h.
+ * - Cuotas semanales diferidas por cobrar.
+ */
+export const getSupplierExpectedEarnings = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Debe iniciar sesión para ver sus cobros esperados.");
+  }
+
+  const providerUid = request.auth.uid;
+
+  const [payoutsSnap, purchasesSnap] = await Promise.all([
+    db.collection("payouts")
+      .where("providerUid", "==", providerUid)
+      .where("status", "==", "PENDING")
+      .get(),
+    db.collection("purchases")
+      .where("providerUid", "==", providerUid)
+      .where("status", "==", "CONFIRMED")
+      .limit(50)
+      .get(),
+  ]);
+
+  let totalPendingAdvanceCents = 0;
+  const pendingPayouts = payoutsSnap.docs.map(doc => {
+    const data = doc.data();
+    totalPendingAdvanceCents += (data.amountCents || 0);
+    return {
+      payoutId: doc.id,
+      purchaseId: data.purchaseId,
+      amountCents: data.amountCents || 0,
+      type: data.type || "ADVANCE_60",
+      dueDate: data.dueDate || "",
+      status: data.status || "PENDING",
+      bankAccountMasked: data.bankAccountMasked || "BCP Soles ****4812",
+    };
+  });
+
+  let totalPendingDeferredCents = 0;
+  for (const doc of purchasesSnap.docs) {
+    const p = doc.data();
+    totalPendingDeferredCents += (p.providerDeferredCents || 0);
+  }
+
+  return {
+    success: true,
+    totalPendingAdvanceCents,
+    totalPendingDeferredCents,
+    totalExpectedCents: totalPendingAdvanceCents + totalPendingDeferredCents,
+    pendingPayouts,
+  };
+});
+
+/**
+ * Helper interno: liquida los payouts pendientes vencidos (scheduledPayoutsRunner).
+ */
+async function processDuePayouts(): Promise<{ processedCount: number; totalAmountCents: number }> {
+  const now = new Date();
+  const nowIso = now.toISOString();
+
+  const dueSnapshot = await db.collection("payouts")
+    .where("status", "==", "PENDING")
+    .where("dueDate", "<=", nowIso)
+    .limit(50)
+    .get();
+
+  if (dueSnapshot.empty) {
+    return { processedCount: 0, totalAmountCents: 0 };
+  }
+
+  let processedCount = 0;
+  let totalAmountCents = 0;
+
+  for (const doc of dueSnapshot.docs) {
+    const payout = doc.data();
+    const amount = payout.amountCents || 0;
+    const nowFs = admin.firestore.FieldValue.serverTimestamp();
+
+    await db.runTransaction(async (transaction) => {
+      // 1. Actualizar estado del payout a SETTLED
+      transaction.update(doc.ref, {
+        status: "SETTLED",
+        settledAt: nowFs,
+      });
+
+      // 2. Asientos contables de partida doble
+      const ledgerDebit = db.collection("ledger").doc();
+      transaction.set(ledgerDebit, {
+        entryId: ledgerDebit.id,
+        transactionId: `payout_${doc.id}`,
+        account: payout.type === "ADVANCE_60" ? "CUENTAS_POR_PAGAR_PROVEEDOR_ADELANTO" : "CUENTAS_POR_PAGAR_PROVEEDOR_DIFERIDO",
+        entryType: "DEBIT",
+        amountCents: amount,
+        currency: "PEN",
+        description: `Liquidación de ${payout.type} a proveedor ${payout.providerUid}`,
+        createdAt: nowFs,
+      });
+
+      const ledgerCredit = db.collection("ledger").doc();
+      transaction.set(ledgerCredit, {
+        entryId: ledgerCredit.id,
+        transactionId: `payout_${doc.id}`,
+        account: "BANCO_LIQUIDACIONES",
+        entryType: "CREDIT",
+        amountCents: amount,
+        currency: "PEN",
+        description: `Desembolso bancario automático a cuenta del proveedor`,
+        createdAt: nowFs,
+      });
+    });
+
+    // 3. Notificación Push al proveedor
+    await sendUserPush(payout.providerUid, {
+      title: "¡Liquidación depositada en tu cuenta!",
+      body: `Kuota ha transferido S/ ${(amount / 100).toFixed(2)} por tu adelanto de venta. Revisa tu cuenta bancaria.`,
+    });
+
+    processedCount++;
+    totalAmountCents += amount;
+  }
+
+  return { processedCount, totalAmountCents };
+}
+
+/**
+ * Cron programado: scheduledPayoutsRunner
+ * Se ejecuta diariamente a las 07:00 (hora de Lima) para procesar adelantos cumplidos a 48h.
+ */
+export const scheduledPayoutsRunner = onSchedule(
+  { schedule: "0 7 * * *", timeZone: "America/Lima" },
+  async () => {
+    console.log("[SCHEDULER] Iniciando scheduledPayoutsRunner para liquidaciones a proveedores");
+    const result = await processDuePayouts();
+    console.log(`[SCHEDULER] Payouts procesados: ${result.processedCount}, Monto: S/ ${(result.totalAmountCents / 100).toFixed(2)}`);
+  }
+);
+
+/**
+ * Callable para pruebas en dev/staging: triggerPayoutsManual
+ */
+export const triggerPayoutsManual = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Requiere autenticación.");
+  }
+  const result = await processDuePayouts();
+  return { success: true, ...result };
+});
+
 

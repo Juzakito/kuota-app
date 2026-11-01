@@ -6,9 +6,11 @@ import com.kuota.core.data.repository.DefaultKycRepository
 import com.kuota.core.data.repository.FirebaseAuthRepository
 import com.kuota.core.data.repository.FirebaseConfigRepository
 import com.kuota.core.data.repository.FirebasePurchaseRepository
+import com.kuota.core.data.repository.FirebaseSupplierRepository
 import com.kuota.core.data.repository.FirebaseUserRepository
 import com.kuota.core.data.repository.KycRepository
 import com.kuota.core.data.repository.PurchaseRepository
+import com.kuota.core.data.repository.SupplierRepository
 import com.kuota.core.data.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -49,4 +51,10 @@ abstract class RepositoryModule {
     abstract fun bindPurchaseRepository(
         impl: FirebasePurchaseRepository
     ): PurchaseRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSupplierRepository(
+        impl: FirebaseSupplierRepository
+    ): SupplierRepository
 }

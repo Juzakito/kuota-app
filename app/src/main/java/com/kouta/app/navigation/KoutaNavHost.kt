@@ -37,6 +37,7 @@ import com.kouta.app.feature.sales.SalesScreen
 import com.kouta.app.feature.supplier.SupplierChargeScreen
 import com.kouta.app.feature.supplier.SupplierHomeScreen
 import com.kouta.app.feature.supplier.SupplierPendingConfirmationsScreen
+import com.kouta.app.feature.supplier.SupplierQrScreen
 import com.kouta.app.feature.supplier.SupplierSalesHistoryScreen
 import com.kouta.app.feature.support.SupportScreen
 import kotlinx.coroutines.Dispatchers
@@ -220,7 +221,16 @@ fun KoutaNavHost(
                     },
                     onOpenNotifications = {
                         navController.navigate(NavDestination.Notifications.route) { launchSingleTop = true }
+                    },
+                    onOpenQr = {
+                        navController.navigate(NavDestination.SupplierQr.route) { launchSingleTop = true }
                     }
+                )
+            }
+
+            composable(NavDestination.SupplierQr.route) {
+                SupplierQrScreen(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 
