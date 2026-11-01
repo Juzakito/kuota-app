@@ -3,6 +3,8 @@ package com.kouta.app.feature.onboarding
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kouta.app.core.util.LocationResult
+import com.kouta.app.core.util.LocationTracker
 import com.kuota.core.data.repository.AuthRepository
 import com.kuota.core.data.repository.KycRepository
 import com.kuota.core.data.repository.UserRepository
@@ -61,6 +63,7 @@ data class OnboardingUiState(
     val selfieStoragePath: String? = null,
     val activeCameraCaptureTarget: CameraCaptureTarget = CameraCaptureTarget.NONE,
     val isSubmittingKyc: Boolean = false,
+    val isDetectingLocation: Boolean = false,
     val kycStatus: KycStatus = KycStatus.UNSUBMITTED,
     val userSummary: UserSummary? = null,
     val errorMessage: String? = null,
@@ -71,7 +74,8 @@ data class OnboardingUiState(
 class OnboardingViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val kycRepository: KycRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val locationTracker: LocationTracker
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OnboardingUiState())
@@ -193,7 +197,14 @@ class OnboardingViewModel @Inject constructor(
                 }
             },
             onError = { error ->
-                _uiState.update { it.copy(isOtpSending = false, errorMessage = error.message ?: "Error al enviar código SMS.") }
+                val errorMsg = when {
+                    error.message?.contains("CONFIGURATION_NOT_FOUND", ignoreCase = true) == true ->
+                        "Configuración de Firebase pendiente: En la consola de Firebase activa 'Teléfono' en Authentication y agrega la huella SHA-1."
+                    error.message?.contains("TOO_MANY_REQUESTS", ignoreCase = true) == true ->
+                        "Demasiados intentos. Espera unos minutos antes de solicitar otro SMS."
+                    else -> error.message ?: "Error al enviar código SMS."
+                }
+                _uiState.update { it.copy(isOtpSending = false, errorMessage = errorMsg) }
             }
         )
     }
@@ -286,6 +297,58 @@ class OnboardingViewModel @Inject constructor(
             )
         }
         saveCurrentDraft()
+    }
+
+    fun hasLocationPermission(): Boolean = locationTracker.hasLocationPermission()
+
+    fun detectLocation() {
+        _uiState.update { it.copy(isDetectingLocation = true, errorMessage = null) }
+        viewModelScope.launch {
+            when (val result = locationTracker.getCurrentLocation()) {
+                is LocationResult.Success -> {
+                    val loc = result.location
+                    _uiState.update { current ->
+                        current.copy(
+                            isDetectingLocation = false,
+                            location = current.location.copy(
+                                latitude = loc.latitude,
+                                longitude = loc.longitude,
+                                address = loc.address.ifBlank { current.location.address },
+                                district = loc.district.ifBlank { current.location.district },
+                                province = loc.province.ifBlank { current.location.province },
+                                department = loc.department.ifBlank { current.location.department }
+                            ),
+                            errorMessage = null
+                        )
+                    }
+                    saveCurrentDraft()
+                }
+                is LocationResult.PermissionDenied -> {
+                    _uiState.update {
+                        it.copy(
+                            isDetectingLocation = false,
+                            errorMessage = "Permiso de ubicación denegado. Puedes ingresar los datos de tu negocio manualmente."
+                        )
+                    }
+                }
+                is LocationResult.GpsDisabled -> {
+                    _uiState.update {
+                        it.copy(
+                            isDetectingLocation = false,
+                            errorMessage = "El GPS está desactivado. Activa la ubicación en los ajustes de tu teléfono."
+                        )
+                    }
+                }
+                is LocationResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isDetectingLocation = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun openCamera(target: CameraCaptureTarget) {

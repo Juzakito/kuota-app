@@ -4,6 +4,9 @@ import android.app.Activity
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.PhoneAuthCredential
+import com.kouta.app.core.util.DetectedLocation
+import com.kouta.app.core.util.LocationResult
+import com.kouta.app.core.util.LocationTracker
 import com.kuota.core.data.repository.AuthRepository
 import com.kuota.core.data.repository.KycRepository
 import com.kuota.core.data.repository.UserRepository
@@ -111,9 +114,27 @@ class OnboardingViewModelTest {
         override fun observeUserSummary(): Flow<UserSummary?> = summaryFlow
     }
 
+    private class FakeLocationTracker : LocationTracker {
+        var hasPermission: Boolean = true
+        var resultToReturn: LocationResult = LocationResult.Success(
+            DetectedLocation(
+                latitude = -12.0645,
+                longitude = -77.0163,
+                address = "Jr. Gamarra 1234",
+                district = "La Victoria",
+                province = "Lima",
+                department = "Lima"
+            )
+        )
+
+        override fun hasLocationPermission(): Boolean = hasPermission
+        override suspend fun getCurrentLocation(): LocationResult = resultToReturn
+    }
+
     private lateinit var authRepository: FakeAuthRepository
     private lateinit var kycRepository: FakeKycRepository
     private lateinit var userRepository: FakeUserRepository
+    private lateinit var locationTracker: FakeLocationTracker
     private lateinit var viewModel: OnboardingViewModel
 
     @Before
@@ -122,7 +143,8 @@ class OnboardingViewModelTest {
         authRepository = FakeAuthRepository()
         kycRepository = FakeKycRepository()
         userRepository = FakeUserRepository()
-        viewModel = OnboardingViewModel(authRepository, kycRepository, userRepository)
+        locationTracker = FakeLocationTracker()
+        viewModel = OnboardingViewModel(authRepository, kycRepository, userRepository, locationTracker)
     }
 
     @After
@@ -242,5 +264,33 @@ class OnboardingViewModelTest {
 
         assertNotNull(viewModel.uiState.value.errorMessage)
         assertNull(kycRepository.submitted)
+    }
+
+    @Test
+    fun testLocationDetectionSuccess() = runTest {
+        viewModel.detectLocation()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(false, state.isDetectingLocation)
+        assertEquals(-12.0645, state.location.latitude, 0.0001)
+        assertEquals(-77.0163, state.location.longitude, 0.0001)
+        assertEquals("Jr. Gamarra 1234", state.location.address)
+        assertEquals("La Victoria", state.location.district)
+        assertEquals("Lima", state.location.province)
+        assertNull(state.errorMessage)
+    }
+
+    @Test
+    fun testLocationDetectionPermissionDenied() = runTest {
+        locationTracker.hasPermission = false
+        locationTracker.resultToReturn = LocationResult.PermissionDenied
+
+        viewModel.detectLocation()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(false, state.isDetectingLocation)
+        assertTrue(state.errorMessage?.contains("denegado", ignoreCase = true) == true)
     }
 }

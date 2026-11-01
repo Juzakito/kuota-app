@@ -39,14 +39,12 @@ android {
     productFlavors {
         create("dev") {
             dimension = "environment"
-            applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
             buildConfigField("String", "FIREBASE_ENV", "\"dev\"")
             buildConfigField("boolean", "FIREBASE_CONFIGURED", hasFirebaseConfig("dev").toString())
         }
         create("staging") {
             dimension = "environment"
-            applicationIdSuffix = ".staging"
             versionNameSuffix = "-stg"
             buildConfigField("String", "FIREBASE_ENV", "\"staging\"")
             buildConfigField("boolean", "FIREBASE_CONFIGURED", hasFirebaseConfig("staging").toString())
@@ -138,13 +136,14 @@ dependencies {
     implementation(libs.firebase.appcheck.playintegrity)
     implementation(libs.firebase.appcheck.debug)
 
-    // QR, Camera & OCR
+    // QR, Camera, OCR & Location
     implementation("com.google.zxing:core:3.5.3")
     implementation("androidx.camera:camera-core:1.4.1")
     implementation("androidx.camera:camera-camera2:1.4.1")
     implementation("androidx.camera:camera-lifecycle:1.4.1")
     implementation("androidx.camera:camera-view:1.4.1")
     implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation(libs.coil.compose)
 
     // Testing

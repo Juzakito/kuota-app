@@ -87,6 +87,16 @@ fun OnboardingScreen(
     val context = LocalContext.current
     val activity = context as? Activity
 
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (fineGranted || coarseGranted) {
+            viewModel.detectLocation()
+        }
+    }
+
     // Si el usuario ya está aprobado o pendiente, mostrar pantalla de estado KYC
     if (state.kycStatus == KycStatus.APPROVED || state.kycStatus == KycStatus.PENDING || state.kycStatus == KycStatus.REJECTED) {
         KycStatusScreen(
@@ -248,11 +258,23 @@ fun OnboardingScreen(
                         department = state.location.department,
                         province = state.location.province,
                         district = state.location.district,
+                        latitude = state.location.latitude,
+                        longitude = state.location.longitude,
+                        isDetectingLocation = state.isDetectingLocation,
                         onUpdateProfile = { fn, d, bn, c, r, a, dep, prov, dist ->
                             viewModel.updateBusinessProfile(fn, d, bn, c, r, a, dep, prov, dist)
                         },
                         onDetectLocation = {
-                            viewModel.setLocationCoordinates(-12.0645, -77.0163)
+                            if (viewModel.hasLocationPermission()) {
+                                viewModel.detectLocation()
+                            } else {
+                                locationPermissionLauncher.launch(
+                                    arrayOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
+                                )
+                            }
                         },
                         onContinue = { viewModel.nextStep() }
                     )
@@ -754,6 +776,9 @@ private fun StepBusinessProfile(
     department: String,
     province: String,
     district: String,
+    latitude: Double,
+    longitude: Double,
+    isDetectingLocation: Boolean,
     onUpdateProfile: (String, String, String, String, String, String, String, String, String) -> Unit,
     onDetectLocation: () -> Unit,
     onContinue: () -> Unit
@@ -770,6 +795,13 @@ private fun StepBusinessProfile(
 
     fun triggerUpdate() {
         onUpdateProfile(fn, d, bn, c, r, a, dep, prov, dist)
+    }
+
+    androidx.compose.runtime.LaunchedEffect(address, district, province, department) {
+        if (address.isNotBlank()) a = address
+        if (district.isNotBlank()) dist = district
+        if (province.isNotBlank()) prov = province
+        if (department.isNotBlank()) dep = department
     }
 
     Column(
@@ -913,8 +945,10 @@ private fun StepBusinessProfile(
         Spacer(modifier = Modifier.height(16.dp))
 
         PillButton(
-            text = stringResource(R.string.onboarding_detect_location),
+            text = if (isDetectingLocation) "Detectando ubicación GPS..." else stringResource(R.string.onboarding_detect_location),
             onClick = onDetectLocation,
+            isLoading = isDetectingLocation,
+            enabled = !isDetectingLocation,
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.MyLocation,
@@ -926,6 +960,31 @@ private fun StepBusinessProfile(
             variant = PillButtonVariant.Secondary,
             modifier = Modifier.fillMaxWidth()
         )
+
+        if (latitude != 0.0 && longitude != 0.0) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(KuotaColors.LimeVoltage.copy(alpha = 0.22f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = KuotaColors.ForestInk,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "GPS fijado: ${"%.4f".format(java.util.Locale.US, latitude)}, ${"%.4f".format(java.util.Locale.US, longitude)}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = KuotaColors.ForestInk
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
 
