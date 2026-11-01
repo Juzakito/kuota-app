@@ -15,6 +15,15 @@ import { createAdvancePayoutRecord } from "./supplier/payouts";
 import { registerSalesBatchCore, SalesBatchSchema } from "./sales/sales";
 import { computeUserScoreCore } from "./scoring/engine";
 import { runInstallmentsTickCore } from "./collections/installmentsTick";
+import { joinWaitlistCore, WaitlistInputSchema } from "./waitlist/waitlist";
+import {
+  assertAdminAuth,
+  adminApproveKycCore,
+  adminGetDelinquentPurchasesCore,
+  adminApproveProviderCore,
+  adminUpdateConfigCore,
+  deleteUserAccountCore,
+} from "./admin/admin";
 if (!admin.apps.length) {
   admin.initializeApp();
 }
@@ -1804,5 +1813,73 @@ export const triggerInstallmentsTickManual = onCall({ region: "us-central1" }, a
   const result = await runInstallmentsTickCore(db, messaging);
   return { success: true, ...result };
 });
+
+// ---------------------------------------------------------------------------
+// 13. FASE 5: PRODUCCIÓN, ADMIN PANEL, WAITLIST Y COMPLIANCE
+// ---------------------------------------------------------------------------
+
+/**
+ * Callable: joinWaitlist
+ * Registro para las landings web con consentimiento legal versionado.
+ */
+export const joinWaitlist = onCall({ region: "us-central1" }, async (request) => {
+  const parseResult = WaitlistInputSchema.safeParse(request.data);
+  if (!parseResult.success) {
+    throw new HttpsError("invalid-argument", "Datos de lista de espera inválidos", parseResult.error.format());
+  }
+  const result = await joinWaitlistCore(db, parseResult.data);
+  return { success: true, ...result };
+});
+
+/**
+ * Callable Admin: adminApproveKyc
+ */
+export const adminApproveKyc = onCall({ region: "us-central1" }, async (request) => {
+  await assertAdminAuth(request.auth);
+  const { targetUid, approved, rejectionReason } = request.data || {};
+  if (!targetUid) throw new HttpsError("invalid-argument", "targetUid requerido");
+  return await adminApproveKycCore(db, targetUid, Boolean(approved), rejectionReason);
+});
+
+/**
+ * Callable Admin: adminGetDelinquentPurchases
+ */
+export const adminGetDelinquentPurchases = onCall({ region: "us-central1" }, async (request) => {
+  await assertAdminAuth(request.auth);
+  const result = await adminGetDelinquentPurchasesCore(db);
+  return { success: true, delinquents: result };
+});
+
+/**
+ * Callable Admin: adminApproveProvider
+ */
+export const adminApproveProvider = onCall({ region: "us-central1" }, async (request) => {
+  await assertAdminAuth(request.auth);
+  const { providerUid } = request.data || {};
+  if (!providerUid) throw new HttpsError("invalid-argument", "providerUid requerido");
+  return await adminApproveProviderCore(db, providerUid);
+});
+
+/**
+ * Callable Admin: adminUpdateConfig
+ */
+export const adminUpdateConfig = onCall({ region: "us-central1" }, async (request) => {
+  await assertAdminAuth(request.auth);
+  const { configName, payload } = request.data || {};
+  if (!configName || !payload) throw new HttpsError("invalid-argument", "configName y payload requeridos");
+  return await adminUpdateConfigCore(db, configName, payload);
+});
+
+/**
+ * Callable: deleteUserAccount
+ * Obligatorio según directrices de Google Play para eliminación completa de cuenta.
+ */
+export const deleteUserAccount = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Requiere autenticación.");
+  }
+  return await deleteUserAccountCore(db, request.auth.uid);
+});
+
 
 
