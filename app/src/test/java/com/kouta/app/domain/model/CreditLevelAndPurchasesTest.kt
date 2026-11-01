@@ -26,8 +26,8 @@ class CreditLevelAndPurchasesTest {
         // Nivel 6
         val n6 = CreditLevel.NIVEL_6
         assertEquals(6, n6.levelNumber)
-        assertEquals(10_000_00L, n6.maxLineCents)
-        assertEquals(0, n6.downPaymentPercentage)
+        assertEquals(12_000_00L, n6.maxLineCents)
+        assertEquals(10, n6.downPaymentPercentage)
 
         // Monotonic increase of credit limits
         for (i in 0 until levels.size - 1) {
@@ -57,15 +57,15 @@ class CreditLevelAndPurchasesTest {
         val supplierPayoutCents = n1.calculateSupplierPayout48hCents(totalCents, downPaymentCents)
         assertEquals("Liquidación 48h debe ser S/ 96.00", 96_00L, supplierPayoutCents)
 
-        // Venta de S/ 5,000 en Nivel 6 (0% inicial)
+        // Venta de S/ 5,000 en Nivel 6 (10% inicial)
         val n6 = CreditLevel.NIVEL_6
         val bigSaleCents = 5_000_00L
         val n6DownPayment = n6.calculateDownPaymentCents(bigSaleCents)
-        assertEquals("Inicial Nivel 6 es 0%", 0L, n6DownPayment)
+        assertEquals("Inicial Nivel 6 es 10%", 500_00L, n6DownPayment)
 
         val n6SupplierPayout = n6.calculateSupplierPayout48hCents(bigSaleCents, n6DownPayment)
-        // 98% de 5000 = 4900
-        assertEquals("Liquidación al 98% es S/ 4,900.00", 4_900_00L, n6SupplierPayout)
+        // 98% de 5000 = 4900 - 500 = 4400
+        assertEquals("Liquidación al 98% es S/ 4,400.00", 4_400_00L, n6SupplierPayout)
     }
 
     @Test
@@ -81,7 +81,7 @@ class CreditLevelAndPurchasesTest {
         )
         assertFalse("Debe bloquearse si hay transacción activa (Regla 3.2)", checkBlocked.isEligible)
         assertNotNull(checkBlocked.errorMessage)
-        assertTrue(checkBlocked.errorMessage!!.contains("Regla 3.2"))
+        assertTrue(checkBlocked.errorMessage!!.contains("compra abierta"))
 
         // 2. Sin transacción abierta y dentro de línea -> debe aprobar
         val checkApproved = PurchaseEligibilityCheck.validate(
@@ -95,9 +95,9 @@ class CreditLevelAndPurchasesTest {
         assertEquals(75_00L, checkApproved.financedCents)
         assertNull(checkApproved.errorMessage)
 
-        // 3. Monto mayor a línea disponible -> debe rechazar
+        // 3. Monto mayor a línea disponible (Financiado S/ 400 > Línea S/ 300) -> debe rechazar
         val checkOverLimit = PurchaseEligibilityCheck.validate(
-            totalAmountCents = 500_00L,
+            totalAmountCents = 800_00L,
             currentLevel = n1,
             availableLineCents = 300_00L,
             hasActiveOpenTransaction = false
@@ -116,13 +116,13 @@ class CreditLevelAndPurchasesTest {
 
     @Test
     fun verifyFase2TermsAlignedWithPRDTable3() {
-        // Validación rigurosa de los plazos de compra de la Tabla 3 del PRD v0.3
-        assertEquals(listOf(3, 7, 15), CreditLevel.NIVEL_1.availableTermsDays)
-        assertEquals(listOf(7, 15, 30), CreditLevel.NIVEL_2.availableTermsDays)
-        assertEquals(listOf(15, 30, 60), CreditLevel.NIVEL_3.availableTermsDays)
-        assertEquals(listOf(30, 60, 90), CreditLevel.NIVEL_4.availableTermsDays)
-        assertEquals(listOf(30, 60, 90, 150), CreditLevel.NIVEL_5.availableTermsDays)
-        assertEquals(listOf(30, 60, 90, 180, 365), CreditLevel.NIVEL_6.availableTermsDays)
+        // Validación rigurosa de los plazos semanales de compra (múltiplos de 7 días conforme a AGENTS.md)
+        assertEquals(listOf(21), CreditLevel.NIVEL_1.availableTermsDays)
+        assertEquals(listOf(21), CreditLevel.NIVEL_2.availableTermsDays)
+        assertEquals(listOf(21, 28), CreditLevel.NIVEL_3.availableTermsDays)
+        assertEquals(listOf(28, 35, 42), CreditLevel.NIVEL_4.availableTermsDays)
+        assertEquals(listOf(28, 42), CreditLevel.NIVEL_5.availableTermsDays)
+        assertEquals(listOf(42, 56, 70, 84), CreditLevel.NIVEL_6.availableTermsDays)
     }
 
     @Test
@@ -408,15 +408,16 @@ class CreditLevelAndPurchasesTest {
         )
         assertEquals("Inicial confirmada", confirmedPurchase.statusLabel)
 
-        // 4. Comprador elige cronograma de 2 cuotas a 15 días (plazo permitido en Nivel 1)
-        assertTrue(15 in currentLevel.availableTermsDays)
+        // 4. Comprador elige cronograma de 3 cuotas semanales a 21 días (plazo permitido en Nivel 1)
+        assertTrue(21 in currentLevel.availableTermsDays)
         val activePurchase = confirmedPurchase.copy(
             phase = PurchasePhase.ACTIVE_IN_REPAYMENT,
-            selectedTermDays = 15,
-            installmentCount = 2,
+            selectedTermDays = 21,
+            installmentCount = 3,
             installments = listOf(
-                CreditInstallment(number = 1, amountCents = 50_00L, dueEpochMillis = System.currentTimeMillis() + 86400000L),
-                CreditInstallment(number = 2, amountCents = 50_00L, dueEpochMillis = System.currentTimeMillis() + (2 * 86400000L))
+                CreditInstallment(number = 1, amountCents = 33_33L, dueEpochMillis = System.currentTimeMillis() + 86400000L),
+                CreditInstallment(number = 2, amountCents = 33_33L, dueEpochMillis = System.currentTimeMillis() + (2 * 86400000L)),
+                CreditInstallment(number = 3, amountCents = 33_34L, dueEpochMillis = System.currentTimeMillis() + (3 * 86400000L))
             )
         )
         assertEquals(100_00L, activePurchase.remainingDebtCents)

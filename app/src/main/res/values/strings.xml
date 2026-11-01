@@ -1,3 +1,81 @@
 <resources>
     <string name="app_name">Kuota Perú</string>
+
+    <!-- Onboarding Flow -->
+    <string name="onboarding_welcome_title">Impulsa tu negocio con crédito al instante</string>
+    <string name="onboarding_welcome_subtitle">Compra a tus proveedores y paga en cómodas cuotas semanales sin burocracia bancaria.</string>
+    <string name="onboarding_btn_start">Empezar ahora</string>
+
+    <!-- Step 1: Teléfono & OTP -->
+    <string name="onboarding_step1_title">Ingresa tu número de celular</string>
+    <string name="onboarding_step1_subtitle">Te enviaremos un código SMS de 6 dígitos para autenticar tu cuenta de forma segura.</string>
+    <string name="onboarding_phone_label">Número de celular (+51)</string>
+    <string name="onboarding_phone_placeholder">987 654 321</string>
+    <string name="onboarding_send_code">Enviar código SMS</string>
+    <string name="onboarding_resend_code">Reenviar código</string>
+    <string name="onboarding_otp_label">Código de verificación (6 dígitos)</string>
+    <string name="onboarding_verify_code">Verificar código</string>
+
+    <!-- Step 2: Términos & Privacidad -->
+    <string name="onboarding_step2_title">Términos y Tratamiento de Datos</string>
+    <string name="onboarding_step2_subtitle">Conforme a la Ley N° 29733 de Protección de Datos Personales del Perú.</string>
+    <string name="onboarding_terms_checkbox">Acepto los Términos y Condiciones del servicio (versión 2026-v1).</string>
+    <string name="onboarding_privacy_checkbox">Autorizo el tratamiento de mis datos personales para fines de scoring crediticio y validación comercial.</string>
+    <string name="onboarding_legal_disclaimer">Kuota está en proceso de afiliación ante la SBS como empresa de crédito. Kuota no guarda tu dinero ni capta depósitos del público.</string>
+
+    <!-- Step 3: Rol del Negocio -->
+    <string name="onboarding_step3_title">¿Cómo deseas operar en Kuota?</string>
+    <string name="onboarding_step3_subtitle">Elige el rol de tu negocio. Podrás acceder a ambas modalidades más adelante.</string>
+    <string name="onboarding_role_buyer">Comprador MYPE</string>
+    <string name="onboarding_role_buyer_desc">Quiero comprar mercadería al crédito y pagar en cuotas semanales.</string>
+    <string name="onboarding_role_supplier">Proveedor MYPE</string>
+    <string name="onboarding_role_supplier_desc">Quiero vender a mis clientes al crédito con adelanto inmediato.</string>
+    <string name="onboarding_role_both">Ambos roles</string>
+    <string name="onboarding_role_both_desc">Comprar a proveedores y también vender a mis clientes con Kuota.</string>
+
+    <!-- Step 4: Perfil de Negocio -->
+    <string name="onboarding_step4_title">Datos de tu Negocio</string>
+    <string name="onboarding_step4_subtitle">Información del comercio y titular para la línea de crédito.</string>
+    <string name="onboarding_business_name_label">Nombre comercial de tu negocio</string>
+    <string name="onboarding_business_category_label">Rubro o giro comercial (ej. Textil, Calzado, Abarrotes)</string>
+    <string name="onboarding_ruc_label">RUC (11 dígitos - Opcional)</string>
+    <string name="onboarding_dni_label">DNI del titular (8 dígitos)</string>
+    <string name="onboarding_full_name_label">Nombres y apellidos completos</string>
+    <string name="onboarding_address_label">Dirección del local o puesto</string>
+    <string name="onboarding_department_label">Departamento</string>
+    <string name="onboarding_province_label">Provincia</string>
+    <string name="onboarding_district_label">Distrito</string>
+    <string name="onboarding_detect_location">Detectar ubicación GPS actual</string>
+
+    <!-- Step 5: Permisos de Valor -->
+    <string name="onboarding_step5_title">¿Por qué requerimos estos permisos?</string>
+    <string name="onboarding_step5_subtitle">Kuota opera con tecnología financiera segura para validar tu identidad sin papeleos bancarios.</string>
+    <string name="onboarding_permission_camera_title">Cámara fotográfica</string>
+    <string name="onboarding_permission_camera_desc">Para verificar la autenticidad de tu DNI físico y realizar una selfie con prueba de vida en tiempo real.</string>
+    <string name="onboarding_permission_location_title">Ubicación GPS</string>
+    <string name="onboarding_permission_location_desc">Para georreferenciar tu negocio MYPE y habilitar transacciones seguras en tu zona comercial.</string>
+    <string name="onboarding_btn_grant_permissions">Continuar y otorgar permisos</string>
+
+    <!-- Step 6: Captura de Identidad (CameraX KYC) -->
+    <string name="onboarding_step6_title">Validación de Identidad KYC</string>
+    <string name="onboarding_step6_subtitle">Captura las 3 fotografías requeridas. Asegúrate de tener buena luz y sostener el DNI con firmeza.</string>
+    <string name="onboarding_kyc_dni_front">1. DNI - Lado Frontal</string>
+    <string name="onboarding_kyc_dni_back">2. DNI - Reverso</string>
+    <string name="onboarding_kyc_selfie">3. Selfie del titular</string>
+    <string name="onboarding_kyc_submit">Enviar verificación KYC</string>
+
+    <!-- Estado KYC -->
+    <string name="kyc_status_pending_title">Verificación en proceso</string>
+    <string name="kyc_status_pending_subtitle">Estamos validando tu información con RENIEC y verificando tu comercio. Te notificaremos por push en menos de 15 minutos.</string>
+    <string name="kyc_status_approved_title">¡Línea de crédito activada!</string>
+    <string name="kyc_status_approved_subtitle">Tu verificación fue aprobada exitosamente. Ya tienes S/ 1,400.00 disponibles para comprar en cuotas semanales.</string>
+    <string name="kyc_status_approved_cta">Empezar a Kuotear</string>
+    <string name="kyc_status_rejected_title">Verificación observada</string>
+    <string name="kyc_status_rejected_subtitle">No pudimos validar la información de tus documentos o DNI.</string>
+    <string name="kyc_status_rejected_cta">Volver a intentar verificación</string>
+
+    <!-- Botones Genéricos -->
+    <string name="btn_continue">Continuar</string>
+    <string name="btn_back">Atrás</string>
+    <string name="btn_retry">Reintentar</string>
 </resources>

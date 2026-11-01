@@ -1,27 +1,17 @@
 package com.kouta.app.feature.onboarding
 
-import com.kouta.app.domain.model.UserRole
-
-import android.os.SystemClock
+import android.Manifest
+import android.app.Activity
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,1582 +24,1224 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MailOutline
-import androidx.compose.material.icons.filled.PersonOutline
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.kouta.app.R
-import com.kouta.app.core.analytics.KuotaAnalytics
-import com.kouta.app.core.analytics.KuotaAnalyticsEvent
-import com.kouta.app.core.designsystem.motion.KuotaMotion
-import com.kouta.app.core.designsystem.motion.KuotaStepAnimatedContent
-import com.kouta.app.core.designsystem.motion.kuotaEntranceReveal
-import com.kouta.app.core.designsystem.motion.kuotaErrorMicroOffset
-import com.kouta.app.core.designsystem.motion.rememberSystemAnimatorScale
-import com.kouta.app.core.security.PinSecurityManager
-import com.kouta.app.data.local.LocalBusinessProfile
-import com.kouta.app.data.local.OnboardingDraft
-import com.kouta.app.data.local.SalesJournalStore
-import com.kouta.app.feature.security.KuotaSixDigitCircles
-import com.kouta.app.feature.security.KuotaSixDigitKeypad
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.kouta.app.feature.kyc.KycStatusScreen
+import com.kuota.core.model.KycStatus
+import com.kuota.core.ui.components.CameraCaptureView
+import com.kuota.core.ui.components.CameraGuideShape
+import com.kuota.core.ui.components.ChipPill
+import com.kuota.core.ui.components.KuotaCard
+import com.kuota.core.ui.components.KuotaCardVariant
+import com.kuota.core.ui.components.PillButton
+import com.kuota.core.ui.components.PillButtonVariant
+import com.kuota.core.ui.components.ProgressBarHorizontal
+import com.kuota.core.ui.theme.KuotaColors
+import com.kuota.core.ui.theme.KuotaTypography
 
 @Composable
-fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
+fun OnboardingScreen(
+    onOnboardingComplete: () -> Unit,
+    viewModel: OnboardingViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val store = remember(context) { SalesJournalStore(context) }
-    val scope = rememberCoroutineScope()
-    var step by rememberSaveable { mutableIntStateOf(0) }
-    var visitedMask by rememberSaveable { mutableIntStateOf(0) }
-    var ownerName by rememberSaveable { mutableStateOf("") }
-    var email by rememberSaveable { mutableStateOf("") }
-    var phone by rememberSaveable { mutableStateOf("") }
-    var businessTaxId by rememberSaveable { mutableStateOf("") }
-    var selectedRole by rememberSaveable { mutableStateOf(UserRole.VENDEDOR) }
-    var createdPin by rememberSaveable { mutableStateOf("") }
-    var confirmPin by rememberSaveable { mutableStateOf("") }
-    var error by rememberSaveable { mutableStateOf<String?>(null) }
-    var errorPulseKey by rememberSaveable { mutableIntStateOf(0) }
-    var draftLoaded by remember { mutableStateOf(false) }
-    var isSavingProfile by remember { mutableStateOf(false) }
+    val activity = context as? Activity
 
-    val isFirstVisitToCurrentStep = (visitedMask and (1 shl step)) == 0
-    LaunchedEffect(step, draftLoaded) {
-        if (draftLoaded) {
-            delay(280L)
-            visitedMask = visitedMask or (1 shl step)
-        }
-    }
-
-    LaunchedEffect(store) {
-        val draft = withContext(Dispatchers.IO) { runCatching { store.readOnboardingDraft() }.getOrNull() }
-        if (draft != null) {
-            // Auto-reparación si un borrador previo guardó pasos desfasados sin nombre o correo
-            val restoredStep = when {
-                draft.ownerName.isBlank() && draft.step > 2 -> 3
-                draft.email.isBlank() && draft.step > 3 -> 4
-                else -> draft.step.coerceIn(0, 8)
+    // Si el usuario ya está aprobado o pendiente, mostrar pantalla de estado KYC
+    if (state.kycStatus == KycStatus.APPROVED || state.kycStatus == KycStatus.PENDING || state.kycStatus == KycStatus.REJECTED) {
+        KycStatusScreen(
+            status = state.kycStatus,
+            summary = state.userSummary,
+            onNavigateToHome = onOnboardingComplete,
+            onRetryKyc = {
+                viewModel.setStep(6)
             }
-            step = restoredStep
-            ownerName = draft.ownerName
-            email = draft.email
-            phone = draft.phone
-            businessTaxId = draft.ruc
-            selectedRole = UserRole.fromCode(draft.role)
-        }
-        draftLoaded = true
-        KuotaAnalytics.track(
-            KuotaAnalyticsEvent.ONBOARDING_STARTED,
-            mapOf("step" to step.toString())
         )
+        return
     }
 
-    LaunchedEffect(draftLoaded, step, ownerName, email, phone, businessTaxId, selectedRole) {
-        if (draftLoaded && step in 1..7) {
-            withContext(Dispatchers.IO) {
-                runCatching {
-                    // Nunca guardamos el PIN en el borrador; solo hasta el paso 7 (creación de PIN)
-                    store.saveOnboardingDraft(
-                        OnboardingDraft(step.coerceAtMost(7), false, ownerName.trim(), email.trim().lowercase(), phone, businessTaxId, selectedRole.code)
-                    )
-                }
-            }
+    // Modal de pantalla completa para captura CameraX
+    if (state.activeCameraCaptureTarget != CameraCaptureTarget.NONE) {
+        val isSelfie = state.activeCameraCaptureTarget == CameraCaptureTarget.SELFIE
+        val guideShape = if (isSelfie) CameraGuideShape.SELFIE_OVAL else CameraGuideShape.CARD_RECTANGLE
+        val instructionTitle = when (state.activeCameraCaptureTarget) {
+            CameraCaptureTarget.DNI_FRONT -> "Frente del DNI"
+            CameraCaptureTarget.DNI_BACK -> "Reverso del DNI"
+            CameraCaptureTarget.SELFIE -> "Selfie con prueba de vida"
+            CameraCaptureTarget.NONE -> ""
         }
-    }
-
-    // Validación automática al completar los 6 dígitos en Confirmar PIN (Paso 7)
-    LaunchedEffect(step, confirmPin, createdPin) {
-        if (step == 8 && confirmPin.length == PinSecurityManager.PIN_LENGTH) {
-            if (confirmPin != createdPin) {
-                error = "Los PIN no coinciden. Inténtalo nuevamente."
-                errorPulseKey++
-                delay(260L)
-                confirmPin = ""
-            } else {
-                error = null
-            }
+        val instructionSubtitle = when (state.activeCameraCaptureTarget) {
+            CameraCaptureTarget.DNI_FRONT -> "Enfoca el frente de tu DNI dentro del marco con buena iluminación."
+            CameraCaptureTarget.DNI_BACK -> "Enfoca el reverso con el código de barras y firma legibles."
+            CameraCaptureTarget.SELFIE -> "Ubica tu rostro dentro del óvalo sin gorras ni lentes oscuros."
+            CameraCaptureTarget.NONE -> ""
         }
+
+        CameraCaptureView(
+            initialIsFrontCamera = isSelfie,
+            guideShape = guideShape,
+            instructionTitle = instructionTitle,
+            instructionSubtitle = instructionSubtitle,
+            onCaptured = { bytes ->
+                viewModel.onImageCaptured(bytes)
+            },
+            onClose = {
+                viewModel.closeCamera()
+            }
+        )
+        return
     }
 
-    fun finishOnboarding() {
-        if (isSavingProfile) return
-        if (confirmPin != createdPin || !PinSecurityManager.isValidPinFormat(confirmPin)) {
-            error = "Los PIN no coinciden. Vuelve a ingresarlo."
-            errorPulseKey++
-            confirmPin = ""
-            return
-        }
-        isSavingProfile = true
-        error = null
-        scope.launch {
-            val saved = withContext(Dispatchers.IO) {
-                runCatching {
-                    val pinOk = PinSecurityManager.setupPin(context, confirmPin)
-                    if (!pinOk) error("No se pudo configurar el PIN")
-                    val existing = store.readBusinessProfile()
-                    val base = existing ?: LocalBusinessProfile(email = "", phone = "", ruc = "")
-                    store.saveBusinessProfile(
-                        base.copy(
-                            ownerName = ownerName.trim().ifBlank { existing?.ownerName.orEmpty() },
-                            email = email.trim().lowercase(),
-                            phone = if (phone.isNotBlank()) phone else existing?.phone.orEmpty(),
-                            ruc = if (businessTaxId.isNotBlank()) businessTaxId else existing?.ruc.orEmpty(),
-                            role = selectedRole.code
-                        )
-                    )
-                    com.kouta.app.data.local.AppSettings(context).userRole = selectedRole
-                }
-            }
-            isSavingProfile = false
-            if (saved.isSuccess) {
-                createdPin = ""
-                confirmPin = ""
-                KuotaAnalytics.track(
-                    KuotaAnalyticsEvent.BUSINESS_PROFILE_COMPLETED,
-                    mapOf("status" to "COMPLETED")
-                )
-                onOnboardingComplete()
-            } else {
-                error = "No se pudo guardar el perfil en este teléfono. Intenta nuevamente."
-                errorPulseKey++
-            }
-        }
-    }
-
-    val isNameValid = ownerName.trim().length >= 2
-    val isEmailValid = email.trim().matches(Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
-    val isPhoneValid = phone.filter(Char::isDigit).length == 9
-    val isRucValid = businessTaxId.filter(Char::isDigit).length == 11
-    val isCreatePinValid = createdPin.length == PinSecurityManager.PIN_LENGTH
-    val isConfirmPinValid = confirmPin.length == PinSecurityManager.PIN_LENGTH && confirmPin == createdPin
-
-    val canContinue = when (step) {
-        2 -> true // Rol seleccionado por defecto
-        3 -> isNameValid
-        4 -> isEmailValid
-        5 -> isPhoneValid
-        6 -> isRucValid
-        7 -> isCreatePinValid
-        8 -> isConfirmPinValid
-        else -> true
-    }
-    val lastStep = 8
-
-    // Nivel superior: transición entre Pantalla 1 (Bienvenida), Pantalla 2 (Antes de empezar) y Flujo de Registro (Pasos 2..7)
-    val stageBucket = when (step) {
-        0 -> 0
-        1 -> 1
-        else -> 2
-    }
-
-    KuotaStepAnimatedContent(
-        targetState = stageBucket,
-        modifier = Modifier.fillMaxSize(),
-        label = "OnboardingStageTransition"
-    ) { currentStage ->
-        when (currentStage) {
-            0 -> {
-                WelcomeHeroScreen(
-                    animateEntrance = (visitedMask and 1) == 0,
-                    onStartClick = {
-                        error = null
-                        step = 1
-                    }
-                )
-            }
-
-            1 -> {
-                SecondLandingScreen(
-                    animateEntrance = (visitedMask and (1 shl 1)) == 0,
-                    onBackClick = {
-                        error = null
-                        step = 0
-                    },
-                    onContinueClick = {
-                        error = null
-                        step = 2
-                    }
-                )
-            }
-
-            else -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFF02060E))
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.kuota_welcome_bg),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.FillBounds,
-                        alpha = 0.55f
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 24.dp, vertical = 20.dp),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                            // Cabecera Kuota + Atrás (fija y estable durante el registro)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Image(
-                                        painter = painterResource(R.drawable.kuota_mark),
-                                        contentDescription = "Logo Kuota",
-                                        modifier = Modifier.height(38.dp)
-                                    )
-                                    Text(
-                                        text = "kuota",
-                                        fontSize = 24.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = Color(0xFF2E7BFF)
-                                    )
-                                }
-                                Spacer(Modifier.weight(1f))
-                                TextButton(
-                                    enabled = !isSavingProfile,
-                                    onClick = {
-                                        if (step > 0) {
-                                            error = null
-                                            step--
-                                        }
-                                    }
-                                ) {
-                                    Text(
-                                        text = "Atrás",
-                                        color = Color(0xFF2E8BFF),
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                            }
-
-                            // Indicador de progreso sincronizado (6 pasos de registro)
-                            val progressStepIndex = when (step) {
-                                2 -> 1
-                                3 -> 2
-                                4 -> 3
-                                5 -> 4
-                                6 -> 5
-                                else -> 6
-                            }
-                            val progressLabel = when (step) {
-                                2 -> "PASO 1 DE 6"
-                                3 -> "2 DE 6"
-                                4 -> "3 DE 6"
-                                5 -> "4 DE 6"
-                                6 -> "5 DE 6"
-                                else -> "6 DE 6"
-                            }
-                            OnboardingStepProgress(
-                                label = progressLabel,
-                                currentStep = progressStepIndex,
-                                totalSteps = 6
-                            )
-
-                            // Contenido animado paso a paso (avance y retroceso direccional)
-                            KuotaStepAnimatedContent(
-                                targetState = step.coerceIn(2, 8),
-                                modifier = Modifier.fillMaxWidth(),
-                                label = "OnboardingFormStepTransition"
-                            ) { currentStep ->
-                                val stepFirstVisit = (visitedMask and (1 shl currentStep)) == 0
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalArrangement = Arrangement.spacedBy(18.dp)
-                                ) {
-                                    when (currentStep) {
-                                        2 -> {
-                                            // Paso 1 de Formulario: Selección de Rol (PRD v0.3)
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 0),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Text(
-                                                    text = buildAnnotatedString {
-                                                        withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.ExtraBold)) {
-                                                            append("¿Cómo usarás ")
-                                                        }
-                                                        withStyle(SpanStyle(color = Color(0xFF23D5FF), fontWeight = FontWeight.ExtraBold)) {
-                                                            append("Kuota?")
-                                                        }
-                                                    },
-                                                    fontSize = 30.sp
-                                                )
-                                                Text(
-                                                    text = "Elige tu rol en la plataforma. Tu cuenta se configurará con las soluciones financieras específicas.",
-                                                    color = Color(0xFFA0B2C8),
-                                                    fontSize = 15.sp,
-                                                    lineHeight = 21.sp
-                                                )
-                                            }
-
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 45),
-                                                verticalArrangement = Arrangement.spacedBy(14.dp)
-                                            ) {
-                                                RoleSelectionCard(
-                                                    role = UserRole.VENDEDOR,
-                                                    isSelected = selectedRole == UserRole.VENDEDOR,
-                                                    onClick = { selectedRole = UserRole.VENDEDOR }
-                                                )
-
-                                                RoleSelectionCard(
-                                                    role = UserRole.PROVEEDOR,
-                                                    isSelected = selectedRole == UserRole.PROVEEDOR,
-                                                    onClick = { selectedRole = UserRole.PROVEEDOR }
-                                                )
-                                            }
-                                        }
-
-                                        3 -> {
-                                            // Pantalla 3: Nombre del cliente
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 0),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Text(
-                                                    text = "¿Cómo te llamas?",
-                                                    color = Color.White,
-                                                    fontSize = 31.sp,
-                                                    fontWeight = FontWeight.ExtraBold
-                                                )
-                                                Text(
-                                                    text = "Usaremos tu nombre para saludarte en la app.",
-                                                    color = Color(0xFFA0B2C8),
-                                                    fontSize = 15.sp
-                                                )
-                                            }
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 6.dp)
-                                                    .kuotaEntranceReveal(stepFirstVisit, delayMs = 45, initialOffsetY = 8.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Image(
-                                                    painter = painterResource(R.drawable.kuota_onb_step1_avatar),
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(136.dp),
-                                                    contentScale = ContentScale.Fit
-                                                )
-                                            }
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 80),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                KuotaOnboardingInputBox(
-                                                    topLabel = "Tu nombre",
-                                                    value = ownerName,
-                                                    onValueChange = { ownerName = it.take(60); error = null },
-                                                    placeholder = "Escribe tu nombre",
-                                                    leadingIcon = Icons.Default.PersonOutline,
-                                                    keyboardType = KeyboardType.Text,
-                                                    isValid = isNameValid
-                                                )
-                                                KuotaInlineValidationMessage(
-                                                    visible = ownerName.isNotEmpty() && !isNameValid,
-                                                    text = "Ingresa al menos 2 caracteres para continuar.",
-                                                    isError = false
-                                                )
-                                            }
-                                        }
-
-                                        4 -> {
-                                            // Pantalla 4: Correo electrónico
-                                            val hasEmailFormatWarning = email.trim().length >= 4 && !isEmailValid
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 0),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Text(
-                                                    text = buildAnnotatedString {
-                                                         withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.ExtraBold)) {
-                                                             append("Ingresa tu ")
-                                                         }
-                                                         withStyle(SpanStyle(color = Color(0xFF23D5FF), fontWeight = FontWeight.ExtraBold)) {
-                                                             append("correo")
-                                                         }
-                                                    },
-                                                    fontSize = 31.sp
-                                                )
-                                                Text(
-                                                    text = "Usaremos este correo para información\nimportante de tu negocio.",
-                                                    color = Color(0xFFA0B2C8),
-                                                    fontSize = 15.sp,
-                                                    lineHeight = 21.sp
-                                                )
-                                            }
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 4.dp)
-                                                    .kuotaEntranceReveal(stepFirstVisit, delayMs = 45, initialOffsetY = 8.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Image(
-                                                    painter = painterResource(R.drawable.kuota_onb_step2_email),
-                                                    contentDescription = null,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .height(148.dp),
-                                                    contentScale = ContentScale.Fit
-                                                )
-                                            }
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 80),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                KuotaOnboardingInputBox(
-                                                    topLabel = null,
-                                                    value = email,
-                                                    onValueChange = {
-                                                        email = it.filterNot { ch -> ch.isWhitespace() }.take(120)
-                                                        error = null
-                                                    },
-                                                    placeholder = "nombre@empresa.com",
-                                                    leadingIcon = Icons.Default.MailOutline,
-                                                    keyboardType = KeyboardType.Email,
-                                                    isValid = isEmailValid,
-                                                    isError = hasEmailFormatWarning
-                                                )
-                                                KuotaInlineValidationMessage(
-                                                    visible = hasEmailFormatWarning,
-                                                    text = "Ingresa un formato de correo válido (ejemplo: nombre@empresa.com).",
-                                                    isError = true
-                                                )
-                                                Text(
-                                                    text = "Usa un correo al que tengas acceso.",
-                                                    color = Color(0xFF7B93B2),
-                                                    fontSize = 13.sp,
-                                                    modifier = Modifier.padding(start = 4.dp)
-                                                 )
-                                            }
-                                        }
-
-                                        5 -> {
-                                            // Pantalla 5: Número de celular
-                                            val cleanDigits = phone.filter(Char::isDigit)
-                                            val hasPhoneWarning = cleanDigits.isNotEmpty() && cleanDigits.length < 9
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 0),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Text(
-                                                    text = buildAnnotatedString {
-                                                        withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.ExtraBold)) {
-                                                            append("Tu ")
-                                                        }
-                                                        withStyle(SpanStyle(color = Color(0xFF23D5FF), fontWeight = FontWeight.ExtraBold)) {
-                                                            append("celular")
-                                                        }
-                                                    },
-                                                    fontSize = 31.sp
-                                                )
-                                                Text(
-                                                    text = "Para guardar los datos de contacto del negocio.",
-                                                    color = Color(0xFFA0B2C8),
-                                                    fontSize = 15.sp
-                                                )
-                                            }
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 4.dp)
-                                                    .kuotaEntranceReveal(stepFirstVisit, delayMs = 45, initialOffsetY = 8.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Image(
-                                                    painter = painterResource(R.drawable.kuota_onb_step3_phone),
-                                                    contentDescription = null,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .height(210.dp),
-                                                    contentScale = ContentScale.Fit
-                                                )
-                                            }
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 80),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                KuotaOnboardingInputBox(
-                                                    topLabel = "Tu celular",
-                                                    value = phone,
-                                                    onValueChange = { value ->
-                                                        if (value.all(Char::isDigit) && value.length <= 9) phone = value
-                                                        error = null
-                                                    },
-                                                    placeholder = "9XX XXX XXX",
-                                                    prefix = "+51 ",
-                                                    leadingIcon = Icons.Default.Phone,
-                                                    keyboardType = KeyboardType.Phone,
-                                                    isValid = isPhoneValid
-                                                )
-                                                KuotaInlineValidationMessage(
-                                                    visible = hasPhoneWarning,
-                                                    text = "Completa los 9 dígitos de tu número móvil (${cleanDigits.length}/9).",
-                                                    isError = false
-                                                )
-                                            }
-                                        }
-
-                                        6 -> {
-                                            // Pantalla 6: RUC del negocio
-                                            val cleanRuc = businessTaxId.filter(Char::isDigit)
-                                            val hasValidRucPrefix = cleanRuc.length < 2 ||
-                                                cleanRuc.startsWith("10") ||
-                                                cleanRuc.startsWith("15") ||
-                                                cleanRuc.startsWith("17") ||
-                                                cleanRuc.startsWith("20")
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 0),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Text(
-                                                    text = "Tu negocio",
-                                                    color = Color.White,
-                                                    fontSize = 31.sp,
-                                                    fontWeight = FontWeight.ExtraBold
-                                                )
-                                                Text(
-                                                    text = "Guarda el RUC para tenerlo a mano en este\nteléfono.",
-                                                    color = Color(0xFFA0B2C8),
-                                                    fontSize = 15.sp,
-                                                    lineHeight = 21.sp
-                                                )
-                                            }
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 45),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                KuotaOnboardingInputBox(
-                                                    topLabel = "RUC",
-                                                    value = businessTaxId,
-                                                    onValueChange = { value ->
-                                                        if (value.all(Char::isDigit) && value.length <= 11) businessTaxId = value
-                                                        error = null
-                                                    },
-                                                    placeholder = "Ingresa los 11 dígitos de tu RUC",
-                                                    leadingIcon = Icons.Default.Description,
-                                                    keyboardType = KeyboardType.Number,
-                                                    isValid = isRucValid,
-                                                    isError = cleanRuc.length >= 2 && !hasValidRucPrefix
-                                                )
-                                                KuotaInlineValidationMessage(
-                                                    visible = isRucValid,
-                                                    text = "Formato de 11 dígitos completado (registro local en el dispositivo).",
-                                                    isError = false,
-                                                    isSuccess = true
-                                                )
-                                                KuotaInlineValidationMessage(
-                                                    visible = cleanRuc.isNotEmpty() && !isRucValid,
-                                                    text = "Ingresa los 11 dígitos numéricos del RUC (${cleanRuc.length}/11).",
-                                                    isError = !hasValidRucPrefix
-                                                )
-                                            }
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 2.dp)
-                                                    .kuotaEntranceReveal(stepFirstVisit, delayMs = 80, initialOffsetY = 8.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Image(
-                                                    painter = painterResource(R.drawable.kuota_onb_step4_ruc),
-                                                    contentDescription = null,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .height(185.dp),
-                                                    contentScale = ContentScale.Fit
-                                                )
-                                            }
-                                            Card(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .kuotaEntranceReveal(stepFirstVisit, delayMs = 110, initialOffsetY = 8.dp),
-                                                shape = RoundedCornerShape(18.dp),
-                                                colors = CardDefaults.cardColors(containerColor = Color(0xFF071630)),
-                                                border = BorderStroke(1.dp, Color(0xFF1A4B96))
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                                                ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(46.dp)
-                                                            .clip(RoundedCornerShape(14.dp))
-                                                            .background(Color(0xFF0C2A5E)),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.VerifiedUser,
-                                                            contentDescription = null,
-                                                            tint = Color(0xFF26D7FF),
-                                                            modifier = Modifier.size(26.dp)
-                                                        )
-                                                    }
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .width(1.dp)
-                                                            .height(34.dp)
-                                                            .background(Color(0xFF1A4B96))
-                                                    )
-                                                    Text(
-                                                        text = "Tu información se guarda cifrada\nen este dispositivo.",
-                                                        color = Color(0xFFC5D4E8),
-                                                        fontSize = 14.sp,
-                                                        lineHeight = 19.sp
-                                                    )
-                                                }
-                                            }
-                                        }
-
-                                        else -> {
-                                            // Pantalla 7 (Crear PIN) y Pantalla 8 (Confirmar PIN)
-                                            val isConfirmPinStep = currentStep == 8
-                                            val activePinValue = if (isConfirmPinStep) confirmPin else createdPin
-                                            Column(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 0),
-                                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Text(
-                                                    text = buildAnnotatedString {
-                                                        withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.ExtraBold)) {
-                                                            append(if (isConfirmPinStep) "Confirma tu " else "Crea tu ")
-                                                        }
-                                                        withStyle(SpanStyle(color = Color(0xFF23D5FF), fontWeight = FontWeight.ExtraBold)) {
-                                                            append("PIN")
-                                                        }
-                                                    },
-                                                    fontSize = 31.sp
-                                                )
-                                                Text(
-                                                    text = if (isConfirmPinStep) {
-                                                        "Ingresa nuevamente el PIN para confirmar\ny finalizar tu registro."
-                                                    } else {
-                                                        "Define un PIN de 6 dígitos para proteger tu cuenta\ncada vez que regreses a KUOTA."
-                                                    },
-                                                    color = Color(0xFFA0B2C8),
-                                                    fontSize = 15.sp,
-                                                    lineHeight = 21.sp
-                                                )
-                                            }
-
-                                            Column(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 12.dp)
-                                                    .kuotaEntranceReveal(stepFirstVisit, delayMs = 45, initialOffsetY = 6.dp),
-                                                horizontalAlignment = Alignment.CenterHorizontally,
-                                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                                            ) {
-                                                KuotaSixDigitCircles(
-                                                    enteredPin = activePinValue,
-                                                    showDigits = false,
-                                                    hasError = error != null,
-                                                    errorPulseKey = errorPulseKey
-                                                )
-
-                                                KuotaInlineValidationMessage(
-                                                    visible = !isConfirmPinStep && isCreatePinValid && error == null,
-                                                    text = "PIN de 6 dígitos completado. Pulsa Continuar.",
-                                                    isError = false,
-                                                    isSuccess = true
-                                                )
-                                                KuotaInlineValidationMessage(
-                                                    visible = isConfirmPinStep && isConfirmPinValid && error == null,
-                                                    text = "PIN confirmado correctamente. Pulsa Finalizar registro.",
-                                                    isError = false,
-                                                    isSuccess = true
-                                                )
-                                            }
-
-                                            Box(
-                                                modifier = Modifier.kuotaEntranceReveal(stepFirstVisit, delayMs = 80, initialOffsetY = 8.dp)
-                                            ) {
-                                                KuotaSixDigitKeypad(
-                                                    enabled = !isSavingProfile,
-                                                    showBiometricKey = false,
-                                                    onDigitClick = { digit ->
-                                                        error = null
-                                                        if (isConfirmPinStep) {
-                                                            if (confirmPin.length < PinSecurityManager.PIN_LENGTH) {
-                                                                confirmPin += digit
-                                                            }
-                                                        } else {
-                                                            if (createdPin.length < PinSecurityManager.PIN_LENGTH) {
-                                                                createdPin += digit
-                                                            }
-                                                        }
-                                                    },
-                                                    onBackspaceClick = {
-                                                        error = null
-                                                        if (isConfirmPinStep) {
-                                                            if (confirmPin.isNotEmpty()) confirmPin = confirmPin.dropLast(1)
-                                                        } else {
-                                                            if (createdPin.isNotEmpty()) createdPin = createdPin.dropLast(1)
-                                                        }
-                                                    },
-                                                    onBiometricClick = {}
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            KuotaInlineValidationMessage(
-                                visible = error != null,
-                                text = error.orEmpty(),
-                                isError = true,
-                                modifier = Modifier.kuotaErrorMicroOffset(errorPulseKey)
-                            )
-                        }
-
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 24.dp, bottom = 8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            val buttonLabel = when {
-                                isSavingProfile -> "Guardando…"
-                                step == 6 -> "Guardar perfil"
-                                step == lastStep -> "Finalizar registro"
-                                else -> "Continuar"
-                            }
-                            val isEnabled = canContinue && !isSavingProfile && draftLoaded
-                            KuotaGradientPillButton(
-                                text = buttonLabel,
-                                showArrow = step < 7,
-                                enabled = isEnabled,
-                                onClick = {
-                                    error = null
-                                    if (step == 7) {
-                                        confirmPin = ""
-                                        step = 8
-                                    } else if (step == lastStep) {
-                                        finishOnboarding()
-                                    } else {
-                                        step++
-                                    }
-                                }
-                            )
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Lock,
-                                    contentDescription = null,
-                                    tint = Color(0xFF28B8FF),
-                                    modifier = Modifier.size(15.dp)
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    text = when (step) {
-                                        4 -> "Tu información se guarda de forma segura en este dispositivo."
-                                        7, 8 -> "Tu información se guardará de forma segura en este dispositivo."
-                                        else -> "Perfil local · guardado cifrado en este teléfono"
-                                    },
-                                    color = Color(0xFF8CA2C0),
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun WelcomeHeroScreen(
-    animateEntrance: Boolean,
-    onStartClick: () -> Unit
-) {
+    // Flujo normal de Onboarding con barra de progreso continua
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF02060E))
-    ) {
-        Image(
-            painter = painterResource(R.drawable.kuota_welcome_bg),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp)
-                .padding(top = 80.dp, bottom = 52.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Spacer(Modifier.height(8.dp))
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.kuota_welcome_logo),
-                    contentDescription = "Kuota",
-                    modifier = Modifier
-                        .size(196.dp)
-                        .kuotaEntranceReveal(
-                            animateEntrance = animateEntrance,
-                            delayMs = 0,
-                            initialOffsetY = 8.dp
-                        ),
-                    contentScale = ContentScale.Fit
-                )
-
-                Spacer(Modifier.height(34.dp))
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.kuotaEntranceReveal(
-                        animateEntrance = animateEntrance,
-                        delayMs = 65,
-                        initialOffsetY = 10.dp
-                    )
-                ) {
-                    Text(
-                        text = "Bienvenido a",
-                        color = Color.White,
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Text(
-                        text = "Kuota",
-                        style = TextStyle(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color(0xFF3388FF),
-                                    Color(0xFF36DCFF)
-                                )
-                            ),
-                            fontSize = 46.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            textAlign = TextAlign.Center
-                        )
-                    )
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                Text(
-                    text = "Tu negocio, más simple,\nmás cerca de ti.",
-                    color = Color(0xFFA2B3C7),
-                    fontSize = 17.sp,
-                    lineHeight = 24.sp,
-                    fontWeight = FontWeight.Normal,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.kuotaEntranceReveal(
-                        animateEntrance = animateEntrance,
-                        delayMs = 120,
-                        initialOffsetY = 10.dp
-                    )
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .kuotaEntranceReveal(
-                        animateEntrance = animateEntrance,
-                        delayMs = 170,
-                        initialOffsetY = 10.dp
-                    )
-            ) {
-                KuotaGradientPillButton(
-                    text = "Comenzar",
-                    showArrow = true,
-                    enabled = true,
-                    onClick = onStartClick
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SecondLandingScreen(
-    animateEntrance: Boolean,
-    onBackClick: () -> Unit,
-    onContinueClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF030B1A),
-                        Color(0xFF02060E),
-                        Color(0xFF030917)
-                    )
-                )
-            )
+            .background(KuotaColors.Fog)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxSize()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(onClick = onBackClick) {
-                    Text(
-                        text = "Atrás",
-                        color = Color(0xFF2E8BFF),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            // Cabecera con botón atrás y barra de progreso continua
+            if (state.step > 0) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.kuotaEntranceReveal(
-                        animateEntrance = animateEntrance,
-                        delayMs = 0,
-                        initialOffsetY = 10.dp
-                    )
-                ) {
-                    Text(
-                        text = buildAnnotatedString {
-                            withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.ExtraBold)) {
-                                append("Kuota ")
-                            }
-                            withStyle(
-                                SpanStyle(
-                                    brush = Brush.horizontalGradient(
-                                        listOf(Color(0xFF1DC8FF), Color(0xFF38E5FF))
-                                    ),
-                                    fontWeight = FontWeight.ExtraBold
-                                )
-                            ) {
-                                append("para tu negocio")
-                            }
-                        },
-                        fontSize = 31.sp,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 36.sp
-                    )
-
-                    Text(
-                        text = "Organiza tus ventas y lleva el control\nde tu negocio desde un solo lugar.",
-                        color = Color(0xFFA8B9D0),
-                        fontSize = 16.sp,
-                        lineHeight = 22.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                Image(
-                    painter = painterResource(R.drawable.kuota_onb_landing2_hero),
-                    contentDescription = "Kuota para tu negocio",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(265.dp)
-                        .padding(vertical = 4.dp)
-                        .kuotaEntranceReveal(
-                            animateEntrance = animateEntrance,
-                            delayMs = 55,
-                            initialOffsetY = 10.dp
-                        ),
-                    contentScale = ContentScale.Fit
-                )
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .kuotaEntranceReveal(
-                            animateEntrance = animateEntrance,
-                            delayMs = 110,
-                            initialOffsetY = 10.dp
-                        ),
-                    shape = RoundedCornerShape(22.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF071A3E)),
-                    border = BorderStroke(1.dp, Color(0xFF184287))
+                        .background(Color.White)
+                        .padding(top = 16.dp, bottom = 12.dp, start = 16.dp, end = 16.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 18.dp, vertical = 18.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFF0D316E)),
-                            contentAlignment = Alignment.Center
+                        IconButton(
+                            onClick = { viewModel.previousStep() },
+                            modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Storefront,
-                                contentDescription = null,
-                                tint = Color(0xFF28D5FF),
-                                modifier = Modifier.size(30.dp)
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Atrás",
+                                tint = KuotaColors.ForestInk
                             )
                         }
 
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "PERFIL LOCAL Y PRIVADO",
-                                color = Color(0xFF29C9FF),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.8.sp
-                            )
-                            Text(
-                                text = "Tu negocio, a la mano.",
-                                color = Color.White,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
-                            Text(
-                                text = "Tus datos se guardan cifrados en este teléfono.",
-                                color = Color(0xFFA2B5CE),
-                                fontSize = 14.sp
-                            )
-                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = "Paso ${state.step} de 6",
+                            color = KuotaColors.Charcoal,
+                            style = KuotaTypography.bodySmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    ProgressBarHorizontal(
+                        progress = state.step / 6f,
+                        modifier = Modifier.fillMaxWidth(),
+                        fillColor = KuotaColors.LimeVoltage,
+                        trackColor = KuotaColors.LinenMist
+                    )
+                }
+            }
+
+            // Mensaje de error general si ocurre
+            AnimatedVisibility(
+                visible = state.errorMessage != null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                state.errorMessage?.let { msg ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(KuotaColors.AlarmRed.copy(alpha = 0.12f))
+                            .padding(horizontal = 20.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text = msg,
+                            color = KuotaColors.AlarmRed,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
 
+            // Contenido por paso
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 20.dp, bottom = 12.dp)
-                    .kuotaEntranceReveal(
-                        animateEntrance = animateEntrance,
-                        delayMs = 155,
-                        initialOffsetY = 8.dp
-                    ),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .weight(1f)
             ) {
-                KuotaGradientPillButton(
-                    text = "Continuar",
-                    showArrow = true,
-                    enabled = true,
-                    onClick = onContinueClick
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun OnboardingStepProgress(
-    label: String,
-    currentStep: Int,
-    totalSteps: Int
-) {
-    val animatorScale = rememberSystemAnimatorScale()
-    val stateDuration = KuotaMotion.resolveDurationMs(KuotaMotion.STATE_DURATION_MS, animatorScale)
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = label,
-            color = Color(0xFF28B8FF),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.6.sp
-        )
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            for (i in 1..totalSteps) {
-                val targetColor = when {
-                    i == currentStep -> Color(0xFF25DCFF)
-                    i < currentStep -> Color(0xFF1E5EC9)
-                    else -> Color(0xFF132647)
+                when (state.step) {
+                    0 -> StepWelcome(onStart = { viewModel.setStep(1) })
+                    1 -> StepPhoneOtp(
+                        phone = state.phone,
+                        otpCode = state.otpCode,
+                        isOtpSending = state.isOtpSending,
+                        isOtpVerifying = state.isOtpVerifying,
+                        verificationId = state.verificationId,
+                        onPhoneChange = { viewModel.setPhone(it) },
+                        onOtpChange = { viewModel.setOtpCode(it) },
+                        onSendOtp = { activity?.let { viewModel.sendPhoneOtp(it) } },
+                        onVerifyOtp = { viewModel.verifyPhoneOtp() }
+                    )
+                    2 -> StepTermsAndPrivacy(
+                        termsAgreed = state.termsAgreed,
+                        privacyAgreed = state.privacyAgreed,
+                        onConsentChange = { terms, priv -> viewModel.setTermsAndPrivacy(terms, priv) },
+                        onContinue = { viewModel.nextStep() }
+                    )
+                    3 -> StepRoleSelection(
+                        selectedRole = state.role,
+                        onRoleSelect = { viewModel.setRole(it) },
+                        onContinue = { viewModel.nextStep() }
+                    )
+                    4 -> StepBusinessProfile(
+                        fullName = state.fullName,
+                        dni = state.dni,
+                        businessName = state.businessName,
+                        category = state.category,
+                        ruc = state.ruc,
+                        address = state.location.address,
+                        department = state.location.department,
+                        province = state.location.province,
+                        district = state.location.district,
+                        onUpdateProfile = { fn, d, bn, c, r, a, dep, prov, dist ->
+                            viewModel.updateBusinessProfile(fn, d, bn, c, r, a, dep, prov, dist)
+                        },
+                        onDetectLocation = {
+                            viewModel.setLocationCoordinates(-12.0645, -77.0163)
+                        },
+                        onContinue = { viewModel.nextStep() }
+                    )
+                    5 -> StepPermissions(
+                        onPermissionsGranted = { viewModel.nextStep() }
+                    )
+                    6 -> StepKycCamera(
+                        dniFrontBytes = state.dniFrontBytes,
+                        dniBackBytes = state.dniBackBytes,
+                        selfieBytes = state.selfieBytes,
+                        isSubmitting = state.isSubmittingKyc,
+                        onCaptureFront = { viewModel.openCamera(CameraCaptureTarget.DNI_FRONT) },
+                        onCaptureBack = { viewModel.openCamera(CameraCaptureTarget.DNI_BACK) },
+                        onCaptureSelfie = { viewModel.openCamera(CameraCaptureTarget.SELFIE) },
+                        onSubmit = { viewModel.submitKyc() }
+                    )
                 }
-                val targetWidth = if (i == currentStep) 52.dp else 40.dp
-                val pillColor by animateColorAsState(
-                    targetValue = targetColor,
-                    animationSpec = tween(durationMillis = stateDuration, easing = KuotaMotion.StandardEasing),
-                    label = "stepPillColor_$i"
-                )
-                val pillWidth by animateDpAsState(
-                    targetValue = targetWidth,
-                    animationSpec = tween(durationMillis = stateDuration, easing = KuotaMotion.StandardEasing),
-                    label = "stepPillWidth_$i"
-                )
-                Box(
-                    modifier = Modifier
-                        .width(pillWidth)
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(pillColor)
-                )
             }
         }
     }
 }
 
+// -------------------------------------------------------------
+// Paso 0: Bienvenida e Introducción
+// -------------------------------------------------------------
 @Composable
-private fun KuotaOnboardingInputBox(
-    topLabel: String?,
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    leadingIcon: ImageVector,
-    keyboardType: KeyboardType,
-    prefix: String? = null,
-    isValid: Boolean = false,
-    isError: Boolean = false
-) {
-    val animatorScale = rememberSystemAnimatorScale()
-    val microDuration = KuotaMotion.resolveDurationMs(KuotaMotion.MICRO_DURATION_MS, animatorScale)
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-
-    val borderColor by animateColorAsState(
-        targetValue = when {
-            isError -> Color(0xFFFF6B6B)
-            isFocused -> Color(0xFF28D5FF)
-            isValid && value.isNotEmpty() -> Color(0xFF249CFF)
-            else -> Color(0xFF1F64C9)
-        },
-        animationSpec = tween(durationMillis = microDuration, easing = KuotaMotion.StandardEasing),
-        label = "inputBorderColor"
-    )
-    val borderWidth by animateDpAsState(
-        targetValue = if (isFocused || isError) 1.8.dp else 1.2.dp,
-        animationSpec = tween(durationMillis = microDuration, easing = KuotaMotion.StandardEasing),
-        label = "inputBorderWidth"
-    )
-    val containerColor by animateColorAsState(
-        targetValue = if (isFocused) Color(0xFF0A1B38) else Color(0xFF08162F),
-        animationSpec = tween(durationMillis = microDuration, easing = KuotaMotion.StandardEasing),
-        label = "inputContainerColor"
-    )
-    val iconTint by animateColorAsState(
-        targetValue = when {
-            isError -> Color(0xFFFF6B6B)
-            isFocused || isValid -> Color(0xFF25DCFF)
-            else -> Color(0xFF28C8FF)
-        },
-        animationSpec = tween(durationMillis = microDuration),
-        label = "inputIconTint"
-    )
-
+private fun StepWelcome(onStart: () -> Unit) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(containerColor)
-            .border(borderWidth, borderColor, RoundedCornerShape(18.dp))
-            .padding(horizontal = 18.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        if (topLabel != null && prefix == null && topLabel != "RUC") {
-            Text(
-                text = topLabel,
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Box(
+            modifier = Modifier
+                .size(96.dp)
+                .clip(CircleShape)
+                .background(KuotaColors.ForestInk),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = leadingIcon,
+                imageVector = Icons.Default.Store,
                 contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(24.dp)
+                tint = KuotaColors.LimeVoltage,
+                modifier = Modifier.size(52.dp)
             )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                if (topLabel != null && (prefix != null || topLabel == "RUC")) {
-                    Text(
-                        text = topLabel,
-                        color = if (topLabel == "RUC") Color.White else Color(0xFF9AB0CC),
-                        fontSize = if (topLabel == "RUC") 15.sp else 13.sp,
-                        fontWeight = if (topLabel == "RUC") FontWeight.Bold else FontWeight.Medium
-                    )
-                }
-                BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    interactionSource = interactionSource,
-                    singleLine = true,
-                    textStyle = TextStyle(
-                        color = Color.White,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Medium
-                    ),
-                    keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                    cursorBrush = SolidColor(Color(0xFF28D5FF)),
-                    decorationBox = { innerTextField ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (prefix != null) {
-                                Text(
-                                    text = prefix,
-                                    color = if (value.isEmpty()) Color(0xFF6E84A3) else Color.White,
-                                    fontSize = 17.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                            Box(modifier = Modifier.weight(1f)) {
-                                if (value.isEmpty()) {
-                                    Text(
-                                        text = placeholder,
-                                        color = Color(0xFF6E84A3),
-                                        fontSize = 16.sp
-                                    )
-                                }
-                                innerTextField()
-                            }
-                        }
-                    }
-                )
-            }
-
-            AnimatedVisibility(
-                visible = isValid && value.isNotEmpty() && !isError,
-                enter = fadeIn(tween(microDuration)) + scaleIn(tween(microDuration), initialScale = 0.85f),
-                exit = fadeOut(tween(microDuration)) + scaleOut(tween(microDuration), targetScale = 0.85f)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Campo válido",
-                    tint = Color(0xFF25DCFF),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
         }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        Text(
+            text = stringResource(R.string.onboarding_welcome_title),
+            style = KuotaTypography.headlineMedium,
+            color = KuotaColors.ForestInk,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Text(
+            text = stringResource(R.string.onboarding_welcome_subtitle),
+            style = KuotaTypography.bodyMedium,
+            color = KuotaColors.Charcoal,
+            textAlign = TextAlign.Center,
+            lineHeight = 22.sp
+        )
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        PillButton(
+            text = stringResource(R.string.onboarding_btn_start),
+            onClick = onStart,
+            variant = PillButtonVariant.Primary,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = stringResource(R.string.onboarding_legal_disclaimer),
+            style = KuotaTypography.bodySmall,
+            color = KuotaColors.Charcoal.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center
+        )
     }
 }
 
+// -------------------------------------------------------------
+// Paso 1: Teléfono y Verificación OTP SMS (+51)
+// -------------------------------------------------------------
 @Composable
-private fun KuotaInlineValidationMessage(
-    visible: Boolean,
-    text: String,
-    isError: Boolean,
-    isSuccess: Boolean = false,
-    modifier: Modifier = Modifier
+private fun StepPhoneOtp(
+    phone: String,
+    otpCode: String,
+    isOtpSending: Boolean,
+    isOtpVerifying: Boolean,
+    verificationId: String?,
+    onPhoneChange: (String) -> Unit,
+    onOtpChange: (String) -> Unit,
+    onSendOtp: () -> Unit,
+    onVerifyOtp: () -> Unit
 ) {
-    val animatorScale = rememberSystemAnimatorScale()
-    val duration = KuotaMotion.resolveDurationMs(KuotaMotion.MICRO_DURATION_MS, animatorScale)
-    val messageColor by animateColorAsState(
-        targetValue = when {
-            isError -> Color(0xFFFF6B6B)
-            isSuccess -> Color(0xFF25DCFF)
-            else -> Color(0xFF8CA2C0)
-        },
-        animationSpec = tween(durationMillis = duration),
-        label = "validationMsgColor"
-    )
-
-    AnimatedVisibility(
-        visible = visible && text.isNotBlank(),
-        enter = fadeIn(tween(duration)) + expandVertically(tween(duration), expandFrom = Alignment.Top),
-        exit = fadeOut(tween(duration)) + shrinkVertically(tween(duration), shrinkTowards = Alignment.Top),
-        modifier = modifier
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.Start
     ) {
         Text(
-            text = text,
-            color = messageColor,
-            fontSize = 13.sp,
-            fontWeight = if (isError || isSuccess) FontWeight.Medium else FontWeight.Normal,
-            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+            text = stringResource(R.string.onboarding_step1_title),
+            style = KuotaTypography.headlineMedium,
+            color = KuotaColors.ForestInk
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(R.string.onboarding_step1_subtitle),
+            style = KuotaTypography.bodyMedium,
+            color = KuotaColors.Charcoal
+        )
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        Text(
+            text = stringResource(R.string.onboarding_phone_label),
+            fontWeight = FontWeight.SemiBold,
+            color = KuotaColors.ForestInk,
+            fontSize = 14.sp
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.White)
+                    .border(1.dp, KuotaColors.Charcoal.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 14.dp, vertical = 15.dp)
+            ) {
+                Text(
+                    text = "🇵🇪 +51",
+                    fontWeight = FontWeight.Bold,
+                    color = KuotaColors.ForestInk,
+                    fontSize = 16.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            OutlinedTextField(
+                value = phone,
+                onValueChange = onPhoneChange,
+                placeholder = { Text(stringResource(R.string.onboarding_phone_placeholder)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = KuotaColors.ForestInk,
+                    unfocusedBorderColor = KuotaColors.Charcoal.copy(alpha = 0.2f),
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        if (verificationId == null) {
+            PillButton(
+                text = stringResource(R.string.onboarding_send_code),
+                onClick = onSendOtp,
+                isLoading = isOtpSending,
+                enabled = phone.length == 9,
+                variant = PillButtonVariant.Primary,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            Text(
+                text = stringResource(R.string.onboarding_otp_label),
+                fontWeight = FontWeight.SemiBold,
+                color = KuotaColors.ForestInk,
+                fontSize = 14.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = otpCode,
+                onValueChange = onOtpChange,
+                placeholder = { Text("123456") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = KuotaColors.ForestInk,
+                    unfocusedBorderColor = KuotaColors.Charcoal.copy(alpha = 0.2f),
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White
+                )
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            PillButton(
+                text = stringResource(R.string.onboarding_verify_code),
+                onClick = onVerifyOtp,
+                isLoading = isOtpVerifying,
+                enabled = otpCode.length == 6,
+                variant = PillButtonVariant.Primary,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            PillButton(
+                text = stringResource(R.string.onboarding_resend_code),
+                onClick = onSendOtp,
+                variant = PillButtonVariant.Tertiary,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// Paso 2: Términos y Tratamiento de Datos (Ley N° 29733)
+// -------------------------------------------------------------
+@Composable
+private fun StepTermsAndPrivacy(
+    termsAgreed: Boolean,
+    privacyAgreed: Boolean,
+    onConsentChange: (Boolean, Boolean) -> Unit,
+    onContinue: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = stringResource(R.string.onboarding_step2_title),
+            style = KuotaTypography.headlineMedium,
+            color = KuotaColors.ForestInk
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(R.string.onboarding_step2_subtitle),
+            style = KuotaTypography.bodyMedium,
+            color = KuotaColors.Charcoal
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        KuotaCard(
+            modifier = Modifier.fillMaxWidth(),
+            variant = KuotaCardVariant.Paper
+        ) {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Security,
+                        contentDescription = null,
+                        tint = KuotaColors.ForestInk,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Marco de Transparencia Legal",
+                        fontWeight = FontWeight.Bold,
+                        color = KuotaColors.ForestInk,
+                        fontSize = 15.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = stringResource(R.string.onboarding_legal_disclaimer),
+                    style = KuotaTypography.bodySmall,
+                    color = KuotaColors.Charcoal,
+                    lineHeight = 18.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onConsentChange(!termsAgreed, privacyAgreed) },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = termsAgreed,
+                onCheckedChange = { onConsentChange(it, privacyAgreed) },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = KuotaColors.ForestInk,
+                    checkmarkColor = KuotaColors.LimeVoltage
+                )
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.onboarding_terms_checkbox),
+                style = KuotaTypography.bodyMedium,
+                color = KuotaColors.ForestInk,
+                fontSize = 14.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onConsentChange(termsAgreed, !privacyAgreed) },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = privacyAgreed,
+                onCheckedChange = { onConsentChange(termsAgreed, it) },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = KuotaColors.ForestInk,
+                    checkmarkColor = KuotaColors.LimeVoltage
+                )
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.onboarding_privacy_checkbox),
+                style = KuotaTypography.bodyMedium,
+                color = KuotaColors.ForestInk,
+                fontSize = 14.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        PillButton(
+            text = stringResource(R.string.btn_continue),
+            onClick = onContinue,
+            enabled = termsAgreed && privacyAgreed,
+            variant = PillButtonVariant.Primary,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
 
+// -------------------------------------------------------------
+// Paso 3: Selección de Rol
+// -------------------------------------------------------------
 @Composable
-private fun KuotaGradientPillButton(
-    text: String,
-    showArrow: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit
+private fun StepRoleSelection(
+    selectedRole: String,
+    onRoleSelect: (String) -> Unit,
+    onContinue: () -> Unit
 ) {
-    val view = LocalView.current
-    val animatorScale = rememberSystemAnimatorScale()
-    val microDuration = KuotaMotion.resolveDurationMs(KuotaMotion.MICRO_DURATION_MS, animatorScale)
-    val stateDuration = KuotaMotion.resolveDurationMs(KuotaMotion.STATE_DURATION_MS, animatorScale)
-
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    var lastClickTimeMs by remember { mutableLongStateOf(0L) }
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.975f else 1.0f,
-        animationSpec = tween(durationMillis = microDuration, easing = KuotaMotion.StandardEasing),
-        label = "pillBtnScale"
-    )
-    val buttonAlpha by animateFloatAsState(
-        targetValue = if (enabled) 1.0f else 0.72f,
-        animationSpec = tween(durationMillis = stateDuration, easing = KuotaMotion.StandardEasing),
-        label = "pillBtnAlpha"
-    )
-    val contentColor by animateColorAsState(
-        targetValue = if (enabled) Color.White else Color(0xFF7B8FA8),
-        animationSpec = tween(durationMillis = stateDuration),
-        label = "pillBtnContentColor"
-    )
-
-    val activeBrush = Brush.horizontalGradient(
-        colors = listOf(
-            Color(0xFF0A64FF),
-            Color(0xFF1F9DFF),
-            Color(0xFF35DAFF)
-        )
-    )
-    val disabledBrush = Brush.horizontalGradient(
-        colors = listOf(
-            Color(0xFF1A2536),
-            Color(0xFF1E2B3E)
-        )
-    )
-
-    Box(
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .scale(scale)
-            .alpha(buttonAlpha)
-            .then(
-                if (enabled) {
-                    Modifier.shadow(
-                        elevation = 14.dp,
-                        shape = RoundedCornerShape(50),
-                        ambientColor = Color(0xFF1E9BFF),
-                        spotColor = Color(0xFF35DAFF)
-                    )
-                } else {
-                    Modifier
-                }
-            )
-            .clip(RoundedCornerShape(50))
-            .background(if (enabled) activeBrush else disabledBrush)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = enabled,
-                onClick = {
-                    val now = SystemClock.elapsedRealtime()
-                    if (now - lastClickTimeMs >= 320L) {
-                        lastClickTimeMs = now
-                        KuotaMotion.performActionHaptic(view)
-                        onClick()
-                    }
-                }
-            ),
-        contentAlignment = Alignment.Center
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.Start
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = text,
-                color = contentColor,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-            if (showArrow) {
-                Spacer(Modifier.width(10.dp))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    tint = contentColor,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
+        Text(
+            text = stringResource(R.string.onboarding_step3_title),
+            style = KuotaTypography.headlineMedium,
+            color = KuotaColors.ForestInk
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(R.string.onboarding_step3_subtitle),
+            style = KuotaTypography.bodyMedium,
+            color = KuotaColors.Charcoal
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        RoleSelectionCard(
+            title = stringResource(R.string.onboarding_role_buyer),
+            description = stringResource(R.string.onboarding_role_buyer_desc),
+            isSelected = selectedRole == "comprador",
+            onClick = { onRoleSelect("comprador") }
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        RoleSelectionCard(
+            title = stringResource(R.string.onboarding_role_supplier),
+            description = stringResource(R.string.onboarding_role_supplier_desc),
+            isSelected = selectedRole == "proveedor",
+            onClick = { onRoleSelect("proveedor") }
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        RoleSelectionCard(
+            title = stringResource(R.string.onboarding_role_both),
+            description = stringResource(R.string.onboarding_role_both_desc),
+            isSelected = selectedRole == "ambos",
+            onClick = { onRoleSelect("ambos") }
+        )
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        PillButton(
+            text = stringResource(R.string.btn_continue),
+            onClick = onContinue,
+            variant = PillButtonVariant.Primary,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
 @Composable
 private fun RoleSelectionCard(
-    role: UserRole,
+    title: String,
+    description: String,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val borderColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFF26D7FF) else Color(0xFF16325C),
-        label = "roleBorder"
-    )
-    val containerColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFF092042) else Color(0xFF06142A),
-        label = "roleContainer"
-    )
+    val borderColor = if (isSelected) KuotaColors.ForestInk else Color.Transparent
+    val borderWidth = if (isSelected) 2.dp else 0.dp
 
-    Card(
+    KuotaCard(
         modifier = Modifier
             .fillMaxWidth()
+            .border(borderWidth, borderColor, RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor)
+        variant = if (isSelected) KuotaCardVariant.Paper else KuotaCardVariant.Fog
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(RoundedCornerShape(11.dp))
-                            .background(if (isSelected) Color(0xFF1E5EC9) else Color(0xFF0E2A54)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (role == UserRole.VENDEDOR) Icons.Default.Storefront else Icons.Default.VerifiedUser,
-                            contentDescription = null,
-                            tint = if (isSelected) Color(0xFF26D7FF) else Color(0xFF8CA2C0),
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                    Column {
-                        Text(
-                            text = role.title,
-                            color = Color.White,
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = role.subtitle,
-                            color = Color(0xFF26D7FF),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontWeight = FontWeight.Bold,
+                    color = KuotaColors.ForestInk,
+                    fontSize = 16.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = description,
+                    color = KuotaColors.Charcoal,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp
+                )
+            }
 
+            if (isSelected) {
+                Spacer(modifier = Modifier.width(12.dp))
                 Box(
                     modifier = Modifier
-                        .size(24.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(2.dp, if (isSelected) Color(0xFF26D7FF) else Color(0xFF38557E), RoundedCornerShape(12.dp))
-                        .background(if (isSelected) Color(0xFF26D7FF) else Color.Transparent),
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(KuotaColors.LimeVoltage),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = Color(0xFF04101F),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = KuotaColors.ForestInk,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------------
+// Paso 4: Perfil de Negocio MYPE
+// -------------------------------------------------------------
+@Composable
+private fun StepBusinessProfile(
+    fullName: String,
+    dni: String,
+    businessName: String,
+    category: String,
+    ruc: String,
+    address: String,
+    department: String,
+    province: String,
+    district: String,
+    onUpdateProfile: (String, String, String, String, String, String, String, String, String) -> Unit,
+    onDetectLocation: () -> Unit,
+    onContinue: () -> Unit
+) {
+    var fn by remember { mutableStateOf(fullName) }
+    var d by remember { mutableStateOf(dni) }
+    var bn by remember { mutableStateOf(businessName) }
+    var c by remember { mutableStateOf(category) }
+    var r by remember { mutableStateOf(ruc) }
+    var a by remember { mutableStateOf(address) }
+    var dep by remember { mutableStateOf(department) }
+    var prov by remember { mutableStateOf(province) }
+    var dist by remember { mutableStateOf(district) }
+
+    fun triggerUpdate() {
+        onUpdateProfile(fn, d, bn, c, r, a, dep, prov, dist)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = stringResource(R.string.onboarding_step4_title),
+            style = KuotaTypography.headlineMedium,
+            color = KuotaColors.ForestInk
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = stringResource(R.string.onboarding_step4_subtitle),
+            style = KuotaTypography.bodyMedium,
+            color = KuotaColors.Charcoal
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // DNI del Titular
+        Text(text = stringResource(R.string.onboarding_dni_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = d,
+            onValueChange = { d = it.filter { ch -> ch.isDigit() }.take(8); triggerUpdate() },
+            placeholder = { Text("8 dígitos") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp)
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Nombres y Apellidos
+        Text(text = stringResource(R.string.onboarding_full_name_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = fn,
+            onValueChange = { fn = it; triggerUpdate() },
+            placeholder = { Text("Ej. María Flores Quispe") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp)
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Nombre Comercial del Negocio
+        Text(text = stringResource(R.string.onboarding_business_name_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = bn,
+            onValueChange = { bn = it; triggerUpdate() },
+            placeholder = { Text("Ej. Confecciones Mary") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp)
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Rubro Comercial
+        Text(text = stringResource(R.string.onboarding_business_category_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = c,
+            onValueChange = { c = it; triggerUpdate() },
+            placeholder = { Text("Ej. Textil / Confecciones / Galería") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp)
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // RUC (Opcional)
+        Text(text = stringResource(R.string.onboarding_ruc_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = r,
+            onValueChange = { r = it.filter { ch -> ch.isDigit() }.take(11); triggerUpdate() },
+            placeholder = { Text("10XXXXXXXXX o 20XXXXXXXXX") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp)
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Dirección
+        Text(text = stringResource(R.string.onboarding_address_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = a,
+            onValueChange = { a = it; triggerUpdate() },
+            placeholder = { Text("Ej. Jr. Gamarra 1234, Tda 204") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp)
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Distrito y Provincia
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Distrito", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedTextField(
+                    value = dist,
+                    onValueChange = { dist = it; triggerUpdate() },
+                    placeholder = { Text("La Victoria") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Provincia", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedTextField(
+                    value = prov,
+                    onValueChange = { prov = it; triggerUpdate() },
+                    placeholder = { Text("Lima") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        PillButton(
+            text = stringResource(R.string.onboarding_detect_location),
+            onClick = onDetectLocation,
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.MyLocation,
+                    contentDescription = null,
+                    tint = KuotaColors.ForestInk,
+                    modifier = Modifier.size(18.dp)
+                )
+            },
+            variant = PillButtonVariant.Secondary,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        val isReady = d.length == 8 && fn.isNotBlank() && bn.isNotBlank() && c.isNotBlank()
+        PillButton(
+            text = stringResource(R.string.btn_continue),
+            onClick = onContinue,
+            enabled = isReady,
+            variant = PillButtonVariant.Primary,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+// -------------------------------------------------------------
+// Paso 5: Pantalla de Valor de Permisos
+// -------------------------------------------------------------
+@Composable
+private fun StepPermissions(
+    onPermissionsGranted: () -> Unit
+) {
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { _ ->
+        onPermissionsGranted()
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = stringResource(R.string.onboarding_step5_title),
+            style = KuotaTypography.headlineMedium,
+            color = KuotaColors.ForestInk
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(R.string.onboarding_step5_subtitle),
+            style = KuotaTypography.bodyMedium,
+            color = KuotaColors.Charcoal,
+            lineHeight = 22.sp
+        )
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        KuotaCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(KuotaColors.LimeVoltage),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CameraAlt,
+                        contentDescription = null,
+                        tint = KuotaColors.ForestInk,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column {
+                    Text(
+                        text = stringResource(R.string.onboarding_permission_camera_title),
+                        fontWeight = FontWeight.Bold,
+                        color = KuotaColors.ForestInk,
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.onboarding_permission_camera_desc),
+                        color = KuotaColors.Charcoal,
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        KuotaCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(KuotaColors.LimeVoltage),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = KuotaColors.ForestInk,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column {
+                    Text(
+                        text = stringResource(R.string.onboarding_permission_location_title),
+                        fontWeight = FontWeight.Bold,
+                        color = KuotaColors.ForestInk,
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.onboarding_permission_location_desc),
+                        color = KuotaColors.Charcoal,
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        PillButton(
+            text = stringResource(R.string.onboarding_btn_grant_permissions),
+            onClick = {
+                permissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            },
+            variant = PillButtonVariant.Primary,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+// -------------------------------------------------------------
+// Paso 6: Captura de Documentos KYC (CameraX)
+// -------------------------------------------------------------
+@Composable
+private fun StepKycCamera(
+    dniFrontBytes: ByteArray?,
+    dniBackBytes: ByteArray?,
+    selfieBytes: ByteArray?,
+    isSubmitting: Boolean,
+    onCaptureFront: () -> Unit,
+    onCaptureBack: () -> Unit,
+    onCaptureSelfie: () -> Unit,
+    onSubmit: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = stringResource(R.string.onboarding_step6_title),
+            style = KuotaTypography.headlineMedium,
+            color = KuotaColors.ForestInk
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = stringResource(R.string.onboarding_step6_subtitle),
+            style = KuotaTypography.bodyMedium,
+            color = KuotaColors.Charcoal
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        KycCaptureItemCard(
+            title = stringResource(R.string.onboarding_kyc_dni_front),
+            subtitle = "Lado de la fotografía y datos personales",
+            imageBytes = dniFrontBytes,
+            onCaptureClick = onCaptureFront
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        KycCaptureItemCard(
+            title = stringResource(R.string.onboarding_kyc_dni_back),
+            subtitle = "Lado con código de barras y firma",
+            imageBytes = dniBackBytes,
+            onCaptureClick = onCaptureBack
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        KycCaptureItemCard(
+            title = stringResource(R.string.onboarding_kyc_selfie),
+            subtitle = "Rostro de frente, buena luz, sin accesorios",
+            imageBytes = selfieBytes,
+            onCaptureClick = onCaptureSelfie
+        )
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        val allCaptured = dniFrontBytes != null && dniBackBytes != null && selfieBytes != null
+
+        PillButton(
+            text = stringResource(R.string.onboarding_kyc_submit),
+            onClick = onSubmit,
+            isLoading = isSubmitting,
+            enabled = allCaptured && !isSubmitting,
+            variant = PillButtonVariant.Primary,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun KycCaptureItemCard(
+    title: String,
+    subtitle: String,
+    imageBytes: ByteArray?,
+    onCaptureClick: () -> Unit
+) {
+    val isCaptured = imageBytes != null
+    val bitmap = remember(imageBytes) {
+        imageBytes?.let {
+            BitmapFactory.decodeByteArray(it, 0, it.size)?.asImageBitmap()
+        }
+    }
+
+    KuotaCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onCaptureClick)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (bitmap != null) {
+                Image(
+                    bitmap = bitmap,
+                    contentDescription = title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(KuotaColors.Fog),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoCamera,
+                        contentDescription = null,
+                        tint = KuotaColors.Charcoal,
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
             }
 
-            Text(
-                text = role.description,
-                color = Color(0xFFB0C4DE),
-                fontSize = 13.sp,
-                lineHeight = 18.sp
-            )
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontWeight = FontWeight.Bold,
+                    color = KuotaColors.ForestInk,
+                    fontSize = 15.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = subtitle,
+                    color = KuotaColors.Charcoal,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            if (isCaptured) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(KuotaColors.LimeVoltage),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Capturado",
+                        tint = KuotaColors.ForestInk,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            } else {
+                ChipPill(
+                    label = "Capturar",
+                    isSelected = false,
+                    onClick = onCaptureClick
+                )
+            }
         }
     }
 }

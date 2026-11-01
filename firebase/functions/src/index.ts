@@ -1,5 +1,6 @@
-import { onRequest } from "firebase-functions/v2/https";
+import { onRequest, onCall, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentWritten, onDocumentCreated } from "firebase-functions/v2/firestore";
+import * as functionsV1 from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import express from "express";
 import cors from "cors";
@@ -532,25 +533,47 @@ export const onKycRequestCreated = onDocumentCreated("kyc_requests/{requestId}",
   const requestId = event.params.requestId;
   const data = snapshot.data();
   const dni = String(data.dni || "");
-  const merchantId = String(data.merchantId || "");
-  const fullName = String(data.fullName || data.full_name || "Comerciante MYPE");
+  const uid = String(data.uid || "");
+  const merchantId = String(data.merchantId || uid);
+  const fullName = String(data.fullName || data.full_name || "Comerciante Kuota");
 
   const verification = calculateReniecDni(dni);
   const now = admin.firestore.FieldValue.serverTimestamp();
 
   if (!verification.isValid) {
+    const rejectionReason = "El DNI ingresado no cumple la estructura oficial o ponderación de RENIEC.";
     await db.collection("kyc_requests").doc(requestId).update({
-      kycStatus: "REJECTED_INVALID_DNI",
-      rejectionReason: "El DNI no cumple la estructura y ponderación oficial de RENIEC.",
+      kycStatus: "rejected",
+      rejectionReason,
       reviewedAt: now,
     });
+
+    if (uid) {
+      await db.collection("users").doc(uid).set({
+        kycStatus: "rejected",
+        kycRejectionReason: rejectionReason,
+        updatedAt: now,
+      }, { merge: true });
+
+      await db.doc(`users/${uid}/summary/current`).set({
+        kycStatus: "rejected",
+        rejectionReason,
+        availableCreditCents: 0,
+        updatedAt: now,
+      }, { merge: true });
+
+      await sendUserPush(uid, {
+        title: "Observación en tu verificación Kuota",
+        body: rejectionReason,
+      });
+    }
     return;
   }
 
   // Verificación exitosa bajo padrón y algoritmo oficial
-  const riskScore = 96; // Nivel bajo de riesgo
+  const riskScore = 96;
   await db.collection("kyc_requests").doc(requestId).update({
-    kycStatus: "VERIFIED",
+    kycStatus: "approved",
     verifiedAt: now,
     verificationAlgorithm: "RENIEC_MOD11_PONDERATED",
     riskScore,
@@ -559,7 +582,44 @@ export const onKycRequestCreated = onDocumentCreated("kyc_requests/{requestId}",
     reniecCheckChar: verification.expectedChar,
   });
 
-  if (merchantId) {
+  // Consultar límite de Nivel 1 en config/levels (default S/ 1,400.00 = 140000 céntimos)
+  let tier1Limit = 140000;
+  try {
+    const cfgSnap = await db.collection("config").doc("levels").get();
+    if (cfgSnap.exists) {
+      const tiers = cfgSnap.data()?.tiers || [];
+      const t1 = tiers.find((t: any) => t.level === 1);
+      if (t1?.maxCreditCents) tier1Limit = t1.maxCreditCents;
+    }
+  } catch (err) {
+    console.warn("No se pudo leer config/levels, usando límite base", err);
+  }
+
+  if (uid) {
+    await db.collection("users").doc(uid).set({
+      kycStatus: "approved",
+      kycVerifiedAt: now,
+      riskScore,
+      updatedAt: now,
+    }, { merge: true });
+
+    // Activar el crédito disponible en el resumen consolidado (PRD §6.1)
+    await db.doc(`users/${uid}/summary/current`).set({
+      kycStatus: "approved",
+      level: 1,
+      levelName: "Nivel 1",
+      maxCreditCents: tier1Limit,
+      availableCreditCents: tier1Limit,
+      updatedAt: now,
+    }, { merge: true });
+
+    await sendUserPush(uid, {
+      title: "¡Cuenta verificada en Kuota!",
+      body: `Felicidades ${fullName}, tu línea de compra al crédito por S/ ${(tier1Limit / 100).toFixed(2)} ya está activa.`,
+    });
+  }
+
+  if (merchantId && merchantId !== uid) {
     await db.collection("merchants").doc(merchantId).set({
       kycStatus: "VERIFIED",
       kycVerifiedAt: now,
@@ -572,9 +632,207 @@ export const onKycRequestCreated = onDocumentCreated("kyc_requests/{requestId}",
   await db.collection("audit_ledger").add({
     eventType: "KYC_VERIFIED",
     requestId,
-    merchantId,
+    uid,
     dniMasked: `****${dni.slice(-4)}`,
-    status: "VERIFIED",
+    status: "approved",
     occurredAt: now,
   });
+});
+
+// Helper para enviar push a los dispositivos registrados de un usuario
+async function sendUserPush(uid: string, notification: { title: string; body: string; channelId?: string }) {
+  try {
+    const devicesSnap = await db.collection("devices").where("uid", "==", uid).limit(5).get();
+    const tokens = devicesSnap.docs.map(d => d.id).filter(t => t.length > 20);
+    if (!tokens.length) return;
+
+    await admin.messaging().sendEachForMulticast({
+      tokens,
+      notification: {
+        title: notification.title,
+        body: notification.body,
+      },
+      android: {
+        priority: "high",
+        notification: {
+          channelId: notification.channelId || "kuota_account_channel",
+          sound: "default",
+        },
+      },
+    });
+  } catch (err) {
+    console.error(`Error enviando FCM push a usuario ${uid}:`, err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 11. AUTH TRIGGER & INITIALIZER: NUEVO USUARIO -> PERFIL Y RESUMEN (PRD §8.1)
+// ---------------------------------------------------------------------------
+async function initUserInFirestore(uid: string, phone: string) {
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  // Asignar Custom Claims iniciales
+  try {
+    await admin.auth().setCustomUserClaims(uid, { role: "comprador", level: 1 });
+  } catch (err) {
+    console.warn("Error setting custom claims:", err);
+  }
+
+  const batch = db.batch();
+
+  // Perfil base del usuario
+  batch.set(db.collection("users").doc(uid), {
+    uid,
+    phone: phone || "",
+    role: "comprador",
+    kycStatus: "unsubmitted",
+    createdAt: now,
+    updatedAt: now,
+  }, { merge: true });
+
+  // Resumen consolidado: Home en 1 lectura (PRD §6.1)
+  batch.set(db.doc(`users/${uid}/summary/current`), {
+    uid,
+    level: 1,
+    levelName: "Nivel 1",
+    maxCreditCents: 140000,
+    availableCreditCents: 0,
+    usedCreditCents: 0,
+    nextInstallmentDueDate: null,
+    nextInstallmentAmountCents: 0,
+    overdueInstallmentsCount: 0,
+    kycStatus: "unsubmitted",
+    role: "comprador",
+    updatedAt: now,
+  }, { merge: true });
+
+  await batch.commit();
+}
+
+export const onUserCreate = functionsV1.auth.user().onCreate(async (user: functionsV1.auth.UserRecord) => {
+  const uid = user.uid;
+  const phone = user.phoneNumber || "";
+  console.log(`[AUTH] Inicializando usuario ${uid} (+51 ${phone})`);
+  await initUserInFirestore(uid, phone);
+});
+
+export const initUserSummary = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Usuario no autenticado");
+  }
+  const uid = request.auth.uid;
+  const phone = (request.auth.token.phone_number as string) || "";
+  await initUserInFirestore(uid, phone);
+  return { success: true, message: "Resumen inicial creado correctamente" };
+});
+
+// ---------------------------------------------------------------------------
+// 12. CALLABLE FUNCTION: SUBMIT KYC (PRD §8.1)
+// ---------------------------------------------------------------------------
+export const submitKyc = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError("unauthenticated", "Debe iniciar sesión para enviar su verificación de identidad.");
+  }
+
+  const uid = request.auth.uid;
+  const data = request.data || {};
+  const {
+    dni,
+    fullName,
+    businessName,
+    category,
+    ruc,
+    role = "comprador",
+    location,
+    dniFrontStoragePath,
+    dniBackStoragePath,
+    selfieStoragePath,
+    termsConsent,
+  } = data;
+
+  // 1. Validaciones peruanas
+  const cleanDni = String(dni || "").trim();
+  if (!/^\d{8}$/.test(cleanDni)) {
+    throw new HttpsError("invalid-argument", "El DNI debe contener exactamente 8 dígitos numéricos.");
+  }
+  if (!fullName || String(fullName).trim().length < 3) {
+    throw new HttpsError("invalid-argument", "El nombre completo es obligatorio.");
+  }
+  if (!businessName || String(businessName).trim().length < 2) {
+    throw new HttpsError("invalid-argument", "El nombre comercial del negocio es obligatorio.");
+  }
+  if (!category) {
+    throw new HttpsError("invalid-argument", "El rubro de negocio es obligatorio.");
+  }
+  if (ruc && !/^\d{11}$/.test(String(ruc).trim())) {
+    throw new HttpsError("invalid-argument", "El RUC debe contener exactamente 11 dígitos numéricos.");
+  }
+  if (!termsConsent || termsConsent.agreed !== true || !termsConsent.version) {
+    throw new HttpsError("failed-precondition", "Debe aceptar los Términos y la Política de Privacidad (Ley N° 29733).");
+  }
+
+  // 2. Validar que las rutas de Storage correspondan a kyc/{uid}/*
+  const allowedPrefix = `kyc/${uid}/`;
+  if (!dniFrontStoragePath?.startsWith(allowedPrefix) ||
+      !dniBackStoragePath?.startsWith(allowedPrefix) ||
+      !selfieStoragePath?.startsWith(allowedPrefix)) {
+    throw new HttpsError("permission-denied", "Las imágenes deben residir en la carpeta kyc/{uid}/ del usuario.");
+  }
+
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  const requestId = `kyc_${uid}_${Date.now()}`;
+
+  const batch = db.batch();
+
+  batch.set(db.collection("users").doc(uid), {
+    dni: cleanDni,
+    fullName: String(fullName).trim(),
+    businessName: String(businessName).trim(),
+    category: String(category).trim(),
+    ruc: ruc ? String(ruc).trim() : null,
+    role,
+    location: location || null,
+    kycStatus: "pending",
+    kycSubmittedAt: now,
+    termsConsent: {
+      agreed: true,
+      version: String(termsConsent.version),
+      consentedAt: termsConsent.consentedAt || new Date().toISOString(),
+    },
+    updatedAt: now,
+  }, { merge: true });
+
+  batch.set(db.doc(`users/${uid}/summary/current`), {
+    kycStatus: "pending",
+    role,
+    updatedAt: now,
+  }, { merge: true });
+
+  batch.set(db.collection("kyc_requests").doc(requestId), {
+    uid,
+    dni: cleanDni,
+    fullName: String(fullName).trim(),
+    businessName: String(businessName).trim(),
+    category: String(category).trim(),
+    ruc: ruc ? String(ruc).trim() : null,
+    role,
+    location: location || null,
+    dniFrontStoragePath,
+    dniBackStoragePath,
+    selfieStoragePath,
+    termsConsent,
+    status: "pending",
+    createdAt: now,
+  });
+
+  await batch.commit();
+
+  await admin.auth().setCustomUserClaims(uid, { role, level: 1 });
+
+  return {
+    success: true,
+    requestId,
+    kycStatus: "pending",
+    message: "Verificación enviada correctamente. Estamos validando tus datos.",
+  };
 });

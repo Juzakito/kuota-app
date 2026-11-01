@@ -24,8 +24,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.kouta.app.core.designsystem.motion.KuotaMotion
 import com.kouta.app.core.designsystem.motion.rememberSystemAnimatorScale
-import com.kouta.app.data.local.SalesJournalStore
-import com.kouta.app.domain.model.UserRole
 import com.kouta.app.feature.financing.TradeScreen
 import com.kouta.app.feature.home.HomeScreen
 import com.kouta.app.feature.installments.MyInstallmentsScreen
@@ -72,18 +70,14 @@ fun KoutaNavHost(
     deepLink: String? = null,
     onDeepLinkHandled: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val store = remember(context) { SalesJournalStore(context) }
-    var startDestination by remember(store) { mutableStateOf<String?>(null) }
+    val currentUser = remember { com.google.firebase.auth.FirebaseAuth.getInstance().currentUser }
+    var startDestination by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(store) {
-        val profile = withContext(Dispatchers.IO) {
-            runCatching { store.readBusinessProfile() }.getOrNull()
-        }
-        startDestination = when {
-            profile == null -> NavDestination.Onboarding.route
-            profile.role == UserRole.PROVEEDOR.name -> NavDestination.SupplierHome.route
-            else -> NavDestination.Home.route
+    LaunchedEffect(currentUser) {
+        startDestination = if (currentUser == null) {
+            NavDestination.Onboarding.route
+        } else {
+            NavDestination.Home.route
         }
     }
 
@@ -125,11 +119,7 @@ fun KoutaNavHost(
             composable(NavDestination.Onboarding.route) {
                 OnboardingScreen(
                     onOnboardingComplete = {
-                        val destination = if (store.readBusinessProfile()?.role == UserRole.PROVEEDOR.name) {
-                            NavDestination.SupplierHome.route
-                        } else {
-                            NavDestination.Home.route
-                        }
+                        val destination = NavDestination.Home.route
                         startDestination = destination
                         navController.navigate(destination) {
                             popUpTo(NavDestination.Onboarding.route) { inclusive = true }

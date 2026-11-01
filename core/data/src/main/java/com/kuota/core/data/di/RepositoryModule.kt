@@ -1,8 +1,12 @@
 package com.kuota.core.data.di
 
+import com.kuota.core.data.repository.AuthRepository
 import com.kuota.core.data.repository.ConfigRepository
+import com.kuota.core.data.repository.DefaultKycRepository
+import com.kuota.core.data.repository.FirebaseAuthRepository
 import com.kuota.core.data.repository.FirebaseConfigRepository
 import com.kuota.core.data.repository.FirebaseUserRepository
+import com.kuota.core.data.repository.KycRepository
 import com.kuota.core.data.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -16,6 +20,12 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun bindAuthRepository(
+        impl: FirebaseAuthRepository
+    ): AuthRepository
+
+    @Binds
+    @Singleton
     abstract fun bindConfigRepository(
         impl: FirebaseConfigRepository
     ): ConfigRepository
@@ -25,4 +35,10 @@ abstract class RepositoryModule {
     abstract fun bindUserRepository(
         impl: FirebaseUserRepository
     ): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindKycRepository(
+        impl: DefaultKycRepository
+    ): KycRepository
 }
