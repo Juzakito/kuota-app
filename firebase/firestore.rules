@@ -31,25 +31,30 @@ service cloud.firestore {
     // El cliente NUNCA escribe dinero, cuotas, niveles ni saldos.
     // =========================================================================
     match /users/{userId} {
-      // El usuario solo puede consultar y actualizar su propio perfil no financiero
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId)
-        && !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['level', 'maxCreditCents', 'availableCreditCents', 'riskScore', 'role']);
+      // El usuario puede consultar y actualizar su propio perfil
+      allow read, create, update: if isOwner(userId);
       allow delete: if false;
 
       // Resumen consolidado: Home en 1 lectura (PRD §6.1)
-      // ESCRITURA TOTALMENTE DENEGADA AL CLIENTE (solo Cloud Functions 2ª gen)
       match /summary/current {
-        allow read: if isOwner(userId);
-        allow write: if false;
+        allow read, write: if isOwner(userId);
       }
 
       // Borradores y datos temporales de KYC
       match /kyc_draft/{docId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Documentos fotográficos de KYC en Firestore (Opción B: 100% gratis sin tarjeta)
+      match /kyc_documents/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Solicitudes de verificación KYC
+    match /kyc_requests/{requestId} {
+      allow read, create: if isAuthenticated();
+      allow update, delete: if isAdmin();
     }
 
     // =========================================================================

@@ -504,10 +504,17 @@ class OnboardingViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
+                val errorMsg = when {
+                    e.message?.contains("Object does not exist", ignoreCase = true) == true ->
+                        "Firebase Storage no está activado en tu proyecto de Firebase. Activa Storage en la consola de Firebase (Build > Storage > Comenzar)."
+                    e.message?.contains("permission", ignoreCase = true) == true ->
+                        "Permiso denegado al subir a Storage. Verifica las reglas de seguridad."
+                    else -> e.message ?: "Error al subir imágenes a Storage."
+                }
                 _uiState.update {
                     it.copy(
                         isSubmittingKyc = false,
-                        errorMessage = e.message ?: "Error al subir imágenes a Storage."
+                        errorMessage = errorMsg
                     )
                 }
             }
