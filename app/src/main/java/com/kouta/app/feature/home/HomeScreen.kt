@@ -462,150 +462,169 @@ fun HomeScreen(
                 }
             }
 
-            // Métrica Principal: Rótulo "Puedes financiar hasta" (HOME-01, HOME-02)
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Puedes financiar hasta",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-
-                    IconButton(
-                        onClick = { showBalance = !showBalance },
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(
-                            if (showBalance) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = "Ocultar monto",
-                            tint = Color.White.copy(alpha = 0.85f),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-
-                if (showBalance) {
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = integerPart,
-                            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 42.sp),
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White,
-                            letterSpacing = (-1).sp
-                        )
-                        if (decimalPart.isNotEmpty()) {
-                            Text(
-                                text = decimalPart,
-                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp),
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White.copy(alpha = 0.75f),
-                                modifier = Modifier.padding(bottom = 5.dp)
-                            )
-                        }
-                    }
-                } else {
-                    Text(
-                        text = "S/ ••••••••",
-                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 38.sp),
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    )
-                }
-
-                // Capacidad de compra con inicial
-                Text(
-                    text = "Con tu inicial del ${userCreditLevel.downPaymentPercentage}%, puedes comprar hasta ${PurchaseOffer.formatPen(maxPurchaseCapacityCents)}.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.85f),
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            // Insignia Nivel e Indicador de Progreso al Siguiente Nivel (HOME-01)
+            // =========================================================
+            // TARJETA PRINCIPAL PROTAGONISTA FUSIONADA (PRD Rediseño UI/UX)
+            // =========================================================
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                color = Color.White.copy(alpha = 0.12f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f))
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White.copy(alpha = 0.15f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f))
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
+                    // Encabezado: "Puedes financiar hasta" + Nivel actual
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = userCreditLevel.accentColor.copy(alpha = 0.3f),
-                            border = BorderStroke(1.dp, userCreditLevel.accentColor.copy(alpha = 0.6f))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = userCreditLevel.title,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                                "Puedes financiar hasta",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
+                            IconButton(
+                                onClick = { showBalance = !showBalance },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    if (showBalance) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = "Ocultar monto",
+                                    tint = Color.White.copy(alpha = 0.85f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+
+                        // Badge Nivel actual (Ej. "Nivel 1")
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = Color.White.copy(alpha = 0.22f),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f))
+                        ) {
+                            Text(
+                                text = "Nivel ${userCreditLevel.levelNumber}",
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                         }
+                    }
 
+                    // Monto gigante protagonista
+                    if (showBalance) {
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                text = integerPart,
+                                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 40.sp),
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White,
+                                letterSpacing = (-1).sp
+                            )
+                            if (decimalPart.isNotEmpty()) {
+                                Text(
+                                    text = decimalPart,
+                                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                            }
+                        }
+                    } else {
                         Text(
-                            text = "${(salesProgressRatio * 100).toInt()}% para Nivel $nextLevelNum",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
+                            text = "S/ ••••••••",
+                            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp),
+                            fontWeight = FontWeight.ExtraBold,
                             color = Color.White
                         )
                     }
 
+                    // Términos del nivel: ("50% inicial", "compras hasta S/ 1400")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = Color.White.copy(alpha = 0.16f)
+                        ) {
+                            Text(
+                                text = "${userCreditLevel.downPaymentPercentage}% inicial",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                        }
+                        Text(
+                            text = "·",
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Compras hasta ${PurchaseOffer.formatPen(maxPurchaseCapacityCents)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    // Barra de progreso simple debajo (progreso visual limpio sin texto largo)
                     LinearProgressIndicator(
                         progress = { salesProgressRatio },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(6.dp)
+                            .height(5.dp)
                             .clip(RoundedCornerShape(3.dp)),
                         color = com.kouta.app.core.designsystem.theme.KuotaEmerald,
                         trackColor = Color.White.copy(alpha = 0.25f)
                     )
-
-                    Text(
-                        text = "S/ ${PurchaseOffer.formatPen(salesTotal)} de ${PurchaseOffer.formatPen(nextLevelGoalCents)} en ventas registradas para desbloquear Nivel $nextLevelNum (${nextLevel.tierName}).",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.85f),
-                        fontSize = 11.sp
-                    )
                 }
             }
 
-            // Próxima Cuota en el Hero (HOME-03, Frosted Glass Card)
+            // =========================================================
+            // SECCIÓN "PRÓXIMA CUOTA" (PRD Rediseño UI/UX)
+            // =========================================================
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                color = Color.White.copy(alpha = 0.16f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f))
+                color = Color.White.copy(alpha = 0.15f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f))
             ) {
                 if (nextUpcomingPair != null) {
                     val (activePurchase, nextInstallment) = nextUpcomingPair
                     Column(
                         modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.CalendarMonth,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
                                 Text(
                                     "Próxima cuota",
                                     style = MaterialTheme.typography.labelMedium,
@@ -633,29 +652,46 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(
+                                modifier = Modifier.weight(1f, fill = false),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
                                 Text(
                                     "${activePurchase.supplierName} · Cuota #${nextInstallment.sequenceNumber}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.9f)
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
+                                // Monto en tamaño reducido (fontSize = 19.sp, titleLarge)
                                 Text(
                                     if (showBalance) PurchaseOffer.formatPen(nextInstallment.amountCents) else "S/ ••••••",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
+                                    fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
                             }
 
+                            Spacer(Modifier.width(12.dp))
+
+                            // Botón limpio sin quiebres de texto
                             Button(
                                 onClick = { wizardTargetPair = activePurchase to nextInstallment },
                                 shape = RoundedCornerShape(50),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.White,
-                                    contentColor = com.kouta.app.core.designsystem.theme.KuotaRoyalBlue
-                                )
+                                    contentColor = Color(0xFF1E40AF)
+                                ),
+                                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                             ) {
-                                Text("Pagar ahora →", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                                Text(
+                                    text = "Pagar ahora",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
                             }
                         }
                     }
@@ -669,7 +705,7 @@ fun HomeScreen(
                                 Icons.Default.CheckCircle,
                                 contentDescription = null,
                                 tint = com.kouta.app.core.designsystem.theme.KuotaEmerald,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                             Text(
                                 "No tienes cuotas pendientes",
@@ -688,7 +724,7 @@ fun HomeScreen(
                                 .fillMaxWidth()
                                 .clickable(onClick = onFinanceClick),
                             shape = RoundedCornerShape(12.dp),
-                            color = Color.White.copy(alpha = 0.2f)
+                            color = Color.White.copy(alpha = 0.18f)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -703,7 +739,6 @@ fun HomeScreen(
                 }
             }
         }
-
         Spacer(Modifier.height(14.dp))
 
         // -------------------------------------------------------------
@@ -731,9 +766,10 @@ fun HomeScreen(
                     modifier = Modifier
                         .weight(1f)
                         .clickable(onClick = onClick),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -766,111 +802,6 @@ fun HomeScreen(
         Spacer(Modifier.height(14.dp))
 
         // -------------------------------------------------------------
-        // 3. SIGUIENTE MEJOR ACCIÓN: TARJETA INTERACTIVA DE PROGRESO (HOME-05)
-        // -------------------------------------------------------------
-        val currentStepNum = when {
-            !canNotify -> 1
-            !hasSession -> 2
-            kycSummary == null -> 3
-            else -> 4
-        }
-        val stepTitle = when (currentStepNum) {
-            1 -> "Activar alertas de Yape y Plin"
-            2 -> "Vincular cuenta comercial"
-            3 -> "Verificar DNI y datos fiscales"
-            else -> "Realiza tu primera compra a crédito"
-        }
-        val stepDesc = when (currentStepNum) {
-            1 -> "Captura automática de pagos en vivo para verificar tus ventas."
-            2 -> "Conecta tu cuenta para respaldar tus ventas de forma segura en la nube."
-            3 -> "Valida tu identidad para emitir comprobantes y subir de nivel."
-            else -> "Financia tu compra en proveedores con solo tu inicial."
-        }
-        val stepBenefit = when (currentStepNum) {
-            1 -> "+ S/ 300 de línea"
-            2 -> "+ S/ 200 de línea"
-            3 -> "Sube a Nivel 2"
-            else -> "Desbloquea Nivel 2"
-        }
-        val stepTime = when (currentStepNum) {
-            1 -> "1 min"
-            2 -> "2 min"
-            3 -> "2 min"
-            else -> "3 min"
-        }
-        val stepAction: () -> Unit = {
-            when (currentStepNum) {
-                1 -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    } else {
-                        onNotificationsClick()
-                    }
-                }
-                2 -> showLinkDialog = true
-                3 -> showKycDialog = true
-                else -> onFinanceClick()
-            }
-        }
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .clickable(onClick = stepAction)
-                .kuotaTabSectionReveal(sectionIndex = 2),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB)),
-            border = BorderStroke(1.dp, Color(0xFFFDE68A)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFFFEF3C7))
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
-                        Text("PASO $currentStepNum DE 4", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(stepBenefit, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF10B981))
-                        Text("· $stepTime", style = MaterialTheme.typography.labelSmall, color = Color(0xFF92400E))
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFEF3C7)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(20.dp))
-                    }
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(stepTitle, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(0xFF92400E))
-                        Text(stepDesc, style = MaterialTheme.typography.bodySmall, color = Color(0xFFB45309), lineHeight = 16.sp)
-                    }
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(18.dp))
-                }
-            }
-        }
-
-        Spacer(Modifier.height(14.dp))
-
-        // -------------------------------------------------------------
         // 4. CONSEJOS DE KUOTA (HOME-06, Adaptación Bill Negotiator Ethan Carter)
         // -------------------------------------------------------------
         Card(
@@ -880,6 +811,7 @@ fun HomeScreen(
                 .kuotaTabSectionReveal(sectionIndex = 3),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
@@ -984,7 +916,7 @@ fun HomeScreen(
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
                     ) {
                         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Box(
@@ -1050,6 +982,7 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
@@ -1110,6 +1043,7 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
@@ -1202,6 +1136,7 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(

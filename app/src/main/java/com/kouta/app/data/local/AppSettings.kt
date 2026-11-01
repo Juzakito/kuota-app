@@ -10,7 +10,7 @@ class AppSettings(context: Context) {
     var serverUrl: String
         get() = prefs.getString(KEY_SERVER_URL, null)
             ?.takeIf { it.isNotBlank() && it != "http://127.0.0.1:8080/" }
-            ?: BuildConfig.KUOTA_API_BASE_URL
+            ?: "" // Sin backend HTTP configurado (AGENTS.md: backend = solo Firebase). No inventar URLs.
         set(value) {
             val normalized = value.trim().let { if (it.endsWith("/")) it else "$it/" }
             prefs.edit().putString(KEY_SERVER_URL, normalized).apply()

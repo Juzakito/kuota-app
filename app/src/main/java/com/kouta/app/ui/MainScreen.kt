@@ -1,7 +1,6 @@
 package com.kouta.app.ui
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -78,7 +77,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kouta.app.core.designsystem.motion.KuotaMotion
 import com.kouta.app.core.designsystem.motion.rememberSystemAnimatorScale
-import com.kouta.app.core.designsystem.theme.kuotaColors
 import com.kouta.app.core.push.KuotaEvents
 import com.kouta.app.core.security.PinSecurityManager
 import com.kouta.app.data.local.CreditPurchaseStore
@@ -325,18 +323,23 @@ private fun VendedorBottomBar(
     onCreditLine: () -> Unit,
     onAccount: () -> Unit
 ) {
-    val barShape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
+    val barShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(elevation = 18.dp, shape = barShape, clip = false)
+            .shadow(elevation = 4.dp, shape = barShape, clip = false)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                shape = barShape
+            )
             .background(MaterialTheme.colorScheme.surface, barShape)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .heightIn(min = 76.dp)
+                .heightIn(min = 72.dp)
                 .padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -387,18 +390,23 @@ private fun SupplierBottomBar(
     onCharge: () -> Unit,
     onSales: () -> Unit
 ) {
-    val barShape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
+    val barShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(elevation = 18.dp, shape = barShape, clip = false)
+            .shadow(elevation = 4.dp, shape = barShape, clip = false)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                shape = barShape
+            )
             .background(MaterialTheme.colorScheme.surface, barShape)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .heightIn(min = 76.dp)
+                .heightIn(min = 72.dp)
                 .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -454,20 +462,10 @@ private fun BottomBarItem(
         animationSpec = tween(durationMillis = duration, easing = KuotaMotion.StandardEasing),
         label = "bottomTabTint_$label"
     )
-    val pillWidth by animateDpAsState(
-        targetValue = if (selected) 46.dp else 0.dp,
-        animationSpec = tween(durationMillis = duration, easing = KuotaMotion.StandardEasing),
-        label = "bottomTabPillWidth_$label"
-    )
-    val pillAlpha by animateFloatAsState(
-        targetValue = if (selected) 1f else 0f,
-        animationSpec = tween(durationMillis = duration),
-        label = "bottomTabPillAlpha_$label"
-    )
     val iconScale by animateFloatAsState(
         targetValue = when {
-            isPressed -> 0.92f
-            selected -> 1.06f
+            isPressed -> 0.94f
+            selected -> 1.04f
             else -> 1.0f
         },
         animationSpec = tween(durationMillis = KuotaMotion.resolveDurationMs(140, animatorScale)),
@@ -476,7 +474,7 @@ private fun BottomBarItem(
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(12.dp))
             .selectable(
                 selected = selected,
                 interactionSource = interactionSource,
@@ -491,22 +489,12 @@ private fun BottomBarItem(
             )
             .padding(vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Box(
-            modifier = Modifier.height(30.dp),
+            modifier = Modifier.height(28.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (pillWidth > 0.dp) {
-                Box(
-                    modifier = Modifier
-                        .width(pillWidth)
-                        .height(28.dp)
-                        .alpha(pillAlpha)
-                        .clip(RoundedCornerShape(50))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
-                )
-            }
             if (badgeCount > 0) {
                 BadgedBox(
                     badge = {
@@ -520,7 +508,7 @@ private fun BottomBarItem(
                         contentDescription = label,
                         tint = tint,
                         modifier = Modifier
-                            .size(23.dp)
+                            .size(24.dp)
                             .scale(iconScale)
                     )
                 }
@@ -530,15 +518,18 @@ private fun BottomBarItem(
                     contentDescription = label,
                     tint = tint,
                     modifier = Modifier
-                        .size(23.dp)
+                        .size(24.dp)
                         .scale(iconScale)
                 )
             }
         }
         Text(
             label,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 11.sp,
+                letterSpacing = (-0.1).sp
+            ),
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
             color = tint,
             maxLines = 1
         )
@@ -557,12 +548,11 @@ private fun CenterActionButton(
     val duration = KuotaMotion.resolveDurationMs(180, animatorScale)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val kuotaColors = MaterialTheme.kuotaColors
 
     val buttonScale by animateFloatAsState(
         targetValue = when {
-            isPressed -> 0.93f
-            selected -> 1.05f
+            isPressed -> 0.94f
+            selected -> 1.03f
             else -> 1.0f
         },
         animationSpec = tween(durationMillis = KuotaMotion.resolveDurationMs(150, animatorScale)),
@@ -573,10 +563,13 @@ private fun CenterActionButton(
         animationSpec = tween(durationMillis = duration),
         label = "centerActionLabelColor"
     )
-    val ringColor by animateColorAsState(
-        targetValue = if (selected) Color(0xFF26D7FF) else Color.Transparent,
-        animationSpec = tween(durationMillis = duration),
-        label = "centerActionRingColor"
+
+    // Gradiente sutil y elegante en azul de marca, sin resplandores intensos ni halos de luz cian
+    val subtleBrandGradient = Brush.verticalGradient(
+        listOf(
+            Color(0xFF2457F0),
+            Color(0xFF1D4ED8)
+        )
     )
 
     val displayLabel = when (label) {
@@ -601,29 +594,20 @@ private fun CenterActionButton(
     ) {
         Box(
             modifier = Modifier
-                .offset(y = (-18).dp)
-                .size(54.dp)
+                .offset(y = (-14).dp)
+                .size(52.dp)
                 .scale(buttonScale)
-                .shadow(if (selected) 12.dp else 8.dp, CircleShape)
+                .shadow(elevation = 2.dp, shape = CircleShape)
                 .clip(CircleShape)
-                .background(Brush.linearGradient(kuotaColors.brandGradient), CircleShape)
-                .border(if (selected) 2.dp else 0.dp, ringColor, CircleShape)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    role = Role.Button,
-                    onClick = {
-                        KuotaMotion.performKeyTapHaptic(view)
-                        onClick()
-                    }
-                ),
+                .background(subtleBrandGradient, CircleShape)
+                .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 Icons.Default.QrCodeScanner,
                 contentDescription = displayLabel.replace("\n", " "),
-                tint = kuotaColors.onBrand,
-                modifier = Modifier.size(26.dp)
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
             )
         }
 

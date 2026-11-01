@@ -21,18 +21,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.SupportAgent
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -42,7 +38,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,7 +49,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -119,10 +113,6 @@ fun NotificationsScreen(onBack: () -> Unit, onOpenDeepLink: (String) -> Unit) {
     var showLinkDialog by remember { mutableStateOf(false) }
     var testing by remember { mutableStateOf(false) }
     var testMessage by remember { mutableStateOf<String?>(null) }
-    var showAdvanced by rememberSaveable { mutableStateOf(false) }
-    var urlDraft by remember { mutableStateOf(settings.serverUrl) }
-    var serverMessage by remember { mutableStateOf<String?>(null) }
-    var connecting by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         canPostNow = NotificationHelper.canPost(context)
@@ -229,43 +219,6 @@ fun NotificationsScreen(onBack: () -> Unit, onOpenDeepLink: (String) -> Unit) {
         }
     }
 
-    fun testConnection() {
-        if (connecting) return
-        connecting = true
-        serverMessage = null
-        scope.launch {
-            val outcome = withContext(Dispatchers.IO) { KuotaApiClient.call(context) { health() } }
-            connecting = false
-            serverMessage = when (outcome) {
-                is ApiOutcome.Ok -> "Conexión correcta con ${AppSettings(context).serverUrl}"
-                is ApiOutcome.Unreachable -> unreachableMessage(outcome.serverUrl)
-                is ApiOutcome.Rejected -> "El servidor respondió ${outcome.httpCode}: ${outcome.message}"
-                ApiOutcome.SessionExpired -> "El servidor rechazó la sesión."
-            }
-        }
-    }
-
-    fun saveServerUrl() {
-        if (!KuotaApiClient.isValidServerUrl(urlDraft)) {
-            serverMessage = "Escribe una dirección http:// o https:// válida, por ejemplo http://192.168.1.10:8080/"
-            return
-        }
-        settings.serverUrl = urlDraft
-        settings.registeredFingerprint = null
-        urlDraft = settings.serverUrl
-        serverMessage = "Dirección guardada. El dispositivo se registrará de nuevo en la próxima sincronización."
-        KuotaSync.enqueue(context)
-        refreshPushStatus(force = true)
-    }
-
-    fun resetServerUrl() {
-        settings.resetServerUrl()
-        settings.registeredFingerprint = null
-        urlDraft = settings.serverUrl
-        serverMessage = "Usando la dirección de fábrica: ${settings.serverUrl}"
-        KuotaSync.enqueue(context)
-        refreshPushStatus(force = true)
-    }
 
     LaunchedEffect(revision) { reload() }
     LaunchedEffect(Unit) { refreshPushStatus() }
@@ -443,44 +396,6 @@ fun NotificationsScreen(onBack: () -> Unit, onOpenDeepLink: (String) -> Unit) {
             }
         }
 
-        SectionTitle("Avanzado")
-        GroupCard {
-            MenuRow(
-                title = "Dirección del servidor",
-                subtitle = settings.serverUrl,
-                icon = Icons.Default.Sync,
-                trailing = { Icon(if (showAdvanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null) },
-                onClick = { showAdvanced = !showAdvanced }
-            )
-            if (showAdvanced) {
-                HorizontalDivider()
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = urlDraft,
-                        onValueChange = { urlDraft = it.take(200); serverMessage = null },
-                        label = { Text("URL del backend") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Text(
-                        "En el celular con cable USB puedes usar http://127.0.0.1:8080/ con \"adb reverse tcp:8080 tcp:8080\".",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = ::saveServerUrl, modifier = Modifier.weight(1f)) { Text("Guardar") }
-                        OutlinedButton(onClick = ::testConnection, enabled = !connecting, modifier = Modifier.weight(1f)) {
-                            Text(if (connecting) "Probando…" else "Probar conexión")
-                        }
-                    }
-                    TextButton(onClick = ::resetServerUrl, enabled = settings.isServerUrlCustom) { Text("Restablecer dirección de fábrica") }
-                    serverMessage?.let {
-                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        }
 
         Text(
             "Kuota Perú v${com.kouta.app.BuildConfig.VERSION_NAME} (build ${com.kouta.app.BuildConfig.VERSION_CODE})",

@@ -19,5 +19,8 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Kouta Peru"
+rootProject.name = "Kuota App"
 include(":app")
+include(":core:model")
+include(":core:data")
+include(":core:ui")

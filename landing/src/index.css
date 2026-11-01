@@ -4,13 +4,27 @@
 
 @layer base {
   html {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    background-color: #F4F6F8;
-    color: #070A0F;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #FFFFFF;
+    color: #454745;
     -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
   }
 
-  /* Optimización táctil móvil: elimina retraso de 300ms y mejora respuesta al toque */
+  body {
+    background-color: #FFFFFF;
+    color: #454745;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: #9FE870;
+    color: #163300;
+  }
+
+  /* Optimización táctil móvil: elimina retraso de 300ms y mejora respuesta */
   button,
   a,
   input,
@@ -19,133 +33,74 @@
   [role="tab"],
   [role="button"] {
     touch-action: manipulation;
-    -webkit-tap-highlight-color: rgba(3, 145, 253, 0.14);
+    -webkit-tap-highlight-color: rgba(159, 232, 112, 0.2);
   }
 
-  /* Slider táctil cómodo en pantallas móviles */
+  /* Slider táctil estilizado según DESIGN.md */
   input[type="range"] {
     touch-action: pan-y;
+    accent-color: #163300;
   }
 
   input[type="range"]::-webkit-slider-thumb {
     width: 24px;
     height: 24px;
     border-radius: 9999px;
-    background: #0391FD;
-    border: 2px solid #00235C;
+    background: #9FE870;
+    border: 2px solid #163300;
     cursor: pointer;
     -webkit-appearance: none;
-    box-shadow: 2px 2px 0px 0px #00235C;
+    box-shadow: 0 1px 3px rgba(22, 51, 0, 0.3);
+    transition: transform 0.15s ease;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
   }
 
   input[type="range"]::-moz-range-thumb {
     width: 24px;
     height: 24px;
     border-radius: 9999px;
-    background: #0391FD;
-    border: 2px solid #00235C;
+    background: #9FE870;
+    border: 2px solid #163300;
     cursor: pointer;
-    box-shadow: 2px 2px 0px 0px #00235C;
+    box-shadow: 0 1px 3px rgba(22, 51, 0, 0.3);
+    transition: transform 0.15s ease;
   }
 
-  /* Accesibilidad: estados de foco visibles en Deep Navy y Dodger Blue (PRD §7) */
+  input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.1);
+  }
+
+  /* Accesibilidad: foco visible limpio sin resplandores exagerados */
   *:focus-visible {
-    outline: 3px solid #0391FD;
+    outline: 2px solid #163300;
     outline-offset: 2px;
-    border-radius: 0.375rem;
   }
 }
 
 @layer utilities {
-  .bg-grid-pattern {
-    background-image: radial-gradient(rgba(0, 35, 92, 0.1) 1.25px, transparent 1.25px);
-    background-size: 22px 22px;
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 
-  .placeholder-stripes {
-    background-image: repeating-linear-gradient(
-      -45deg,
-      rgba(0, 35, 92, 0.04),
-      rgba(0, 35, 92, 0.04) 10px,
-      rgba(3, 145, 253, 0.07) 10px,
-      rgba(3, 145, 253, 0.07) 20px
-    );
+  /* Titular Hero Display de DESIGN.md */
+  .display-hero {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 0.95;
+    text-transform: uppercase;
   }
 }
 
-@keyframes kuotaSectionArrive {
-  0% {
-    transform: translate3d(0, 18px, 0) scale(0.985);
-  }
-  45% {
-    transform: translate3d(0, -4px, 0) scale(1.006);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-.kuota-section-arrive {
-  animation: kuotaSectionArrive 680ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-
-/* ── Cómo funciona Kuota: chips con auto-avance y acordeón suave ── */
-@keyframes kuotaChipProgress {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-.kuota-chip-progress {
-  transform-origin: left center;
-  animation: kuotaChipProgress 6500ms linear forwards;
-}
-
-.kuota-accordion {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition: grid-template-rows 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease;
-}
-
-.kuota-accordion[data-open='true'] {
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
-
-.kuota-accordion > div {
-  overflow: hidden;
-  min-height: 0;
-}
-
-@keyframes kuotaScreenIn {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 14px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-.kuota-screen-in {
-  animation: kuotaScreenIn 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
+/* Transiciones suaves */
 @media (prefers-reduced-motion: reduce) {
-  .kuota-chip-progress {
-    animation: none;
-    transform: scaleX(1);
-  }
-  .kuota-accordion {
-    transition: none;
-  }
-  .kuota-screen-in {
-    animation: none;
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

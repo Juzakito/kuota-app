@@ -3,62 +3,82 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#00235C" />
-    <title>KUOTA — Ecosistema Fintech de Compras en Cuotas | Conectamos Oportunidades</title>
+    <meta name="theme-color" content="#163300" />
+    <title>Compra y vende al crédito para tu negocio | Kuota</title>
     <meta
       name="description"
-      content="KUOTA conecta compradores y comercios en Perú a través de una experiencia digital que facilita nuevas oportunidades de compra, venta y gestión de pagos en cuotas."
+      content="Compra mercadería en cuotas semanales fijas con 5% de costo o cobra con tarjeta, Yape y Plin al 2% de comisión. Sin letras chicas. Kuota."
     />
     <meta
       name="keywords"
-      content="Kuota, fintech Perú, compras en cuotas, financiamiento comercios, capital de trabajo, bodegas Perú, colocaciones comerciales, recaudación, Yape, Plin"
+      content="Kuota, crédito B2B Perú, compras en cuotas, capital de trabajo bodegas, cuotas semanales, Kuota Payments, Yape, Plin, POS comisión"
     />
-    <meta property="og:title" content="KUOTA — Ecosistema Fintech de Compras en Cuotas" />
+    <link rel="canonical" href="https://kuota.pro" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://kuota.pro" />
+    <meta property="og:title" content="Compra y vende al crédito para tu negocio | Kuota" />
     <meta
       property="og:description"
-      content="Conectamos compradores y comercios a través de una experiencia digital que facilita nuevas oportunidades de compra, venta y gestión de pagos."
+      content="Financia tu mercadería en cuotas semanales o cobra con tarjeta y billeteras digitales al 2% de comisión. Respaldo y transparencia."
     />
-    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://kuota.pro/logos/kuota-logo-dark.png" />
     <meta property="og:locale" content="es_PE" />
-    <meta property="og:site_name" content="KUOTA" />
-    <meta property="og:image" content="/logos/kuota-logo-blue.png" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="KUOTA — Ecosistema Fintech de Compras en Cuotas" />
-    <meta name="twitter:description" content="Conectamos compradores y comercios para comprar y vender en cuotas con total trazabilidad." />
+    <meta property="og:site_name" content="Kuota" />
 
-    <!-- Google Fonts: Plus Jakarta Sans -->
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://kuota.pro" />
+    <meta name="twitter:title" content="Compra y vende al crédito para tu negocio | Kuota" />
+    <meta
+      name="twitter:description"
+      content="Financia tu mercadería en cuotas semanales o cobra con tarjeta y billeteras digitales al 2% de comisión."
+    />
+    <meta name="twitter:image" content="https://kuota.pro/logos/kuota-logo-dark.png" />
+
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Favicon e iconos oficiales Kuota -->
+    <!-- Favicon e iconos -->
     <link rel="icon" type="image/png" href="/logos/kuota-icon.png" />
-    <link rel="shortcut icon" type="image/png" href="/logos/kuota-icon.png" />
     <link rel="apple-touch-icon" href="/logos/kuota-icon.png" />
 
     <!-- Datos estructurados JSON-LD -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "FinancialService",
-      "name": "KUOTA",
-      "alternateName": "Kuota Perú",
-      "url": "https://kuota-ia.vercel.app",
-      "logo": "https://kuota-ia.vercel.app/logos/kuota-logo-blue.png",
-      "description": "Ecosistema fintech que conecta compradores, comercios y canales de recaudación mediante soluciones de compra en cuotas.",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Lima",
-        "addressCountry": "PE"
-      },
-      "areaServed": "PE"
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://kuota.pro/#organization",
+          "name": "Kuota",
+          "url": "https://kuota.pro",
+          "logo": "https://kuota.pro/logos/kuota-logo-dark.png",
+          "description": "Plataforma de compra y venta al crédito B2B y recaudación de pagos para micro y pequeñas empresas en el Perú.",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Lima",
+            "addressCountry": "PE"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://kuota.pro/#website",
+          "url": "https://kuota.pro",
+          "name": "Kuota",
+          "publisher": { "@id": "https://kuota.pro/#organization" }
+        }
+      ]
     }
     </script>
   </head>
-  <body class="bg-kuota-palesky text-kuota-crayola font-sans antialiased selection:bg-kuota-dodger selection:text-white">
+  <body class="bg-paper text-charcoal font-sans antialiased selection:bg-lime selection:text-forest">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

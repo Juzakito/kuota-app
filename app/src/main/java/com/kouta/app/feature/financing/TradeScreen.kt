@@ -55,6 +55,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -91,7 +97,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kouta.app.core.designsystem.theme.kuotaColors
 import com.kouta.app.data.local.AppSettings
@@ -312,19 +317,30 @@ fun TradeScreen(
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                             ) {
                                 Column(modifier = Modifier.padding(20.dp)) {
+                                    LinearProgressIndicator(
+                                        progress = { 1.0f },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(6.dp)
+                                            .clip(RoundedCornerShape(3.dp)),
+                                        color = Color(0xFFFFB300),
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
+
+                                    Spacer(modifier = Modifier.height(14.dp))
+
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(Color(0xFFFFB300).copy(alpha = 0.15f))
-                                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = Color(0xFFFFB300).copy(alpha = 0.15f)
                                         ) {
                                             Text(
-                                                "PASO 3 DE 3: PAGO DE INICIAL AL PROVEEDOR",
+                                                "Pago de Inicial al Proveedor",
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = Color(0xFFFFB300)
@@ -603,14 +619,13 @@ fun TradeScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(kuotaColors.accentTeal.copy(alpha = 0.15f))
-                                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = kuotaColors.accentTeal.copy(alpha = 0.15f)
                                         ) {
                                             Text(
-                                                "PASO 3 DE 3: CONFIRMACIÓN Y ENTREGA",
+                                                "Confirmación y Entrega",
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.Bold,
                                                 color = kuotaColors.accentTeal
@@ -707,16 +722,21 @@ fun TradeScreen(
 
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         userCreditLevel.availableInstallmentCounts.forEach { optCount ->
+                                            val isOptSelected = selectedInstallmentCount == optCount
                                             FilterChip(
-                                                selected = selectedInstallmentCount == optCount,
+                                                selected = isOptSelected,
                                                 onClick = {
                                                     selectedInstallmentCount = optCount
                                                     selectedTermDays = optCount * 7
                                                 },
                                                 label = {
-                                                    Text("$optCount cuotas semanales")
+                                                    Text("$optCount cuotas semanales", fontWeight = if (isOptSelected) FontWeight.Bold else FontWeight.Normal)
                                                 },
+                                                shape = RoundedCornerShape(50),
+                                                border = null,
                                                 colors = FilterChipDefaults.filterChipColors(
+                                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                                    labelColor = MaterialTheme.colorScheme.onSurface,
                                                     selectedContainerColor = MaterialTheme.colorScheme.primary,
                                                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                                                 )
@@ -1033,19 +1053,26 @@ fun TradeScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Categorías de Proveedores
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                                .padding(horizontal = 8.dp, vertical = 3.dp)
-                        ) {
-                            Text("PASO 1 DE 3", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        Text("Elige tu Comercio Proveedor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    }
+                    // Barra de progreso horizontal continua (PRD §5)
+                    val parsedPurchaseAmount = purchaseAmountInput.replace(",", ".").toDoubleOrNull() ?: 0.0
+                    val currentPurchaseCents = (parsedPurchaseAmount * 100).toLong()
+                    val tradeFlowProgress = if (currentPurchaseCents > 0) 0.66f else 0.33f
+
+                    // Barra de progreso horizontal continua en cabecera (PRD §5)
+                    LinearProgressIndicator(
+                        progress = { tradeFlowProgress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Proveedor y Categorías
+                    Text("Elige tu Comercio Proveedor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(10.dp))
                     Text("Categorías de Comercio:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -1056,11 +1083,16 @@ fun TradeScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         supplierCategories.forEach { cat ->
+                            val isCatSelected = selectedCategory == cat
                             FilterChip(
-                                selected = selectedCategory == cat,
+                                selected = isCatSelected,
                                 onClick = { selectedCategory = cat },
-                                label = { Text(cat) },
+                                label = { Text(cat, fontWeight = if (isCatSelected) FontWeight.Bold else FontWeight.Normal) },
+                                shape = RoundedCornerShape(50),
+                                border = null,
                                 colors = FilterChipDefaults.filterChipColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                    labelColor = MaterialTheme.colorScheme.onSurface,
                                     selectedContainerColor = MaterialTheme.colorScheme.primary,
                                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                                 )
@@ -1091,7 +1123,7 @@ fun TradeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
                         ExposedDropdownMenu(
                             expanded = supplierDropdownExpanded,
@@ -1123,42 +1155,115 @@ fun TradeScreen(
                     OutlinedButton(
                         onClick = { galleryLauncher.launch("image/*") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(14.dp)
                     ) {
                         Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Escanear QR de tienda desde galería")
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
-                    // Amount Input (Paso 2)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                                .padding(horizontal = 8.dp, vertical = 3.dp)
-                        ) {
-                            Text("PASO 2 DE 3", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        Text("Monto y Simulación Cashea B2B", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    }
+                    // Amount Input (PRD: Sin cajas restrictivas, tipografía gigante y centrada)
+                    Text("Monto de la Compra", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    OutlinedTextField(
-                        value = purchaseAmountInput,
-                        onValueChange = {
-                            purchaseAmountInput = it
-                            purchaseFormError = null
-                        },
-                        label = { Text("Monto de la compra (S/)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(18.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                "Ingresa el valor total",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    "S/ ",
+                                    style = MaterialTheme.typography.headlineMedium.copy(
+                                        fontSize = 32.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (purchaseAmountInput.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                    )
+                                )
+                                BasicTextField(
+                                    value = purchaseAmountInput,
+                                    onValueChange = {
+                                        purchaseAmountInput = it
+                                        purchaseFormError = null
+                                    },
+                                    textStyle = MaterialTheme.typography.headlineLarge.copy(
+                                        fontSize = 38.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    ),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    singleLine = true,
+                                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                    decorationBox = { innerTextField ->
+                                        if (purchaseAmountInput.isEmpty()) {
+                                            Text(
+                                                "0.00",
+                                                style = MaterialTheme.typography.headlineLarge.copy(
+                                                    fontSize = 38.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+                                                )
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Botones rápidos (+50, +100, +200, +500)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                listOf(50.0, 100.0, 200.0, 500.0).forEach { preset ->
+                                    Surface(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable {
+                                                val cur = purchaseAmountInput.replace(",", ".").toDoubleOrNull() ?: 0.0
+                                                purchaseAmountInput = String.format(Locale.US, "%.2f", cur + preset)
+                                                purchaseFormError = null
+                                            },
+                                        shape = RoundedCornerShape(50),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                    ) {
+                                        Text(
+                                            "+${preset.toInt()}",
+                                            modifier = Modifier.padding(vertical = 8.dp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     val enteredAmount = purchaseAmountInput.replace(",", ".").toDoubleOrNull() ?: 0.0
                     val enteredCents = (enteredAmount * 100).toLong()
@@ -1204,7 +1309,7 @@ fun TradeScreen(
 
                                 Spacer(Modifier.height(4.dp))
 
-                                // Installment count chips
+                                // Installment count chips (sin borde, PRD §5)
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1213,14 +1318,19 @@ fun TradeScreen(
                                     Text("Cuotas semanales:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                         userCreditLevel.availableInstallmentCounts.forEach { opt ->
+                                            val isOptSelected = selectedInstallmentCount == opt
                                             FilterChip(
-                                                selected = selectedInstallmentCount == opt,
+                                                selected = isOptSelected,
                                                 onClick = {
                                                     selectedInstallmentCount = opt
                                                     selectedTermDays = opt * 7
                                                 },
-                                                label = { Text("$opt cuotas") },
+                                                label = { Text("$opt cuotas", fontWeight = if (isOptSelected) FontWeight.Bold else FontWeight.Normal) },
+                                                shape = RoundedCornerShape(50),
+                                                border = null,
                                                 colors = FilterChipDefaults.filterChipColors(
+                                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                                    labelColor = MaterialTheme.colorScheme.onSurface,
                                                     selectedContainerColor = MaterialTheme.colorScheme.primary,
                                                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                                                 )
@@ -1317,7 +1427,7 @@ fun TradeScreen(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Continuar al Paso 3: Pago de Inicial →", fontWeight = FontWeight.Bold)
+                        Text("Continuar a Pago de Inicial →", fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -1564,61 +1674,16 @@ fun TradeScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
                 } else {
-                    // Wizard 3 Pasos (LNK-01)
-                    // Step indicators
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        listOf(
-                            1 to "1. Monto",
-                            2 to "2. Cliente",
-                            3 to "3. Revisar"
-                        ).forEach { (stepNum, stepLabel) ->
-                            val isActive = linkWizardStep == stepNum
-                            val isPassed = linkWizardStep > stepNum
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clickable(enabled = isPassed) {
-                                        linkFormError = null
-                                        linkWizardStep = stepNum
-                                    },
-                                shape = RoundedCornerShape(10.dp),
-                                color = when {
-                                    isActive -> MaterialTheme.colorScheme.primary
-                                    isPassed -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    if (isPassed) {
-                                        Icon(
-                                            Icons.Default.CheckCircle,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                    }
-                                    Text(
-                                        text = stepLabel,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
-                                        color = when {
-                                            isActive -> MaterialTheme.colorScheme.onPrimary
-                                            isPassed -> MaterialTheme.colorScheme.primary
-                                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    // Barra de progreso horizontal continua en cabecera (PRD §5)
+                    LinearProgressIndicator(
+                        progress = { linkWizardStep / 3f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -1632,7 +1697,7 @@ fun TradeScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    "PASO 1 DE 3: MONTO Y CONCEPTO",
+                                    "Monto y Concepto",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -1692,21 +1757,30 @@ fun TradeScreen(
                                     FilterChip(
                                         selected = selectedProduct == null,
                                         onClick = { selectedProduct = null },
-                                        label = { Text("Monto libre / Manual") },
+                                        label = { Text("Monto libre / Manual", fontWeight = if (selectedProduct == null) FontWeight.Bold else FontWeight.Normal) },
+                                        shape = RoundedCornerShape(50),
+                                        border = null,
                                         colors = FilterChipDefaults.filterChipColors(
+                                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                            labelColor = MaterialTheme.colorScheme.onSurface,
                                             selectedContainerColor = MaterialTheme.colorScheme.primary,
                                             selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                                         )
                                     )
                                     linkProducts.forEach { prod ->
+                                        val isProdSelected = selectedProduct?.id == prod.id
                                         FilterChip(
-                                            selected = selectedProduct?.id == prod.id,
+                                            selected = isProdSelected,
                                             onClick = {
                                                 selectedProduct = prod
                                                 linkQuantity = 1
                                             },
-                                            label = { Text("${prod.name} (${PurchaseOffer.formatPen(prod.priceCents)})") },
+                                            label = { Text("${prod.name} (${PurchaseOffer.formatPen(prod.priceCents)})", fontWeight = if (isProdSelected) FontWeight.Bold else FontWeight.Normal) },
+                                            shape = RoundedCornerShape(50),
+                                            border = null,
                                             colors = FilterChipDefaults.filterChipColors(
+                                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                                labelColor = MaterialTheme.colorScheme.onSurface,
                                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                                             )
@@ -1764,33 +1838,95 @@ fun TradeScreen(
 
                                     Spacer(modifier = Modifier.height(10.dp))
 
-                                    OutlinedTextField(
-                                        value = linkAmountInput,
-                                        onValueChange = { linkAmountInput = it },
-                                        label = { Text("Monto a cobrar en Soles (S/)") },
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                        singleLine = true,
+                                    Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    // Quick amount shortcuts
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        shape = RoundedCornerShape(20.dp),
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                                     ) {
-                                        listOf(20.0, 50.0, 100.0, 200.0).forEach { preset ->
-                                            OutlinedButton(
-                                                onClick = {
-                                                    val current = linkAmountInput.replace(",", ".").toDoubleOrNull() ?: 0.0
-                                                    linkAmountInput = String.format(Locale.US, "%.2f", current + preset)
-                                                },
-                                                modifier = Modifier.weight(1f),
-                                                shape = RoundedCornerShape(8.dp)
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                "Monto a cobrar",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center,
+                                                modifier = Modifier.fillMaxWidth()
                                             ) {
-                                                Text("+${preset.toInt()}", style = MaterialTheme.typography.labelSmall)
+                                                Text(
+                                                    "S/ ",
+                                                    style = MaterialTheme.typography.headlineMedium.copy(
+                                                        fontSize = 32.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = if (linkAmountInput.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                                    )
+                                                )
+                                                BasicTextField(
+                                                    value = linkAmountInput,
+                                                    onValueChange = { linkAmountInput = it },
+                                                    textStyle = MaterialTheme.typography.headlineLarge.copy(
+                                                        fontSize = 38.sp,
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    ),
+                                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                                    singleLine = true,
+                                                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                                    decorationBox = { innerTextField ->
+                                                        if (linkAmountInput.isEmpty()) {
+                                                            Text(
+                                                                "0.00",
+                                                                style = MaterialTheme.typography.headlineLarge.copy(
+                                                                    fontSize = 38.sp,
+                                                                    fontWeight = FontWeight.ExtraBold,
+                                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+                                                                )
+                                                            )
+                                                        }
+                                                        innerTextField()
+                                                    }
+                                                )
+                                            }
+
+                                            Spacer(modifier = Modifier.height(14.dp))
+
+                                            // Quick amount shortcuts (PRD §5: Estilos limpios)
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                listOf(20.0, 50.0, 100.0, 200.0).forEach { preset ->
+                                                    Surface(
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .clickable {
+                                                                val current = linkAmountInput.replace(",", ".").toDoubleOrNull() ?: 0.0
+                                                                linkAmountInput = String.format(Locale.US, "%.2f", current + preset)
+                                                            },
+                                                        shape = RoundedCornerShape(50),
+                                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                                    ) {
+                                                        Text(
+                                                            "+${preset.toInt()}",
+                                                            modifier = Modifier.padding(vertical = 8.dp),
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = MaterialTheme.colorScheme.onSurface,
+                                                            textAlign = TextAlign.Center
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -1837,7 +1973,7 @@ fun TradeScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    "PASO 2 DE 3: DATOS DEL CLIENTE",
+                                    "Datos del Cliente",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -1867,14 +2003,23 @@ fun TradeScreen(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         frequentClients.forEach { fc ->
+                                            val isFcSelected = linkCustomerPhone == fc.customerPhone
                                             FilterChip(
-                                                selected = linkCustomerPhone == fc.customerPhone,
+                                                selected = isFcSelected,
                                                 onClick = {
                                                     linkCustomerPhone = fc.customerPhone
                                                     linkCustomerName = fc.customerName
                                                     linkCustomerDni = fc.customerDni
                                                 },
-                                                label = { Text("${fc.customerName.ifBlank { "Cliente" }} (${fc.customerPhone})") }
+                                                label = { Text("${fc.customerName.ifBlank { "Cliente" }} (${fc.customerPhone})", fontWeight = if (isFcSelected) FontWeight.Bold else FontWeight.Normal) },
+                                                shape = RoundedCornerShape(50),
+                                                border = null,
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                                    labelColor = MaterialTheme.colorScheme.onSurface,
+                                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                                )
                                             )
                                         }
                                     }
@@ -1957,13 +2102,29 @@ fun TradeScreen(
                                     FilterChip(
                                         selected = linkReceiptType == "BOLETA",
                                         onClick = { linkReceiptType = "BOLETA" },
-                                        label = { Text("Boleta de Venta") },
+                                        label = { Text("Boleta de Venta", fontWeight = if (linkReceiptType == "BOLETA") FontWeight.Bold else FontWeight.Normal) },
+                                        shape = RoundedCornerShape(50),
+                                        border = null,
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                            labelColor = MaterialTheme.colorScheme.onSurface,
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                        ),
                                         modifier = Modifier.weight(1f)
                                     )
                                     FilterChip(
                                         selected = linkReceiptType == "FACTURA",
                                         onClick = { linkReceiptType = "FACTURA" },
-                                        label = { Text("Factura Comercial") },
+                                        label = { Text("Factura Comercial", fontWeight = if (linkReceiptType == "FACTURA") FontWeight.Bold else FontWeight.Normal) },
+                                        shape = RoundedCornerShape(50),
+                                        border = null,
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                            labelColor = MaterialTheme.colorScheme.onSurface,
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                        ),
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -2049,7 +2210,7 @@ fun TradeScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    "PASO 3 DE 3: REVISAR Y GENERAR LINK",
+                                    "Revisar y Generar Link",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary

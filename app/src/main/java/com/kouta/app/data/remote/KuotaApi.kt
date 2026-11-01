@@ -479,31 +479,18 @@ object KuotaApiClient {
         return api
     }
 
-    private suspend fun <T> runLocalDemoFallback(context: Context, block: suspend KuotaApi.() -> T): ApiOutcome<T> {
-        return try {
-            ApiOutcome.Ok(LocalDemoKuotaApi.getInstance(context).block())
-        } catch (demoErr: LocalDemoApiException) {
-            ApiOutcome.Rejected(
-                httpCode = demoErr.httpCode,
-                code = demoErr.code,
-                message = demoErr.message,
-                requestId = "local-demo",
-                retryable = demoErr.retryable
-            )
-        }
-    }
-
+    // AGENTS.md Regla 1: sin mocks ni servidores locales. Si no hay backend alcanzable,
+    // la UI debe mostrar su estado de error/offline; nunca se simulan respuestas.
     suspend fun <T> call(context: Context, block: suspend KuotaApi.() -> T): ApiOutcome<T> {
         val settings = AppSettings(context)
         val currentUrl = settings.serverUrl
         if (!isValidServerUrl(currentUrl)) return ApiOutcome.Unreachable(currentUrl)
 
         val now = System.currentTimeMillis()
-        if (BuildConfig.DEBUG &&
-            lastUnreachableUrl == currentUrl &&
+        if (lastUnreachableUrl == currentUrl &&
             (now - lastUnreachableEpochMs) < UNREACHABLE_BACKOFF_MS
         ) {
-            return runLocalDemoFallback(context, block)
+            return ApiOutcome.Unreachable(currentUrl)
         }
 
         return try {
@@ -527,13 +514,9 @@ object KuotaApiClient {
                 )
             }
         } catch (_: IOException) {
-            if (BuildConfig.DEBUG) {
-                lastUnreachableUrl = currentUrl
-                lastUnreachableEpochMs = System.currentTimeMillis()
-                runLocalDemoFallback(context, block)
-            } else {
-                ApiOutcome.Unreachable(currentUrl)
-            }
+            lastUnreachableUrl = currentUrl
+            lastUnreachableEpochMs = System.currentTimeMillis()
+            ApiOutcome.Unreachable(currentUrl)
         } catch (_: kotlinx.serialization.SerializationException) {
             ApiOutcome.Rejected(0, "BAD_RESPONSE", "Respuesta inesperada del servidor.", retryable = true)
         }

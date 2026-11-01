@@ -5,15 +5,21 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)
 }
 
-// FCM se activa solo si existe app/google-services.json (descargado desde la consola de Firebase, fuera del repo).
-val firebaseConfigured = file("google-services.json").exists()
-if (firebaseConfigured) {
-    apply(plugin = "com.google.gms.google-services")
-}
+// Cada entorno usa su propio google-services.json descargado de la consola de Firebase:
+//   app/src/dev/google-services.json      -> paquete com.kouta.app.dev
+//   app/src/staging/google-services.json  -> paquete com.kouta.app.staging
+//   app/src/prod/google-services.json     -> paquete com.kouta.app
+// Nunca se inventan clientes: si falta el archivo de un entorno, ese entorno compila
+// con FIREBASE_CONFIGURED=false y la app muestra el estado "no configurado".
+fun hasFirebaseConfig(flavor: String) = file("src/$flavor/google-services.json").exists()
 
-val kuotaApiBaseUrl = (findProperty("KUOTA_API_BASE_URL") as String?)?.takeIf { it.isNotBlank() } ?: "http://192.168.18.43:8080/"
+googleServices {
+    missingGoogleServicesStrategy =
+        com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy.WARN
+}
 
 android {
     namespace = "com.kouta.app"
@@ -23,23 +29,48 @@ android {
         applicationId = "com.kouta.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 40
-        versionName = "2.6.0"
+        versionCode = 41
+        versionName = "2.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "KUOTA_API_BASE_URL", "\"$kuotaApiBaseUrl\"")
-        buildConfigField("boolean", "FIREBASE_CONFIGURED", firebaseConfigured.toString())
+    }
+
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("String", "FIREBASE_ENV", "\"dev\"")
+            buildConfigField("boolean", "FIREBASE_CONFIGURED", hasFirebaseConfig("dev").toString())
+        }
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-stg"
+            buildConfigField("String", "FIREBASE_ENV", "\"staging\"")
+            buildConfigField("boolean", "FIREBASE_CONFIGURED", hasFirebaseConfig("staging").toString())
+        }
+        create("prod") {
+            dimension = "environment"
+            buildConfigField("String", "FIREBASE_ENV", "\"prod\"")
+            buildConfigField("boolean", "FIREBASE_CONFIGURED", hasFirebaseConfig("prod").toString())
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isMinifyEnabled = false
+        }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -54,6 +85,10 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:model"))
+    implementation(project(":core:data"))
+    implementation(project(":core:ui"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -74,28 +109,36 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
-    // Networking
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-kotlinx-serialization:2.11.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-
+    // Serialization
     implementation(libs.kotlinx.serialization.json)
 
-    // Async
+    // Networking (Retrofit & OkHttp)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
+
+    // Sentry Monitoring
+    implementation(libs.sentry.android)
+    implementation(libs.sentry.compose)
+
+    // Async & Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.work.runtime.ktx)
 
-    // Push (FCM) & Analytics
+    // Firebase (Auth, Firestore, App Check, Messaging)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-appcheck-playintegrity")
-    implementation("com.google.firebase:firebase-appcheck-debug")
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.functions)
+    implementation(libs.firebase.appcheck.playintegrity)
+    implementation(libs.firebase.appcheck.debug)
 
-    // QR Code Generation & Real Camera Scanning (ZXing + CameraX)
+    // QR & Camera
     implementation("com.google.zxing:core:3.5.3")
     implementation("androidx.camera:camera-core:1.4.1")
     implementation("androidx.camera:camera-camera2:1.4.1")
@@ -110,11 +153,4 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-}
-
-tasks.register<Copy>("copyDebugApkForSharing") {
-    dependsOn("assembleDebug")
-    from(layout.buildDirectory.file("outputs/apk/debug/app-debug.apk"))
-    into(layout.buildDirectory.dir("outputs/share"))
-    rename { "Kuota-Peru-v${android.defaultConfig.versionName}-debug.apk" }
 }

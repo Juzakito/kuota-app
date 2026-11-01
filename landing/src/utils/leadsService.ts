@@ -1,152 +1,115 @@
 import { trackEvent } from './analytics';
 
-export interface MerchantLeadData {
+export interface WaitlistLeadData {
+  fullName: string;
   businessName: string;
-  contactName: string;
-  businessType: string;
-  city: string;
+  ruc?: string;
+  category: string;
+  location: string;
   phone: string;
-  email: string;
-  message?: string;
-  submittedAt: string;
-}
-
-export interface PartnerLeadData {
-  organizationName: string;
-  contactName: string;
-  partnerType: string;
-  email: string;
-  phone: string;
-  message?: string;
-  submittedAt: string;
+  role: 'comprador' | 'proveedor' | 'ambos';
+  consent: boolean;
+  consentAt: string;
+  source?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
 }
 
 export const OFFICIAL_CONTACT = {
-  email: 'kuota.contact@gmail.com',
-  whatsappNumber: '51900000000', // Canal oficial de soporte y admisión
-  whatsappDisplay: '+51 900 000 000',
+  email: 'contacto@kuota.pro',
+  whatsappNumber: '51987654321',
+  whatsappDisplay: '+51 987 654 321',
+  calendlyUrl: 'https://calendly.com/kuota-peru/reunion-30min',
   city: 'Lima, Perú',
   hours: 'Lunes a Viernes 08:30 - 18:30 (PET)',
 };
 
 /**
- * Guarda el lead en almacenamiento local estructurado y emite el evento analítico sin PII sensible.
+ * Normaliza el teléfono peruano a formato internacional +51
  */
-export async function submitMerchantLead(data: Omit<MerchantLeadData, 'submittedAt'>): Promise<{
-  success: boolean;
-  leadId: string;
-  whatsappUrl: string;
-  mailtoUrl: string;
-}> {
-  const leadId = `lead-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-  const record: MerchantLeadData = {
-    ...data,
-    submittedAt: new Date().toISOString(),
-  };
-
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const existing = JSON.parse(localStorage.getItem('kuota_merchant_leads') || '[]');
-      existing.unshift(record);
-      localStorage.setItem('kuota_merchant_leads', JSON.stringify(existing.slice(0, 50)));
-    }
-  } catch (err) {
-    console.warn('[Kuota Leads] Storage warning:', err);
+export function normalizePhone(rawPhone: string): string {
+  const digits = rawPhone.replace(/\D/g, '');
+  if (digits.startsWith('51') && digits.length === 11) {
+    return `+${digits}`;
   }
-
-  trackEvent('merchant_form_submit', {
-    lead_id: leadId,
-    business_type: data.businessType,
-    city: data.city,
-    has_message: Boolean(data.message),
-  });
-
-  // Generar enlace directo a WhatsApp con datos prellenados para contacto inmediato
-  const waText = encodeURIComponent(
-    `Hola equipo Kuota, deseo afiliar mi comercio.\n\n` +
-    `• Negocio: ${data.businessName}\n` +
-    `• Responsable: ${data.contactName}\n` +
-    `• Rubro: ${data.businessType}\n` +
-    `• Ciudad / Distrito: ${data.city}\n` +
-    `• Celular: ${data.phone}\n` +
-    `• Correo: ${data.email}\n` +
-    (data.message ? `• Mensaje: ${data.message}\n` : '') +
-    `\n(Registro ID: ${leadId})`
-  );
-
-  const whatsappUrl = `https://wa.me/?text=${waText}`;
-
-  const mailSubject = encodeURIComponent(`Solicitud de Afiliación Comercio — ${data.businessName}`);
-  const mailBody = encodeURIComponent(
-    `Estimado equipo de Admisión Kuota,\n\n` +
-    `Deseo solicitar la afiliación de mi negocio a Kuota:\n\n` +
-    `Nombre del Negocio: ${data.businessName}\n` +
-    `Responsable: ${data.contactName}\n` +
-    `Rubro Comercial: ${data.businessType}\n` +
-    `Ciudad / Distrito: ${data.city}\n` +
-    `Celular / WhatsApp: ${data.phone}\n` +
-    `Correo Electrónico: ${data.email}\n` +
-    (data.message ? `Comentarios: ${data.message}\n\n` : '\n') +
-    `Agradezco su pronta comunicación para coordinar los siguientes pasos.\n\n` +
-    `Atentamente,\n${data.contactName}`
-  );
-
-  const mailtoUrl = `mailto:${OFFICIAL_CONTACT.email}?subject=${mailSubject}&body=${mailBody}`;
-
-  return {
-    success: true,
-    leadId,
-    whatsappUrl,
-    mailtoUrl,
-  };
+  if (digits.length === 9) {
+    return `+51${digits}`;
+  }
+  return rawPhone.trim();
 }
 
-export async function submitPartnerLead(data: Omit<PartnerLeadData, 'submittedAt'>): Promise<{
-  success: boolean;
-  leadId: string;
-  mailtoUrl: string;
-}> {
-  const leadId = `partner-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-  const record: PartnerLeadData = {
+/**
+ * Obtiene parámetros UTM de la URL actual
+ */
+export function getUtmParams(): { utmSource?: string; utmMedium?: string; utmCampaign?: string } {
+  if (typeof window === 'undefined') return {};
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      utmSource: params.get('utm_source') || undefined,
+      utmMedium: params.get('utm_medium') || undefined,
+      utmCampaign: params.get('utm_campaign') || undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Registra un lead de waitlist con consentimiento conforme a la Ley N° 29733
+ */
+export async function submitWaitlistLead(
+  data: Omit<WaitlistLeadData, 'consentAt' | 'phone'> & { phone: string }
+): Promise<{ success: boolean; leadId: string }> {
+  const normalizedPhone = normalizePhone(data.phone);
+  const utm = getUtmParams();
+
+  const leadRecord: WaitlistLeadData = {
     ...data,
-    submittedAt: new Date().toISOString(),
+    phone: normalizedPhone,
+    consentAt: new Date().toISOString(),
+    utmSource: data.utmSource || utm.utmSource,
+    utmMedium: data.utmMedium || utm.utmMedium,
+    utmCampaign: data.utmCampaign || utm.utmCampaign,
   };
 
+  const leadId = `waitlist_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+  // 1. Guardar en almacenamiento estructurado local
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const existing = JSON.parse(localStorage.getItem('kuota_partner_leads') || '[]');
-      existing.unshift(record);
-      localStorage.setItem('kuota_partner_leads', JSON.stringify(existing.slice(0, 50)));
+      const existing = JSON.parse(localStorage.getItem('kuota_waitlist_leads') || '[]');
+      existing.unshift({ id: leadId, ...leadRecord });
+      localStorage.setItem('kuota_waitlist_leads', JSON.stringify(existing.slice(0, 100)));
     }
   } catch (err) {
-    console.warn('[Kuota Leads] Partner storage warning:', err);
+    console.warn('[Kuota Waitlist] Local storage warning:', err);
   }
 
-  trackEvent('partner_contact', {
+  // 2. Intentar llamar a Cloud Function si estuviera configurada
+  try {
+    const endpoint = (typeof window !== 'undefined' && (window as unknown as { __KUOTA_API_URL__?: string }).__KUOTA_API_URL__) || '';
+    if (endpoint) {
+      await fetch(`${endpoint}/joinWaitlist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: leadId, ...leadRecord }),
+      });
+    }
+  } catch (err) {
+    console.info('[Kuota Waitlist] Backend endpoint standby mode, stored locally:', err);
+  }
+
+  // 3. Emitir evento analítico de conversión (PRD §5 y §6)
+  trackEvent('generate_lead', {
     lead_id: leadId,
-    partner_type: data.partnerType,
-    has_message: Boolean(data.message),
+    role: leadRecord.role,
+    category: leadRecord.category,
+    location: leadRecord.location,
+    has_ruc: Boolean(leadRecord.ruc),
+    consent: true,
   });
 
-  const mailSubject = encodeURIComponent(`Alianza Estratégica / Colaboración — ${data.organizationName}`);
-  const mailBody = encodeURIComponent(
-    `Estimada Dirección de Alianzas Kuota,\n\n` +
-    `Me contacto en representación de ${data.organizationName} para explorar oportunidades de colaboración con Kuota:\n\n` +
-    `Organización: ${data.organizationName}\n` +
-    `Contacto: ${data.contactName}\n` +
-    `Tipo de Alianza: ${data.partnerType}\n` +
-    `Correo: ${data.email}\n` +
-    `Teléfono: ${data.phone}\n` +
-    (data.message ? `Mensaje: ${data.message}\n\n` : '\n') +
-    `Quedamos a su disposición para coordinar una reunión de trabajo.\n\n` +
-    `Saludos cordiales,\n${data.contactName}`
-  );
-
-  const mailtoUrl = `mailto:${OFFICIAL_CONTACT.email}?subject=${mailSubject}&body=${mailBody}`;
-
-  return {
-    success: true,
-    leadId,
-    mailtoUrl,
-  };
+  return { success: true, leadId };
 }

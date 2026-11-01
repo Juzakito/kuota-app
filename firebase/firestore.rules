@@ -3,110 +3,126 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper de autenticación básica
+    // Funciones helper de autenticación y propiedad
     function isAuthenticated() {
       return request.auth != null && request.auth.uid != null;
     }
 
-    // Helper: verifica si el solicitante es el propietario legítimo del recurso
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Helper: valida que el importe de venta sea entero positivo en centavos y moneda PEN
-    function isValidSale(data) {
-      return data.totalAmountCents is int
-        && data.totalAmountCents > 0
-        && data.totalAmountCents <= 1000000000
-        && data.currency == 'PEN'
-        && (data.status == 'PENDING' || data.status == 'PROCESSING');
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
     }
 
-    // Perfil del negocio MYPE y subcolecciones
-    match /merchants/{merchantId} {
-      // Solo el propietario autenticado puede consultar su información
-      allow read: if isOwner(merchantId);
+    // =========================================================================
+    // 1. Colecciones de Configuración de Negocio (PRD §6.6 y AGENTS.md Regla 6)
+    // Valores de negocio en config/*, nunca constantes en código.
+    // Lectura permitida a usuarios autenticados; escritura SOLO admin/servidor.
+    // =========================================================================
+    match /config/{configDoc} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
 
-      // Creación y actualización de perfil:
-      // - El cliente NUNCA puede auto-aprobarse el KYC ('APPROVED').
-      // - El cliente NUNCA puede auto-asignarse límites de crédito o saldo.
-      allow create: if isOwner(merchantId)
-        && (!('kycStatus' in request.resource.data) || request.resource.data.kycStatus == 'PENDING_REVIEW')
-        && (!('creditLimitCents' in request.resource.data));
-
-      allow update: if isOwner(merchantId)
-        && (!('kycStatus' in request.resource.data)
-            || request.resource.data.kycStatus == 'PENDING_REVIEW'
-            || request.resource.data.kycStatus == resource.data.kycStatus)
-        && (!('creditLimitCents' in request.resource.data)
-            || request.resource.data.creditLimitCents == resource.data.creditLimitCents);
-
-      // Prohibida la eliminación directa del comerciante desde el cliente
+    // =========================================================================
+    // 2. Usuarios y Resumen Consolidado (PRD §6.1 y AGENTS.md Regla 2)
+    // El cliente NUNCA escribe dinero, cuotas, niveles ni saldos.
+    // =========================================================================
+    match /users/{userId} {
+      // El usuario solo puede consultar y actualizar su propio perfil no financiero
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['level', 'maxCreditCents', 'availableCreditCents', 'riskScore', 'role']);
       allow delete: if false;
 
-      // Ventas y facturación a crédito de la MYPE
-      match /sales/{saleId} {
-        allow read: if isOwner(merchantId);
-        allow create: if isOwner(merchantId) && isValidSale(request.resource.data);
-        allow update: if isOwner(merchantId) && isValidSale(request.resource.data) && request.resource.data.merchantId == merchantId;
-        allow delete: if isOwner(merchantId);
+      // Resumen consolidado: Home en 1 lectura (PRD §6.1)
+      // ESCRITURA TOTALMENTE DENEGADA AL CLIENTE (solo Cloud Functions 2ª gen)
+      match /summary/current {
+        allow read: if isOwner(userId);
+        allow write: if false;
       }
 
-      // Directorio de clientes de la MYPE
-      match /customers/{customerId} {
-        allow read, write: if isOwner(merchantId);
+      // Borradores y datos temporales de KYC
+      match /kyc_draft/{docId} {
+        allow read, write: if isOwner(userId);
       }
     }
 
-    // Solicitudes de verificación KYC (DNI peruano - Ley N° 29733)
-    match /kyc_requests/{requestId} {
-      // El cliente autenticado solo puede registrar una solicitud con estado PENDING_REVIEW
-      // y consentimiento explícito otorgado
-      allow create: if isAuthenticated()
-        && request.resource.data.merchantId == request.auth.uid
-        && request.resource.data.kycStatus == 'PENDING_REVIEW'
-        && request.resource.data.consentGiven == true;
-
-      // Solo el dueño de la solicitud puede consultar su estado
-      allow read: if isAuthenticated() && resource.data.merchantId == request.auth.uid;
-
-      // El cliente NO puede modificar el estado ni eliminar la solicitud (inmutable desde Android)
-      allow update, delete: if false;
+    // =========================================================================
+    // 3. Compras al Crédito y Cuotas (PRD §6.6 y AGENTS.md Regla 2)
+    // ESCRITURA TOTALMENTE DENEGADA AL CLIENTE.
+    // Solo Cloud Functions autorizadas escriben compras y cuotas.
+    // =========================================================================
+    match /purchases/{purchaseId} {
+      // Lectura permitida solo al comprador o al proveedor involucrado
+      allow read: if isAuthenticated() && (
+        resource.data.buyerUid == request.auth.uid ||
+        resource.data.providerUid == request.auth.uid ||
+        isAdmin()
+      );
+      // Escritura denegada al cliente
+      allow write: if false;
     }
 
-    // Registro de tokens FCM para notificaciones push transaccionales
+    match /installments/{installmentId} {
+      // Lectura permitida solo al comprador o al proveedor de la compra
+      allow read: if isAuthenticated() && (
+        resource.data.buyerUid == request.auth.uid ||
+        resource.data.providerUid == request.auth.uid ||
+        isAdmin()
+      );
+      // Escritura denegada al cliente
+      allow write: if false;
+    }
+
+    // =========================================================================
+    // 4. Ledger Contable de Doble Entrada y Payouts (PRD §6.6)
+    // Inmutable, append-only, escrito exclusivamente desde el servidor.
+    // =========================================================================
+    match /ledger/{entryId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /payouts/{payoutId} {
+      allow read: if isAuthenticated() && (
+        resource.data.providerUid == request.auth.uid || isAdmin()
+      );
+      allow write: if false;
+    }
+
+    // =========================================================================
+    // 5. Proveedores y Catálogo Público (PRD §3 y §4)
+    // Directorio público de proveedores para búsqueda y compra.
+    // =========================================================================
+    match /providers/{providerId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // =========================================================================
+    // 6. Lista de Espera (Waitlist Landings) - PRD §5
+    // Registro público de leads con consentimiento Ley N° 29733.
+    // =========================================================================
+    match /waitlist/{leadId} {
+      allow create: if request.resource.data.consent == true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // 7. Registro de Dispositivos y Notificaciones Push
+    // =========================================================================
     match /devices/{deviceToken} {
       allow read, write: if isAuthenticated();
     }
 
-    // Libro de Reclamaciones (Ley N° 29571 / INDECOPI)
-    match /claims/{claimId} {
-      // Cualquier consumidor puede registrar un reclamo legal formal (estado inicial obligado RECEIVED)
-      allow create: if request.resource.data.status == 'RECEIVED'
-        && request.resource.data.claim_number == claimId;
-
-      // Consulta de estado permitida con el número de reclamo
-      allow read: if true;
-
-      // Inmutable para trazabilidad y auditoría de protección al consumidor
-      allow update, delete: if false;
-    }
-
-    // Sesiones de cobro con QR dinámico seguro
-    match /qr_sessions/{sessionId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.merchantId == request.auth.uid;
-      allow update, delete: if false;
-    }
-
-    // Registro contable de auditoría inmutable (Append-only)
-    match /audit_ledger/{entryId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
-    }
-
-    // Denegación estricta por defecto para cualquier otra ruta no declarada
+    // =========================================================================
+    // 8. Denegación estricta por defecto
+    // =========================================================================
     match /{document=**} {
       allow read, write: if false;
     }

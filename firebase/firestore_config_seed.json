@@ -1,0 +1,130 @@
+{
+  "_readme": "Seed de colecciones config/* para Firestore. Montos en céntimos (PEN). Porcentajes en puntos básicos (bps: 100 bps = 1%). Campos con placeholder:true deben ser calibrados con datos del piloto. Cargar con Admin SDK (script seed) en dev/stg/prod; escritura solo claim admin.",
+  "config": {
+    "levels": {
+      "version": 1,
+      "currency": "PEN",
+      "levels": [
+        { "level": 1, "label": "Nivel 1", "initialBps": 3000, "maxPurchaseCents": 70000, "minFinancedCents": 30000, "upgrade": { "verifiedSalesCents": 140000, "onTimeInstallmentsMin": 4, "maxLateDays": 0 }, "placeholder": false },
+        { "level": 2, "label": "Nivel 2", "initialBps": 2500, "maxPurchaseCents": 140000, "upgrade": { "verifiedSalesCents": 300000, "onTimeInstallmentsMin": 8, "maxLateDays": 0 }, "placeholder": true },
+        { "level": 3, "label": "Nivel 3", "initialBps": 2000, "maxPurchaseCents": 250000, "upgrade": { "verifiedSalesCents": 600000, "onTimeInstallmentsMin": 12, "maxLateDays": 0 }, "placeholder": true },
+        { "level": 4, "label": "Nivel 4", "initialBps": 1500, "maxPurchaseCents": 400000, "upgrade": { "verifiedSalesCents": 1000000, "onTimeInstallmentsMin": 16, "maxLateDays": 0 }, "placeholder": true },
+        { "level": 5, "label": "Nivel 5", "initialBps": 1000, "maxPurchaseCents": 600000, "upgrade": { "verifiedSalesCents": 1600000, "onTimeInstallmentsMin": 24, "maxLateDays": 0 }, "placeholder": true },
+        { "level": 6, "label": "Nivel 6", "initialBps": 0, "maxPurchaseCents": 1000000, "upgrade": null, "placeholder": true }
+      ],
+      "startLevel": 1,
+      "freezeAfterLateDays": 7,
+      "downgradeAfterLateDays": 30
+    },
+
+    "fees": {
+      "version": 1,
+      "buyerFlatBps": 500,
+      "buyerFeeBase": "financed",
+      "buyerFeeCapDays": 60,
+      "providerCreditBps": 200,
+      "providerAdvanceBps": 6000,
+      "providerRemainderMaxDays": 30,
+      "paymentsBps": 200,
+      "plans": {
+        "basic": { "monthlyCents": 8000, "igvIncluded": false, "maxPerTxCents": 500000, "users": 1 },
+        "pro":   { "monthlyCents": 12000, "igvIncluded": false, "minPerTxCents": 500001, "users": 5, "bulkCollection": true },
+        "open":  { "monthlyCents": 9900, "igvIncluded": false, "enabled": false, "note": "aKuotas! — no activar ni cotizar" }
+      },
+      "igvBps": 1800,
+      "settlementBusinessHours": 48,
+      "decisionsPending": [
+        "providerCreditBps: 200 vs 400",
+        "paymentsBps: 100 vs 200",
+        "providerAdvanceBps: 6000 vs 10000",
+        "buyerFlatBps para 90 días"
+      ]
+    },
+
+    "terms": {
+      "version": 1,
+      "minPurchaseCents": 19900,
+      "enabledDays": [15, 30, 60],
+      "disabledDays": [90],
+      "installmentsByDays": { "15": 2, "30": 4, "60": 8 },
+      "firstDueAfterDays": 7,
+      "dueTimeLocal": "23:59",
+      "timezone": "America/Lima",
+      "purchaseStepTtlMinutes": 15,
+      "rounding": "half_up_last_installment_absorbs_remainder"
+    },
+
+    "collections": {
+      "version": 1,
+      "reminderOffsetsDays": [-3, -1, 0, 1, 3],
+      "tickLocalTime": "06:00",
+      "lateFeeBps": 0,
+      "blockNewPurchasesWhenLate": true,
+      "defaultAfterLateDays": 30,
+      "decisionsPending": ["política de mora y recargo"]
+    },
+
+    "limits": {
+      "version": 1,
+      "dailyFundingCapCents": 500000,
+      "perUserPurchasesPerHour": 10,
+      "perUserOtpPerHour": 5,
+      "perProviderPendingApprovalsMax": 20,
+      "placeholder": true,
+      "note": "Tope diario de fondeo sujeto a caja disponible; ajustar según capital levantado."
+    },
+
+    "scoring": {
+      "version": 1,
+      "modelVersion": "rules-v1",
+      "weights": {
+        "paymentBehavior": 30,
+        "salesRegularity": 20,
+        "payerDiversity": 10,
+        "verifiedSalesRatio": 10,
+        "locationStability": 5,
+        "bureauAndSbs": 15,
+        "formality": 5,
+        "deviceAndBanking": 5
+      },
+      "hardFilters": ["redam", "protestos", "judicial_activo", "dni_no_validado", "colusion_detectada"],
+      "scoreToLimitMultiplier": [
+        { "minScore": 0,  "maxScore": 39,  "multiplier": 0.5 },
+        { "minScore": 40, "maxScore": 69,  "multiplier": 1.0 },
+        { "minScore": 70, "maxScore": 100, "multiplier": 1.0, "fastTrackUpgrade": true }
+      ],
+      "recomputeTriggers": ["registro", "pago_cuota", "mora", "semanal"],
+      "pdReference": { "lgdBps": 4500 },
+      "placeholder": true
+    },
+
+    "legal": {
+      "version": 1,
+      "sbsText": "En proceso de afiliación a la SBS.",
+      "noCustodyText": "Los pagos pasan por plataformas intermediarias con relación directa con el banco. Kuota no toca tu dinero.",
+      "creditDisclaimer": "Crédito sujeto a evaluación. Simulación referencial.",
+      "backing": "Respaldo: Científica del Sur"
+    },
+
+    "tips": {
+      "items": [
+        { "id": "tip1", "text": "Paga tus cuotas a tiempo: es la forma más rápida de subir de nivel.", "active": true },
+        { "id": "tip2", "text": "Registra tus ventas por Yape o Plin para que tu nivel crezca más rápido.", "active": true },
+        { "id": "tip3", "text": "Compra con frecuencia: tus ventas pueden financiar tu próximo pedido.", "active": true }
+      ]
+    },
+
+    "benefits": {
+      "items": []
+    },
+
+    "featureFlags": {
+      "paymentsEnabled": true,
+      "buyerCreditEnabled": true,
+      "providerCreditEnabled": true,
+      "salesTrackingEnabled": true,
+      "terms90Enabled": false,
+      "aKuotasPromoEnabled": false
+    }
+  }
+}

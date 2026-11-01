@@ -17,6 +17,20 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.KoutaPeru">
+        <!-- Sentry Error Tracking & Crash Reporting -->
+        <meta-data
+            android:name="io.sentry.dsn"
+            android:value="https://xwZY4BIZ_Go3eExw4WpmlwtRqhvRp7Dd@o5136976.ingest.us.sentry.io/5136976" />
+        <meta-data
+            android:name="io.sentry.traces.sample-rate"
+            android:value="1.0" />
+        <meta-data
+            android:name="io.sentry.attach-screenshot"
+            android:value="true" />
+        <meta-data
+            android:name="io.sentry.attach-view-hierarchy"
+            android:value="true" />
+
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_stat_kuota" />

@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -102,6 +103,7 @@ fun MyInstallmentsScreen(
     val kuotaColors = MaterialTheme.kuotaColors
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var showLevelsModal by remember { mutableStateOf(false) }
     var showStatementDialog by remember { mutableStateOf(false) }
     var payingInstallmentSheet by remember { mutableStateOf<CreditInstallment?>(null) }
     var showAdvanceAllDialog by remember { mutableStateOf(false) }
@@ -162,21 +164,7 @@ fun MyInstallmentsScreen(
                 .padding(top = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = "Línea Kuota B2B",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Text(
-                    text = "Tu línea sube con tus ventas verificadas",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.85f)
-                )
-            }
-
-            // Tarjeta Esmerilada Principal (Vaulta Glass Card)
+            // Tarjeta Principal Protagonista (PRD Rediseño UI/UX)
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -184,7 +172,7 @@ fun MyInstallmentsScreen(
                 shape = RoundedCornerShape(24.dp),
                 color = Color.White.copy(alpha = 0.16f),
                 border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
-                shadowElevation = 8.dp
+                shadowElevation = 4.dp
             ) {
                 Column(
                     modifier = Modifier
@@ -192,55 +180,84 @@ fun MyInstallmentsScreen(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
+                    // Cabecera de la tarjeta: Badge Nivel 1 + Ícono de información (i) + Contactless
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = Color.White.copy(alpha = 0.22f),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "Nivel ${currentLevel.levelNumber}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "· ${currentLevel.tierName}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White.copy(alpha = 0.9f)
+                                )
+                            }
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Ícono de información (i) para ver los 6 niveles en popup modal
                             Box(
                                 modifier = Modifier
                                     .size(32.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.25f)),
+                                    .background(Color.White.copy(alpha = 0.22f))
+                                    .clickable { showLevelsModal = true },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.CreditCard, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = "Información de niveles de crédito",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
                             }
-                            Text(
-                                "KUOTA B2B",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White,
-                                letterSpacing = 1.sp
+
+                            Icon(
+                                Icons.Default.Nfc,
+                                contentDescription = "Contactless",
+                                tint = Color.White.copy(alpha = 0.85f),
+                                modifier = Modifier.size(22.dp)
                             )
                         }
-                        Icon(
-                            Icons.Default.Nfc,
-                            contentDescription = "Contactless",
-                            tint = Color.White.copy(alpha = 0.85f),
-                            modifier = Modifier.size(24.dp)
-                        )
                     }
 
-                    // Nivel y cupo de financiamiento
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    // Jerarquía: "Puedes financiar hasta" pequeño, número del monto gigante
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = "NIVEL ${currentLevel.levelNumber} · ${currentLevel.tierName.uppercase()}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF5EE0E8),
-                            letterSpacing = 1.sp
+                            text = "Puedes financiar hasta",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White.copy(alpha = 0.85f)
                         )
                         Text(
-                            text = "Puedes financiar hasta ${PurchaseOffer.formatPen(currentLevel.maxLineCents)}",
-                            style = MaterialTheme.typography.headlineSmall,
+                            text = PurchaseOffer.formatPen(currentLevel.maxLineCents),
+                            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 38.sp),
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color.White
+                            color = Color.White,
+                            letterSpacing = (-0.5).sp
                         )
                     }
 
-                    // Pie de tarjeta con titular, vencimiento y respaldo
+                    // Pie de tarjeta con titular comercial y respaldo
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.Bottom,
@@ -257,7 +274,9 @@ fun MyInstallmentsScreen(
                                 ownerName.ifBlank { "MI NEGOCIO B2B" }.uppercase(),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -553,60 +572,49 @@ fun MyInstallmentsScreen(
         Spacer(Modifier.height(18.dp))
 
         // -------------------------------------------------------------
-        // 5. SECCIÓN DE CUOTAS ACTIVAS & NIVELES DE CRÉDITO
+        // 5. SECCIÓN DE CUOTAS ACTIVAS (PRD: Solo cuotas activas)
         // -------------------------------------------------------------
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 20.dp).clip(RoundedCornerShape(16.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Tab(
-                selected = selectedTabIndex == 0,
-                onClick = { selectedTabIndex = 0 },
-                text = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Cuotas Activas")
-                        if (activePurchase?.nextPendingInstallment != null) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(com.kouta.app.core.designsystem.theme.KuotaCoral)
-                            )
-                        }
-                    }
+            Text(
+                "Cuotas Activas",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            if (activePurchase?.nextPendingInstallment != null) {
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = com.kouta.app.core.designsystem.theme.KuotaCoral.copy(alpha = 0.12f)
+                ) {
+                    Text(
+                        "Pendiente",
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = com.kouta.app.core.designsystem.theme.KuotaCoral
+                    )
                 }
-            )
-            Tab(
-                selected = selectedTabIndex == 1,
-                onClick = { selectedTabIndex = 1 },
-                text = { Text("Los 6 Niveles") }
-            )
+            }
         }
 
         Spacer(Modifier.height(12.dp))
 
-        if (selectedTabIndex == 0) {
-            // Cuotas Activas Tab (LIN-05)
-            ActiveInstallmentsTabContent(
-                activePurchase = activePurchase,
-                history = purchaseHistory,
-                onOpenTrade = onOpenTrade,
-                onPayInstallment = { inst ->
-                    payingInstallmentSheet = inst
-                },
-                onAdvanceAll = {
-                    showAdvanceAllDialog = true
-                }
-            )
-        } else {
-            // Niveles de Crédito Tab (All 6 levels)
-            CreditLevelsTabContent(
-                userLevelNumber = userLevelNumber
-            )
-        }
+        ActiveInstallmentsTabContent(
+            activePurchase = activePurchase,
+            history = emptyList(),
+            onOpenTrade = onOpenTrade,
+            onPayInstallment = { inst ->
+                payingInstallmentSheet = inst
+            },
+            onAdvanceAll = {
+                showAdvanceAllDialog = true
+            }
+        )
 
         Spacer(Modifier.height(110.dp))
     }
@@ -758,6 +766,14 @@ fun MyInstallmentsScreen(
             }
         )
     }
+
+    // 4. Diálogo Modal de los 6 Niveles de Crédito (PRD Pantalla 3)
+    if (showLevelsModal) {
+        CreditLevelsModalDialog(
+            userLevelNumber = userLevelNumber,
+            onDismiss = { showLevelsModal = false }
+        )
+    }
 }
 
 @Composable
@@ -902,20 +918,36 @@ private fun ActiveInstallmentsTabContent(
     val kuotaColors = MaterialTheme.kuotaColors
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.US) }
 
-    if (activePurchase == null && history.isEmpty()) {
-        Box(
+    if (activePurchase == null) {
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
+                .padding(horizontal = 20.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    Icons.Default.CalendarMonth,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    modifier = Modifier.size(60.dp)
-                )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.CalendarMonth,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
                 Spacer(modifier = Modifier.height(14.dp))
                 Text(
                     "No tienes cuotas pendientes",
@@ -929,8 +961,11 @@ private fun ActiveInstallmentsTabContent(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(20.dp))
-                Button(onClick = onOpenTrade, shape = RoundedCornerShape(12.dp)) {
+                Spacer(modifier = Modifier.height(18.dp))
+                Button(
+                    onClick = onOpenTrade,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
                     Icon(Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Comprar al crédito con QR")
@@ -941,239 +976,218 @@ private fun ActiveInstallmentsTabContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            if (activePurchase != null) {
-                Text(
-                    "Crédito Activo en Curso",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                activePurchase.supplierName,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "Total: ${PurchaseOffer.formatPen(activePurchase.totalAmountCents)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        val statusText = activePurchase.statusLabel
+                        val statusColor = when (activePurchase.phase) {
+                            PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION -> kuotaColors.accentTeal
+                            PurchasePhase.ACTIVE_IN_REPAYMENT -> if (activePurchase.isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                            PurchasePhase.COMPLETED -> Color(0xFF10B981)
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = statusColor.copy(alpha = 0.12f)
                         ) {
-                            Column {
-                                Text(
-                                    activePurchase.supplierName,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    "Compra total: ${PurchaseOffer.formatPen(activePurchase.totalAmountCents)}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            val statusText = activePurchase.statusLabel
-                            val statusColor = when (activePurchase.phase) {
-                                PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION -> kuotaColors.accentTeal
-                                PurchasePhase.ACTIVE_IN_REPAYMENT -> if (activePurchase.isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                                PurchasePhase.COMPLETED -> Color(0xFF10B981)
-                                else -> MaterialTheme.colorScheme.onSurfaceVariant
-                            }
                             Text(
                                 statusText,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = statusColor
                             )
                         }
+                    }
 
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
-                        // Breakdown
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text("Inicial pagada", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(PurchaseOffer.formatPen(activePurchase.downPaymentCents), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                            }
-                            Column {
-                                Text("Financiado Kuota", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(PurchaseOffer.formatPen(activePurchase.financedAmountCents), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = kuotaColors.accentTeal)
-                            }
-                            Column {
-                                Text("Plazo elegido", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("${activePurchase.selectedTermDays ?: 0} días", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                            }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Inicial pagada", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(PurchaseOffer.formatPen(activePurchase.downPaymentCents), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                         }
-
-                        if (activePurchase.phase == PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION) {
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Button(
-                                onClick = onOpenTrade,
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Elegir plazo y cronograma de cuotas")
-                            }
+                        Column {
+                            Text("Financiado", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(PurchaseOffer.formatPen(activePurchase.financedAmountCents), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
-
-                        // Installment list (LIN-05: Pagar y Adelantar)
-                        if (activePurchase.installments.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "Cronograma de Cuotas",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    "${activePurchase.totalPaidInstallments} de ${activePurchase.installments.size} pagadas",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            activePurchase.installments.forEach { inst ->
-                                val isInstOverdue = !inst.isPaid && inst.dueEpochMillis < System.currentTimeMillis()
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(
-                                            if (inst.isPaid) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                                            else if (isInstOverdue) MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
-                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                        )
-                                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(
-                                                "Cuota #${inst.number} · ${dateFormat.format(Date(inst.dueEpochMillis))}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            if (isInstOverdue) {
-                                                Spacer(modifier = Modifier.width(6.dp))
-                                                Text(
-                                                    "Vencida",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.error,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            } else if (!inst.isPaid) {
-                                                Spacer(modifier = Modifier.width(6.dp))
-                                                Text(
-                                                    "Por vencer",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                            }
-                                        }
-                                        Text(
-                                            PurchaseOffer.formatPen(inst.amountCents),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (inst.isPaid) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-
-                                    if (inst.isPaid) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                Icons.Default.CheckCircle,
-                                                contentDescription = null,
-                                                tint = kuotaColors.accentTeal,
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text("Pagada", style = MaterialTheme.typography.labelSmall, color = kuotaColors.accentTeal)
-                                        }
-                                    } else {
-                                        Button(
-                                            onClick = { onPayInstallment(inst) },
-                                            shape = RoundedCornerShape(8.dp),
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                                        ) {
-                                            Text("Pagar", style = MaterialTheme.typography.labelSmall)
-                                        }
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(6.dp))
-                            }
-
-                            // Botón Adelantar Saldo Restante (LIN-05)
-                            val remainingUnpaid = activePurchase.installments.filter { !it.isPaid }
-                            if (remainingUnpaid.size > 1) {
-                                Spacer(modifier = Modifier.height(10.dp))
-                                OutlinedButton(
-                                    onClick = onAdvanceAll,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Icon(Icons.Default.Payment, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Adelantar todas las cuotas (${remainingUnpaid.size}) · 0% penalidad")
-                                }
-                            }
+                        Column {
+                            Text("Plazo", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${activePurchase.selectedTermDays ?: 0} días", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                         }
                     }
-                }
-            }
 
-            if (history.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    "Historial de Créditos Pagados",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                    if (activePurchase.phase == PurchasePhase.PHASE_2_INSTALLMENTS_SELECTION) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Button(
+                            onClick = onOpenTrade,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Elegir plazo y cronograma de cuotas")
+                        }
+                    }
 
-                history.forEach { item ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                        )
-                    ) {
+                    if (activePurchase.installments.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
-                                Text(item.supplierName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                Text("Financiado: ${PurchaseOffer.formatPen(item.financedAmountCents)}", style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                "Cronograma de Cuotas",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "${activePurchase.totalPaidInstallments} de ${activePurchase.installments.size} pagadas",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        activePurchase.installments.forEach { inst ->
+                            val isInstOverdue = !inst.isPaid && inst.dueEpochMillis < System.currentTimeMillis()
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(
+                                        if (inst.isPaid) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                                        else if (isInstOverdue) MaterialTheme.colorScheme.error.copy(alpha = 0.08f)
+                                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                                    )
+                                    .border(
+                                        1.dp,
+                                        if (isInstOverdue) MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
+                                        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                                        RoundedCornerShape(14.dp)
+                                    )
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            "Cuota #${inst.number} · ${dateFormat.format(Date(inst.dueEpochMillis))}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        if (isInstOverdue) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                "Vencida",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.error,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        } else if (!inst.isPaid) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                "Por vencer",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        PurchaseOffer.formatPen(inst.amountCents),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (inst.isPaid) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
+                                    )
+                                }
+
+                                if (inst.isPaid) {
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = Color(0xFF10B981).copy(alpha = 0.12f)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.CheckCircle,
+                                                contentDescription = null,
+                                                tint = Color(0xFF10B981),
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("Pagada", style = MaterialTheme.typography.labelSmall, color = Color(0xFF10B981), fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                } else {
+                                    Button(
+                                        onClick = { onPayInstallment(inst) },
+                                        shape = RoundedCornerShape(10.dp),
+                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                    ) {
+                                        Text("Pagar", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                    }
+                                }
                             }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = kuotaColors.accentTeal, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Completado", style = MaterialTheme.typography.labelSmall, color = kuotaColors.accentTeal)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
+                        // Botón Adelantar Saldo Restante (LIN-05)
+                        val remainingUnpaid = activePurchase.installments.filter { !it.isPaid }
+                        if (remainingUnpaid.size > 1) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedButton(
+                                onClick = onAdvanceAll,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                            ) {
+                                Icon(Icons.Default.Payment, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "Adelantar todas (${remainingUnpaid.size}) · 0% penalidad",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
                 }
             }
         }
@@ -1181,8 +1195,9 @@ private fun ActiveInstallmentsTabContent(
 }
 
 @Composable
-private fun CreditLevelsTabContent(
-    userLevelNumber: Int
+private fun CreditLevelsModalDialog(
+    userLevelNumber: Int,
+    onDismiss: () -> Unit
 ) {
     val levels = listOf(
         CreditLevel.NIVEL_1,
@@ -1193,152 +1208,167 @@ private fun CreditLevelsTabContent(
         CreditLevel.NIVEL_6
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text(
-            "Escalera de Crédito Kuota (6 Niveles)",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            "Sube de nivel registrando ventas comprobadas (Yape, Plin, POS) y pagando tus cuotas con puntualidad.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        // Barra de progreso de nivel (PRD LIN-06)
-        if (userLevelNumber < 6) {
-            val nextLevel = CreditLevel.fromNumber(userLevelNumber + 1)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.ArrowUpward, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Column {
-                        Text(
-                            "Próximo objetivo: Nivel ${nextLevel.levelNumber} · ${nextLevel.tierName}",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            "Te faltan 3 cuotas puntuales o mantener tus ventas semanales para desbloquear ${PurchaseOffer.formatPen(nextLevel.maxLineCents)} de línea.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Icon(
+                        Icons.Default.Star,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        "Niveles de Crédito Kuota",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "Tu línea crece con tus ventas verificadas",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        levels.forEach { lvl ->
-            val isCurrent = lvl.levelNumber == userLevelNumber
-            val isUnlocked = lvl.levelNumber <= userLevelNumber
-            val lvlColor = Color(lvl.badgeColorHex)
-
-            Card(
+        },
+        text = {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        width = if (isCurrent) 2.dp else 1.dp,
-                        color = if (isCurrent) lvlColor else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                        shape = RoundedCornerShape(16.dp)
-                    ),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isCurrent) lvlColor.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
-                )
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                levels.forEach { lvl ->
+                    val isCurrent = lvl.levelNumber == userLevelNumber
+                    val isUnlocked = lvl.levelNumber <= userLevelNumber
+                    val lvlColor = Color(lvl.badgeColorHex)
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isCurrent) lvlColor.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                        border = BorderStroke(
+                            width = if (isCurrent) 1.5.dp else 1.dp,
+                            color = if (isCurrent) lvlColor else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(CircleShape)
-                                    .background(lvlColor.copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    "${lvl.levelNumber}",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = lvlColor
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    lvl.title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    "Hasta ${PurchaseOffer.formatPen(lvl.maxAmountCents)}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = lvlColor,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(26.dp)
+                                            .clip(CircleShape)
+                                            .background(lvlColor),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            "${lvl.levelNumber}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    }
+                                    Column {
+                                        Text(
+                                            lvl.title,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            "Hasta ${PurchaseOffer.formatPen(lvl.maxAmountCents)}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = lvlColor
+                                        )
+                                    }
+                                }
 
-                        if (isCurrent) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(lvlColor)
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                if (isCurrent) {
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = lvlColor
+                                    ) {
+                                        Text(
+                                            "ACTUAL",
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 9.sp
+                                        )
+                                    }
+                                } else if (!isUnlocked) {
+                                    Icon(
+                                        Icons.Default.Lock,
+                                        contentDescription = "Bloqueado",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Default.CheckCircle,
+                                        contentDescription = "Desbloqueado",
+                                        tint = Color(0xFF10B981),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("NIVEL ACTUAL", style = MaterialTheme.typography.labelSmall, color = Color.White, fontWeight = FontWeight.Bold)
+                                Column {
+                                    Text("Inicial", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
+                                    Text("${lvl.downPaymentPercent}%", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                                }
+                                Column {
+                                    Text("Cuotas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
+                                    Text("${lvl.defaultInstallmentCount} sem.", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                                }
+                                Column {
+                                    Text("Ventas mín.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
+                                    Text(
+                                        if (lvl.levelNumber == 1) "Sin req." else PurchaseOffer.formatPen(lvl.minMonthlySalesCents),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
-                        } else if (!isUnlocked) {
-                            Icon(Icons.Default.Lock, contentDescription = "Bloqueado", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        } else {
-                            Icon(Icons.Default.CheckCircle, contentDescription = "Superado", tint = Color(0xFF55DDE0))
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text("Cuota inicial", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${lvl.downPaymentPercent}%", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                        }
-                        Column {
-                            Text("Cuotas semanales", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${lvl.defaultInstallmentCount} semanas", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                        }
-                        Column {
-                            Text("Ventas requeridas", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(
-                                if (lvl.levelNumber == 1) "Sin requisito" else PurchaseOffer.formatPen(lvl.minMonthlySalesCents),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
-                            )
                         }
                     }
                 }
             }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Entendido")
+            }
         }
-    }
+    )
 }

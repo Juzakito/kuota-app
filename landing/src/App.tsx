@@ -1,306 +1,126 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { UnifiedNavbar, AudienceMode } from './components/UnifiedNavbar';
-import { CrossAudienceBanner } from './components/EcosystemBanner';
-import { LaunchCountdownSection } from './components/LaunchCountdownSection';
-
-// Secciones del Ecosistema Principal (Hub Ecosistema)
-import { EcosystemHeroSection } from './components/ecosystem/EcosystemHeroSection';
-import { ExperienceSelectorSection } from './components/ecosystem/ExperienceSelectorSection';
-import { EcosystemFlowDiagram } from './components/ecosystem/EcosystemFlowDiagram';
-import { MerchantOperationDemo } from './components/ecosystem/MerchantOperationDemo';
-import { ColocacionesRecaudacionSection } from './components/ecosystem/ColocacionesRecaudacionSection';
-import { AudienceFaqSection } from './components/ecosystem/AudienceFaqSection';
-import { MasterCtaSection } from './components/ecosystem/MasterCtaSection';
-import { InstitutionalFooter } from './components/ecosystem/InstitutionalFooter';
-
-// Modales globales de captación y alianzas
-import { MerchantAffiliationModal } from './components/ecosystem/MerchantAffiliationModal';
-import { PartnerContactModal } from './components/ecosystem/PartnerContactModal';
-import { FloatingLeadWidgets } from './components/landing/FloatingLeadWidgets';
-import { MobileAppSimulator } from './components/mobile/MobileAppSimulator';
-
-// Vistas especializadas de Compradores
-import { HeroSection as BuyerHeroSection } from './components/HeroSection';
-import { ProblemSolutionSection as BuyerProblemSolutionSection } from './components/ProblemSolutionSection';
-import { PaymentMethodsSection as BuyerPaymentMethodsSection } from './components/PaymentMethodsSection';
-import { ProductChipsSection as BuyerProductChipsSection } from './components/ProductChipsSection';
-import { FormalizationSection as BuyerFormalizationSection } from './components/FormalizationSection';
-import { LevelsSection as BuyerLevelsSection } from './components/LevelsSection';
-import { TrustSection as BuyerTrustSection } from './components/TrustSection';
-import { CtaFooterSection as BuyerCtaFooterSection } from './components/CtaFooterSection';
-
-// Vistas especializadas de Proveedores / Comercios
-import { HeroSection as SupplierHeroSection } from './components/supplier/HeroSection';
-import { ProblemSolutionSection as SupplierProblemSolutionSection } from './components/supplier/ProblemSolutionSection';
-import { SocialProofSection as SupplierSocialProofSection } from './components/supplier/SocialProofSection';
-import { ProductChipsSection as SupplierProductChipsSection } from './components/supplier/ProductChipsSection';
-import { SavingsCalculatorSection as SupplierSavingsCalculatorSection } from './components/supplier/SavingsCalculatorSection';
-import { TrustSection as SupplierTrustSection } from './components/supplier/TrustSection';
-import { PricingSection as SupplierPricingSection } from './components/supplier/PricingSection';
-import { CalCtaSection as SupplierCalCtaSection } from './components/supplier/CalCtaSection';
-import { FooterSection as SupplierFooterSection } from './components/supplier/FooterSection';
-
+import React, { useEffect, useState } from 'react';
+import { Navbar, LandingMode } from './components/Navbar';
+import { EcosistemaLanding } from './components/EcosistemaLanding';
+import { CompradoresLanding } from './components/CompradoresLanding';
+import { ProveedoresLanding } from './components/ProveedoresLanding';
+import { GraciasPage } from './components/GraciasPage';
+import { Footer } from './components/Footer';
 import { trackEvent } from './utils/analytics';
-import { smoothScrollToAnchor } from './utils/motionSystem';
 
-function getInitialAudienceMode(): AudienceMode {
+function getInitialMode(): LandingMode {
   if (typeof window === 'undefined') return 'ecosistema';
-  const params = new URLSearchParams(window.location.search);
-  const perfil = params.get('perfil') || params.get('modo');
-  if (
-    perfil === 'proveedores' ||
-    perfil === 'comercios' ||
-    window.location.hash === '#proveedores' ||
-    window.location.hash === '#comercios'
-  ) {
-    return 'comercios';
-  }
-  if (perfil === 'compradores' || window.location.hash === '#compradores') {
+
+  const pathname = window.location.pathname.toLowerCase();
+  const searchParams = new URLSearchParams(window.location.search);
+  const perfilParam = searchParams.get('perfil') || searchParams.get('modo');
+  const hash = window.location.hash.toLowerCase();
+
+  if (pathname.includes('/comprar') || perfilParam === 'compradores' || hash === '#compradores') {
     return 'compradores';
   }
-  // Por defecto: Ecosistema Flagship Fintech Redesign (Estilo iO / Vercel / Stripe)
+  if (
+    pathname.includes('/proveedores') ||
+    perfilParam === 'proveedores' ||
+    perfilParam === 'comercios' ||
+    hash === '#proveedores' ||
+    hash === '#comercios'
+  ) {
+    return 'proveedores';
+  }
+  if (pathname.includes('/gracias') || perfilParam === 'gracias' || hash === '#gracias') {
+    return 'gracias';
+  }
+
   return 'ecosistema';
 }
 
 export const App: React.FC = () => {
-  const [mode, setMode] = useState<AudienceMode>('ecosistema');
-  const [evaluationModalOpen, setEvaluationModalOpen] = useState(false);
-  const [merchantModalOpen, setMerchantModalOpen] = useState(false);
-  const [partnerModalOpen, setPartnerModalOpen] = useState(false);
-  const [mobileSimulatorOpen, setMobileSimulatorOpen] = useState(false);
-  const milestonesTracked = useRef<Set<number>>(new Set());
+  const [mode, setMode] = useState<LandingMode>('ecosistema');
 
   useEffect(() => {
-    const initial = getInitialAudienceMode();
+    const initial = getInitialMode();
     setMode(initial);
 
     const handlePopState = () => {
-      setMode(getInitialAudienceMode());
+      setMode(getInitialMode());
     };
+
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const handleModeChange = (nextMode: AudienceMode, source: string) => {
+  const handleModeChange = (nextMode: LandingMode) => {
     setMode(nextMode);
-    trackEvent('switch_audience_mode', { mode: nextMode, source });
+    trackEvent('switch_landing_mode', { mode: nextMode });
 
     if (typeof window !== 'undefined') {
       try {
         const url = new URL(window.location.href);
         if (nextMode === 'ecosistema') {
+          url.pathname = '/';
           url.searchParams.delete('perfil');
           url.searchParams.delete('modo');
-        } else {
-          url.searchParams.set('perfil', nextMode);
+          url.hash = '';
+        } else if (nextMode === 'compradores') {
+          url.pathname = '/comprar';
+          url.searchParams.set('perfil', 'compradores');
+          url.hash = '';
+        } else if (nextMode === 'proveedores') {
+          url.pathname = '/proveedores';
+          url.searchParams.set('perfil', 'proveedores');
+          url.hash = '';
+        } else if (nextMode === 'gracias') {
+          url.pathname = '/gracias';
+          url.searchParams.set('perfil', 'gracias');
+          url.hash = '';
         }
-        window.history.replaceState({}, '', url.toString());
+        window.history.pushState({}, '', url.toString());
       } catch {
-        // Ignorar restricciones en testing
+        // Soporte para entornos estáticos
       }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    smoothScrollToAnchor('#inicio');
   };
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      document.title =
-        mode === 'ecosistema'
-          ? 'KUOTA — El Sistema Operativo de Compras B2B e IA Predictiva'
-          : mode === 'compradores'
-          ? 'Kuota — Financia tu crecimiento sin apuros | Compra mercadería a kuotas'
-          : 'Kuota Comercios — Ofrece ventas en cuotas y gestiona tu recaudación';
-
-      const iconHref = '/logos/kuota-icon.png';
-      const existingIcons = document.querySelectorAll<HTMLLinkElement>(
-        'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]'
-      );
-      if (existingIcons.length > 0) {
-        existingIcons.forEach((linkEl) => {
-          linkEl.type = 'image/png';
-          linkEl.href = iconHref;
-        });
-      }
+      const titles = {
+        ecosistema: 'Compra y vende al crédito para tu negocio | Kuota',
+        compradores: 'Compra mercadería en cuotas semanales | Kuota',
+        proveedores: 'Vende al crédito y cobra con 2% de comisión | Kuota',
+        gracias: '¡Gracias por confiar en Kuota! | Kuota',
+      };
+      document.title = titles[mode] || titles.ecosistema;
     }
   }, [mode]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (docHeight <= 0) return;
-
-      const percent = Math.round((scrollTop / docHeight) * 100);
-      [25, 50, 75, 100].forEach((milestone) => {
-        if (percent >= milestone && !milestonesTracked.current.has(milestone)) {
-          milestonesTracked.current.add(milestone);
-          trackEvent('scroll_depth', { depth_percent: milestone, audience: mode });
-        }
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [mode]);
-
   return (
-    <div
-      id="inicio"
-      className="min-h-screen flex flex-col bg-[#F4F6F8] text-[#070A0F] font-sans overflow-x-hidden selection:bg-[#10B981] selection:text-black"
-    >
-      {/* MODAL GLOBAL DE CAPTACIÓN RÁPIDA / EVALUACIÓN B2B */}
-      <FloatingLeadWidgets
-        isOpen={evaluationModalOpen}
-        onOpen={() => setEvaluationModalOpen(true)}
-        onClose={() => setEvaluationModalOpen(false)}
-      />
+    <div className="min-h-screen flex flex-col bg-paper text-charcoal font-sans antialiased selection:bg-lime selection:text-forest">
+      {/* Barra de navegación unificada */}
+      <Navbar mode={mode} onModeChange={handleModeChange} />
 
-      {/* MODALES ADICIONALES DE ALIADOS Y AFILIACIÓN */}
-      <MerchantAffiliationModal
-        isOpen={merchantModalOpen}
-        onClose={() => setMerchantModalOpen(false)}
-      />
-      <PartnerContactModal
-        isOpen={partnerModalOpen}
-        onClose={() => setPartnerModalOpen(false)}
-      />
-
-      {/* RENDERIZADO PRINCIPAL SEGÚN EL PERFIL ACTIVO */}
-      {mode === 'ecosistema' ? (
-        <>
-          {/* ========================================================= */}
-          {/* HUB ECOSISTEMA KUOTA (Compradores ↔ KUOTA ↔ Comercios)   */}
-          {/* ========================================================= */}
-
-          {/* NAVBAR UNIFICADA CON SELECTOR DE PERFILES TRIPARTITO */}
-          <UnifiedNavbar
-            mode={mode}
-            onModeChange={handleModeChange}
-            onOpenMerchantAffiliation={() => setMerchantModalOpen(true)}
+      {/* Contenido principal según el modo activo */}
+      <main className="flex-1">
+        {mode === 'ecosistema' && (
+          <EcosistemaLanding
+            onSelectBuyer={() => handleModeChange('compradores')}
+            onSelectSupplier={() => handleModeChange('proveedores')}
           />
+        )}
 
-          <main className="flex-1">
-            {/* 1. HERO DEL ECOSISTEMA (Conectamos compras y ventas en cuotas) */}
-            <EcosystemHeroSection
-              onSelectBuyer={() => handleModeChange('compradores', 'hero_cta_buyer')}
-              onOpenMerchantAffiliation={() => setMerchantModalOpen(true)}
-              onExploreEcosystem={() => smoothScrollToAnchor('#diagrama')}
-            />
+        {mode === 'compradores' && <CompradoresLanding />}
 
-            {/* 2. CONTADOR OFICIAL DE LANZAMIENTO */}
-            <LaunchCountdownSection mode="ecosistema" />
+        {mode === 'proveedores' && <ProveedoresLanding />}
 
-            {/* 3. SELECTOR DE EXPERIENCIAS (Compradores / Comercios / Aliados) */}
-            <ExperienceSelectorSection
-              onSelectBuyer={() => handleModeChange('compradores', 'experience_selector')}
-              onSelectMerchant={() => handleModeChange('comercios', 'experience_selector')}
-              onOpenPartnerModal={() => setPartnerModalOpen(true)}
-            />
+        {mode === 'gracias' && (
+          <GraciasPage onGoHome={() => handleModeChange('ecosistema')} />
+        )}
+      </main>
 
-            {/* 4. DIAGRAMA INTERACTIVO DEL FLUJO COMPLETO (6 Pasos) */}
-            <EcosystemFlowDiagram />
-
-            {/* 5. DEMOSTRACIÓN OPERATIVA EN COMERCIO (Mostrador, QR, Despacho) */}
-            <MerchantOperationDemo
-              onOpenAffiliation={() => setMerchantModalOpen(true)}
-            />
-
-            {/* 6. COLOCACIONES Y RECAUDACIÓN TRAZABLE (Ledger y Conciliación) */}
-            <ColocacionesRecaudacionSection />
-
-            {/* 7. PRUEBA SOCIAL Y RESPALDO COMERCIAL */}
-            <SupplierSocialProofSection />
-
-            {/* 8. PREGUNTAS FRECUENTES POR AUDIENCIA */}
-            <AudienceFaqSection />
-
-            {/* 9. MASTER CTA FINAL */}
-            <MasterCtaSection
-              onSelectBuyer={() => handleModeChange('compradores', 'master_cta_buyer')}
-              onOpenMerchantAffiliation={() => setMerchantModalOpen(true)}
-              onOpenPartnerModal={() => setPartnerModalOpen(true)}
-            />
-
-            {/* 10. FOOTER INSTITUCIONAL */}
-            <InstitutionalFooter
-              onSelectBuyer={() => handleModeChange('compradores', 'footer_link')}
-              onSelectMerchant={() => handleModeChange('comercios', 'footer_link')}
-              onOpenPartnerModal={() => setPartnerModalOpen(true)}
-            />
-          </main>
-        </>
-      ) : mode === 'compradores' ? (
-        <>
-          {/* VISTA ESPECÍFICA DE COMPRADORES */}
-          <UnifiedNavbar
-            mode={mode}
-            onModeChange={handleModeChange}
-            onOpenMerchantAffiliation={() => setEvaluationModalOpen(true)}
-          />
-          <main className="flex-1">
-            <BuyerHeroSection />
-            <BuyerProblemSolutionSection />
-            <BuyerPaymentMethodsSection />
-            <BuyerProductChipsSection />
-            <BuyerFormalizationSection />
-            <BuyerLevelsSection />
-            <CrossAudienceBanner mode={mode} onModeChange={handleModeChange} />
-            <BuyerTrustSection />
-            <BuyerCtaFooterSection />
-          </main>
-        </>
-      ) : (
-        <>
-          {/* VISTA ESPECÍFICA DE PROVEEDORES / COMERCIOS */}
-          <UnifiedNavbar
-            mode={mode}
-            onModeChange={handleModeChange}
-            onOpenMerchantAffiliation={() => setEvaluationModalOpen(true)}
-          />
-          <main className="flex-1">
-            <SupplierHeroSection />
-            <SupplierProblemSolutionSection />
-            <SupplierSocialProofSection />
-            <SupplierProductChipsSection />
-            <SupplierSavingsCalculatorSection />
-            <SupplierTrustSection />
-            <SupplierPricingSection />
-            <CrossAudienceBanner mode={mode} onModeChange={handleModeChange} />
-            <SupplierCalCtaSection />
-            <SupplierFooterSection />
-          </main>
-        </>
-      )}
-
-      {/* BOTÓN FLOTANTE SIMULADOR APP ANDROID (PRD VENTAS B2B) */}
-      <div className="fixed bottom-6 left-6 z-40">
-        <button
-          type="button"
-          onClick={() => setMobileSimulatorOpen(true)}
-          className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#0F172A] text-white text-xs font-bold shadow-xl hover:bg-[#1E293B] hover:scale-105 active:scale-95 transition-all border border-slate-700/80 cursor-pointer"
-        >
-          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-          <span>📱 App Móvil (Simulador B2B)</span>
-        </button>
-      </div>
-
-      {/* MODAL SIMULADOR INTERACTIVO ANDROID */}
-      {mobileSimulatorOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="relative max-w-sm w-full py-6">
-            <button
-              onClick={() => setMobileSimulatorOpen(false)}
-              className="absolute -top-1 -right-1 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-white text-slate-900 shadow-2xl hover:bg-slate-100 transition-all font-extrabold cursor-pointer text-sm"
-              aria-label="Cerrar simulador"
-            >
-              ✕
-            </button>
-            <MobileAppSimulator />
-          </div>
-        </div>
-      )}
+      {/* Footer general */}
+      <Footer onNavigate={(target) => handleModeChange(target)} />
     </div>
   );
 };

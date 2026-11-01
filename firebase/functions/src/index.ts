@@ -4,12 +4,6 @@ import * as admin from "firebase-admin";
 import express from "express";
 import cors from "cors";
 import * as crypto from "crypto";
-import {
-  syncMerchantToSupabase,
-  syncSaleToSupabase,
-  syncClaimToSupabase
-} from "./supabaseMirror";
-
 if (!admin.apps.length) {
   admin.initializeApp();
 }
@@ -19,7 +13,7 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
-const JWT_SECRET = process.env.JWT_SECRET || "kuota_peru_secret_key_2026_fintech_secure";
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? (() => { throw new Error("JWT_SECRET missing in production Secret Manager"); })() : "dev_insecure_jwt_secret_change_in_secret_manager");
 
 // ---------------------------------------------------------------------------
 // 1. AUTENTICACIÓN OTP & SESIÓN
@@ -462,7 +456,7 @@ app.post("/api/v1/webhooks/yape-plin", async (req, res) => {
 export const api = onRequest({ region: "us-central1", cors: true }, app);
 
 // ---------------------------------------------------------------------------
-// 7. FIRESTORE TRIGGER: VENTA ACTUALIZADA -> PUSH FCM + SUPABASE MIRROR
+// 7. FIRESTORE TRIGGER: VENTA ACTUALIZADA -> PUSH FCM
 // ---------------------------------------------------------------------------
 export const onSaleUpdated = onDocumentWritten("merchants/{merchantId}/sales/{saleId}", async (event) => {
   const after = event.data?.after.exists ? event.data.after.data() : null;
@@ -470,12 +464,8 @@ export const onSaleUpdated = onDocumentWritten("merchants/{merchantId}/sales/{sa
 
   const merchantId = event.params.merchantId;
   const saleId = event.params.saleId;
-  const eventId = event.id || `evt-sale-${Date.now()}`;
 
-  // 1. Replicación controlada del servidor hacia Supabase Mirror (idempotente)
-  await syncSaleToSupabase(merchantId, saleId, after, eventId);
-
-  // 2. Notificación Push a los dispositivos de la MYPE
+  // Notificación Push a los dispositivos de la MYPE
   const devicesSnap = await db.collection("devices").limit(5).get();
   const tokens = devicesSnap.docs.map(d => d.id).filter(t => t.length > 20);
   if (!tokens.length) return;
@@ -509,7 +499,7 @@ export const onSaleUpdated = onDocumentWritten("merchants/{merchantId}/sales/{sa
 });
 
 // ---------------------------------------------------------------------------
-// 8. FIRESTORE TRIGGER: PERFIL MYPE ACTUALIZADO -> SUPABASE MIRROR
+// 8. FIRESTORE TRIGGER: PERFIL MYPE ACTUALIZADO (AUDITORÍA)
 // ---------------------------------------------------------------------------
 export const onMerchantUpdated = onDocumentWritten("merchants/{merchantId}", async (event) => {
   const after = event.data?.after.exists ? event.data.after.data() : null;
@@ -517,20 +507,19 @@ export const onMerchantUpdated = onDocumentWritten("merchants/{merchantId}", asy
 
   const merchantId = event.params.merchantId;
   const eventId = event.id || `evt-merchant-${Date.now()}`;
-  await syncMerchantToSupabase(merchantId, after, eventId);
+  console.log(`[AUDIT] Merchant profile updated: ${merchantId} (event ${eventId})`);
 });
 
 // ---------------------------------------------------------------------------
-// 9. FIRESTORE TRIGGER: RECLAMACIÓN REGISTRADA -> SUPABASE MIRROR
+// 9. FIRESTORE TRIGGER: RECLAMACIÓN REGISTRADA (AUDITORÍA)
 // ---------------------------------------------------------------------------
 export const onClaimCreated = onDocumentCreated("claims/{claimNumber}", async (event) => {
   const snapshot = event.data;
   if (!snapshot) return;
 
   const claimNumber = event.params.claimNumber;
-  const data = snapshot.data();
   const eventId = event.id || `evt-claim-${Date.now()}`;
-  await syncClaimToSupabase(claimNumber, data, eventId);
+  console.log(`[AUDIT] Claim created: ${claimNumber} (event ${eventId})`);
 });
 
 // ---------------------------------------------------------------------------
