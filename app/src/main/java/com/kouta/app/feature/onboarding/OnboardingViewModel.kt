@@ -1,10 +1,14 @@
 package com.kouta.app.feature.onboarding
 
 import android.app.Activity
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kouta.app.core.util.LocationResult
 import com.kouta.app.core.util.LocationTracker
+import com.kouta.app.data.local.AppSettings
+import com.kouta.app.data.local.LocalBusinessProfile
+import com.kouta.app.data.local.SalesJournalStore
 import com.kuota.core.data.repository.AuthRepository
 import com.kuota.core.data.repository.KycRepository
 import com.kuota.core.data.repository.UserRepository
@@ -15,6 +19,7 @@ import com.kuota.core.model.KycSubmission
 import com.kuota.core.model.TermsConsent
 import com.kuota.core.model.UserSummary
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -75,7 +80,8 @@ class OnboardingViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val kycRepository: KycRepository,
     private val userRepository: UserRepository,
-    private val locationTracker: LocationTracker
+    private val locationTracker: LocationTracker,
+    @ApplicationContext private val context: Context? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OnboardingUiState())
@@ -486,9 +492,31 @@ class OnboardingViewModel @Inject constructor(
                     )
                 )
 
-                // 5. Llamada callable a Firebase Function `submitKyc`
+                // 5. Llamada a verificación KYC (Cloud Function con fallback nativo a Firestore)
                 val submitResult = kycRepository.submitKyc(submission)
                 submitResult.onSuccess { res ->
+                    context?.let { ctx ->
+                        runCatching {
+                            val store = SalesJournalStore(ctx)
+                            val profile = LocalBusinessProfile(
+                                ownerName = submission.fullName,
+                                businessName = submission.businessName,
+                                email = "",
+                                phone = authRepository.currentUser?.phoneNumber.orEmpty().ifBlank { state.phone },
+                                ruc = submission.ruc.orEmpty(),
+                                role = submission.role.uppercase(),
+                                creditLevel = 1,
+                                availableLineCents = 140000L,
+                                commercialCategory = submission.category,
+                                commercialAddress = submission.location?.address.orEmpty()
+                            )
+                            store.saveBusinessProfile(profile)
+                            val appSettings = AppSettings(ctx)
+                            appSettings.kycSummary = "APPROVED"
+                            appSettings.availableCreditLineCents = 140000L
+                            appSettings.creditLevelNumber = 1
+                        }
+                    }
                     _uiState.update {
                         it.copy(
                             isSubmittingKyc = false,

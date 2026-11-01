@@ -275,14 +275,19 @@ class DefaultKycRepository @Inject constructor(
 
             val summaryRef = firestore.collection("users").document(uid).collection("summary").document("current")
             val summaryData = mapOf(
+                "uid" to uid,
                 "kycStatus" to "approved",
                 "role" to submission.role,
-                "creditLimit" to 140000L, // S/ 1,400.00 en céntimos
+                "businessName" to submission.businessName,
+                "creditLimit" to 140000L,
+                "maxCreditCents" to 140000L,
                 "availableCredit" to 140000L,
+                "availableCreditCents" to 140000L,
                 "usedCredit" to 0L,
+                "usedCreditCents" to 0L,
                 "riskScore" to 720,
                 "level" to 1,
-                "updatedAt" to now
+                "updatedAt" to System.currentTimeMillis()
             )
             batch.set(summaryRef, summaryData, SetOptions.merge())
 
@@ -325,14 +330,18 @@ class DefaultKycRepository @Inject constructor(
             if (!snap.exists()) {
                 docRef.set(
                     mapOf(
+                        "uid" to uid,
                         "kycStatus" to "unsubmitted",
                         "role" to "comprador",
                         "creditLimit" to 0L,
+                        "maxCreditCents" to 0L,
                         "availableCredit" to 0L,
+                        "availableCreditCents" to 0L,
                         "usedCredit" to 0L,
+                        "usedCreditCents" to 0L,
                         "riskScore" to 650,
                         "level" to 1,
-                        "updatedAt" to FieldValue.serverTimestamp()
+                        "updatedAt" to System.currentTimeMillis()
                     )
                 ).await()
             }

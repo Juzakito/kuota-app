@@ -90,6 +90,8 @@ import com.kouta.app.feature.security.PinSetupBarrierScreen
 import com.kouta.app.navigation.KoutaNavHost
 import com.kouta.app.navigation.NavDestination
 import com.kouta.app.navigation.navigateToTopLevel
+import com.kouta.app.di.AppEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -104,6 +106,18 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
     val currentRoute = navBackStackEntry?.destination?.route
     val pinState by PinSecurityManager.stateFlow.collectAsState()
     val revision by KuotaEvents.revision.collectAsState()
+
+    val appEntryPoint = remember(context) {
+        runCatching {
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                AppEntryPoint::class.java
+            )
+        }.getOrNull()
+    }
+    val userSummary by (appEntryPoint?.userRepository()?.observeUserSummary()
+        ?: kotlinx.coroutines.flow.flowOf(null))
+        .collectAsState(initial = null)
 
     var currentProfile by remember { mutableStateOf<LocalBusinessProfile?>(null) }
     var pendingBadgeCount by remember { mutableIntStateOf(0) }
@@ -127,7 +141,8 @@ fun MainScreen(deepLink: String? = null, onDeepLinkHandled: () -> Unit = {}) {
     val requiresPinUnlock = isProtectedRoute && pinState.isConfigured && pinState.isLocked
     val isSecurityBarrierActive = requiresPinSetup || requiresPinUnlock
 
-    val isProveedor = currentProfile?.role == UserRole.PROVEEDOR.name
+    val isProveedor = (userSummary?.role?.equals("PROVEEDOR", ignoreCase = true) == true) ||
+        (currentProfile?.role?.equals(UserRole.PROVEEDOR.name, ignoreCase = true) == true)
 
     val topLevelRoutes = if (isProveedor) {
         setOf(
@@ -564,11 +579,11 @@ private fun CenterActionButton(
         label = "centerActionLabelColor"
     )
 
-    // Gradiente sutil y elegante en azul de marca, sin resplandores intensos ni halos de luz cian
+    // Gradiente en azul de marca conforme a la paleta de 5 colores
     val subtleBrandGradient = Brush.verticalGradient(
         listOf(
-            Color(0xFF2457F0),
-            Color(0xFF1D4ED8)
+            Color(0xFF1A3BB0), // Persian Blue
+            Color(0xFF0B2545)  // Prussian Blue
         )
     )
 

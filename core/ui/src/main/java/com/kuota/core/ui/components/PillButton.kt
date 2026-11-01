@@ -67,7 +67,7 @@ fun PillButton(
                 shape = shape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = KuotaColors.LimeVoltage,
-                    contentColor = KuotaColors.ForestInk,
+                    contentColor = KuotaColors.White,
                     disabledContainerColor = KuotaColors.Fog,
                     disabledContentColor = KuotaColors.Pebble
                 ),
@@ -76,9 +76,9 @@ fun PillButton(
             ) {
                 ButtonContent(
                     text = text,
-                    textColor = if (enabled) KuotaColors.ForestInk else KuotaColors.Pebble,
+                    textColor = if (enabled) KuotaColors.White else KuotaColors.Pebble,
                     isLoading = isLoading,
-                    loadingColor = KuotaColors.ForestInk,
+                    loadingColor = KuotaColors.White,
                     leadingIcon = leadingIcon,
                     trailingIcon = trailingIcon
                 )
@@ -94,20 +94,20 @@ fun PillButton(
                 shape = shape,
                 border = BorderStroke(
                     width = 1.5.dp,
-                    color = if (enabled) KuotaColors.ForestInk else KuotaColors.Pebble
+                    color = if (enabled) KuotaColors.PersianBlue else KuotaColors.Pebble
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = KuotaColors.Paper,
-                    contentColor = KuotaColors.ForestInk,
+                    contentColor = KuotaColors.PersianBlue,
                     disabledContentColor = KuotaColors.Pebble
                 ),
                 contentPadding = contentPadding
             ) {
                 ButtonContent(
                     text = text,
-                    textColor = if (enabled) KuotaColors.ForestInk else KuotaColors.Pebble,
+                    textColor = if (enabled) KuotaColors.PersianBlue else KuotaColors.Pebble,
                     isLoading = isLoading,
-                    loadingColor = KuotaColors.ForestInk,
+                    loadingColor = KuotaColors.PersianBlue,
                     leadingIcon = leadingIcon,
                     trailingIcon = trailingIcon
                 )
@@ -122,16 +122,16 @@ fun PillButton(
                 enabled = enabled && !isLoading,
                 shape = shape,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = KuotaColors.ForestInk,
+                    contentColor = KuotaColors.PersianBlue,
                     disabledContentColor = KuotaColors.Pebble
                 ),
                 contentPadding = contentPadding
             ) {
                 ButtonContent(
                     text = text,
-                    textColor = if (enabled) KuotaColors.ForestInk else KuotaColors.Pebble,
+                    textColor = if (enabled) KuotaColors.PersianBlue else KuotaColors.Pebble,
                     isLoading = isLoading,
-                    loadingColor = KuotaColors.ForestInk,
+                    loadingColor = KuotaColors.PersianBlue,
                     leadingIcon = leadingIcon,
                     trailingIcon = trailingIcon
                 )

@@ -54,7 +54,7 @@ fun KycStatusScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(KuotaColors.Fog)
+            .background(KuotaColors.White)
             .padding(horizontal = 24.dp)
     ) {
         Column(
@@ -72,18 +72,18 @@ fun KycStatusScreen(
                         modifier = Modifier
                             .size(96.dp)
                             .clip(CircleShape)
-                            .background(KuotaColors.ForestInk.copy(alpha = 0.08f)),
+                            .background(KuotaColors.Lavender),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(64.dp),
-                            color = KuotaColors.ForestInk,
+                            color = KuotaColors.PersianBlue,
                             strokeWidth = 4.dp
                         )
                         Icon(
                             imageVector = Icons.Default.AccessTime,
                             contentDescription = null,
-                            tint = KuotaColors.ForestInk,
+                            tint = KuotaColors.PersianBlue,
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -93,7 +93,7 @@ fun KycStatusScreen(
                     Text(
                         text = stringResource(R.string.kyc_status_pending_title),
                         style = KuotaTypography.headlineMedium,
-                        color = KuotaColors.ForestInk,
+                        color = KuotaColors.PrussianBlue,
                         textAlign = TextAlign.Center
                     )
 
@@ -116,7 +116,7 @@ fun KycStatusScreen(
                             Text(
                                 text = "Estado de tu cuenta",
                                 fontWeight = FontWeight.Bold,
-                                color = KuotaColors.ForestInk,
+                                color = KuotaColors.PrussianBlue,
                                 fontSize = 14.sp
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -125,7 +125,7 @@ fun KycStatusScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(text = "Validación RENIEC:", color = KuotaColors.Charcoal, fontSize = 13.sp)
-                                Text(text = "En revisión", color = KuotaColors.ForestInk, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text(text = "En revisión", color = KuotaColors.PersianBlue, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(
@@ -133,7 +133,7 @@ fun KycStatusScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(text = "Tiempo estimado:", color = KuotaColors.Charcoal, fontSize = 13.sp)
-                                Text(text = "< 15 minutos", color = KuotaColors.ForestInk, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text(text = "< 15 minutos", color = KuotaColors.PersianBlue, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                             }
                         }
                     }
@@ -154,13 +154,13 @@ fun KycStatusScreen(
                         modifier = Modifier
                             .size(96.dp)
                             .clip(CircleShape)
-                            .background(KuotaColors.LimeVoltage),
+                            .background(KuotaColors.PersianBlue),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = KuotaColors.ForestInk,
+                            tint = KuotaColors.White,
                             modifier = Modifier.size(56.dp)
                         )
                     }
@@ -170,7 +170,7 @@ fun KycStatusScreen(
                     Text(
                         text = stringResource(R.string.kyc_status_approved_title),
                         style = KuotaTypography.headlineMedium,
-                        color = KuotaColors.ForestInk,
+                        color = KuotaColors.PrussianBlue,
                         textAlign = TextAlign.Center
                     )
 
@@ -197,7 +197,7 @@ fun KycStatusScreen(
                         ) {
                             Text(
                                 text = "LÍNEA DISPONIBLE INICIAL",
-                                color = KuotaColors.LimeVoltage,
+                                color = KuotaColors.PersianBlue,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
@@ -205,13 +205,13 @@ fun KycStatusScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "S/ 1,400.00",
-                                color = Color.White,
+                                color = KuotaColors.PrussianBlue,
                                 style = KuotaTypography.displayLarge
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "Nivel 1 • Pago semanal flexible",
-                                color = KuotaColors.Fog,
+                                color = KuotaColors.Slate,
                                 fontSize = 13.sp
                             )
                         }

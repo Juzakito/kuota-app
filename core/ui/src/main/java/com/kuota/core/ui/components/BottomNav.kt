@@ -114,7 +114,7 @@ fun KuotaBottomNav(
                 .offset(y = (-14).dp)
                 .size(56.dp)
                 .clip(CircleShape)
-                .background(KuotaColors.ForestInk)
+                .background(KuotaColors.PersianBlue)
                 .clickable(
                     role = Role.Button,
                     onClick = onQrClick
@@ -125,7 +125,7 @@ fun KuotaBottomNav(
             Icon(
                 imageVector = Icons.Default.QrCodeScanner,
                 contentDescription = "Escanear código QR",
-                tint = KuotaColors.LimeVoltage,
+                tint = KuotaColors.White,
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -138,7 +138,7 @@ private fun NavItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val tint = if (isSelected) KuotaColors.ForestInk else KuotaColors.Pebble
+    val tint = if (isSelected) KuotaColors.PersianBlue else KuotaColors.Pebble
     val fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
 
     Column(

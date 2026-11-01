@@ -27,11 +27,10 @@ import com.kuota.core.ui.theme.KuotaColors
 import com.kuota.core.ui.theme.KuotaRadii
 
 /**
- * Chip Pill oficial de Kuota App según DESIGN.md.
- * Regla dura: Cero azul en chips. Lima nunca como texto sobre blanco.
+ * Chip Pill oficial de Kuota App (Light First).
  * - Radio: 9999dp
- * - Seleccionado: Fondo Forest Ink (#163300) con texto Lime Voltage (#9FE870).
- * - No seleccionado: Fondo Fog (#E8EBE6) con texto Charcoal (#454745).
+ * - Seleccionado: Fondo Persian Blue (#1A3BB0) con texto White (#FFFEFF).
+ * - No seleccionado: Fondo Lavender (#E6EDFD) con texto Prussian Blue (#0B2545).
  */
 @Composable
 fun ChipPill(
@@ -43,15 +42,15 @@ fun ChipPill(
     leadingIcon: (@Composable () -> Unit)? = null
 ) {
     val backgroundColor = when {
-        !enabled -> KuotaColors.Fog.copy(alpha = 0.5f)
-        isSelected -> KuotaColors.ForestInk
-        else -> KuotaColors.Fog
+        !enabled -> KuotaColors.Lavender.copy(alpha = 0.5f)
+        isSelected -> KuotaColors.PersianBlue
+        else -> KuotaColors.Lavender
     }
 
     val textColor = when {
-        !enabled -> KuotaColors.Pebble
-        isSelected -> KuotaColors.LimeVoltage
-        else -> KuotaColors.Charcoal
+        !enabled -> KuotaColors.Periwinkle
+        isSelected -> KuotaColors.White
+        else -> KuotaColors.PrussianBlue
     }
 
     val shape = RoundedCornerShape(KuotaRadii.Pill)

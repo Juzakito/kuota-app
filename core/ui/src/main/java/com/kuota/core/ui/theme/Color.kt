@@ -12,30 +12,41 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Tokens de color oficiales de Kuota App según DESIGN.md.
- * Regla dura: Lima nunca como texto sobre blanco. Cero azul en chips.
+ * Tokens de color oficiales de Kuota App conforme a la paleta de 5 colores (Light First).
+ * 1. White: #FFFEFF
+ * 2. Lavender: #E6EDFD
+ * 3. Periwinkle: #AFC5F6
+ * 4. Persian Blue: #1A3BB0
+ * 5. Prussian Blue: #0B2545
  */
 object KuotaColors {
-    // Brand Darks
-    val ForestInk = Color(0xFF163300)       // Dominant brand dark
-    val ForestInkDark = Color(0xFF0E1F00)   // Deep dark
-    val Spruce = Color(0xFF054D28)          // Secondary dark green for cards & depth
-    val Obsidian = Color(0xFF0E0F0C)        // Display headlines, high contrast
+    // 5 Official Palette Colors from User (Light First)
+    val White = Color(0xFFFFFEFF)          // Pure bright canvas #FFFEFF
+    val Lavender = Color(0xFFE6EDFD)       // Light Ice Blue / Lavender surface #E6EDFD
+    val Periwinkle = Color(0xFFAFC5F6)     // Soft vivid blue accent #AFC5F6
+    val PersianBlue = Color(0xFF1A3BB0)    // Electric brand blue / Primary CTA #1A3BB0
+    val PrussianBlue = Color(0xFF0B2545)   // Deep contrast navy for headlines & body #0B2545
 
-    // Brand Accents
-    val LimeVoltage = Color(0xFF9FE870)     // Accent, functional punctuation, primary CTA
-    val LimeVoltageHover = Color(0xFF8CD85E)
-    val LinenMist = Color(0xFFE2F6D5)       // Pale green wash for soft highlight surfaces
+    // Brand Darks / Primary Texts (Deep high contrast Prussian Blue)
+    val ForestInk = PrussianBlue           // Dominant brand dark typography & icons #0B2545
+    val ForestInkDark = PrussianBlue       // Deep contrast #0B2545
+    val Spruce = PersianBlue               // Secondary brand blue #1A3BB0
+    val Obsidian = PrussianBlue            // Display headlines, high contrast #0B2545
 
-    // Neutral Surfaces
-    val Fog = Color(0xFFE8EBE6)             // Card surfaces, subtle panels
-    val Paper = Color(0xFFFFFFFF)           // Canvas, pure white
+    // Brand Accents (Vivid Persian Blue & Soft Periwinkle)
+    val LimeVoltage = PersianBlue          // Primary CTA action #1A3BB0
+    val LimeVoltageHover = Color(0xFF152E8C)
+    val LinenMist = Lavender               // Pale bright blue wash #E6EDFD
+
+    // Neutral Surfaces (Predominantly light and bright)
+    val Fog = Lavender                     // Card surfaces, subtle panels #E6EDFD
+    val Paper = White                      // Canvas, crisp pure white #FFFEFF
 
     // Text & Line Tones
-    val Charcoal = Color(0xFF454745)        // Primary text, soft warm black
-    val Slate = Color(0xFF6A6C6A)           // Supporting text, helper labels
-    val Pebble = Color(0xFF868685)          // Muted text, borders
-    val AlarmRed = Color(0xFFCB272F)        // Error accent
+    val Charcoal = PrussianBlue            // Primary readable text (deep Prussian Blue)
+    val Slate = Color(0xFF3B577D)          // Supporting text, helper labels
+    val Pebble = Periwinkle                // Muted accent, subtle borders #AFC5F6
+    val AlarmRed = Color(0xFFCB272F)       // Error accent
 }
 
 /**
@@ -65,25 +76,25 @@ data class KuotaCustomColors(
 val LocalKuotaColors = staticCompositionLocalOf { KuotaCustomColors() }
 
 private val KuotaLightColorScheme: ColorScheme = lightColorScheme(
-    primary = KuotaColors.ForestInk,
-    onPrimary = KuotaColors.LimeVoltage,
-    primaryContainer = KuotaColors.LinenMist,
-    onPrimaryContainer = KuotaColors.ForestInk,
-    secondary = KuotaColors.Spruce,
-    onSecondary = KuotaColors.Paper,
-    secondaryContainer = KuotaColors.Fog,
-    onSecondaryContainer = KuotaColors.Charcoal,
-    tertiary = KuotaColors.LimeVoltage,
-    onTertiary = KuotaColors.ForestInk,
-    background = KuotaColors.Paper,
-    onBackground = KuotaColors.Charcoal,
-    surface = KuotaColors.Paper,
-    onSurface = KuotaColors.Charcoal,
-    surfaceVariant = KuotaColors.Fog,
+    primary = KuotaColors.PersianBlue,
+    onPrimary = KuotaColors.White,
+    primaryContainer = KuotaColors.Lavender,
+    onPrimaryContainer = KuotaColors.PrussianBlue,
+    secondary = KuotaColors.Periwinkle,
+    onSecondary = KuotaColors.PrussianBlue,
+    secondaryContainer = KuotaColors.Lavender,
+    onSecondaryContainer = KuotaColors.PrussianBlue,
+    tertiary = KuotaColors.PersianBlue,
+    onTertiary = KuotaColors.White,
+    background = KuotaColors.White,
+    onBackground = KuotaColors.PrussianBlue,
+    surface = KuotaColors.White,
+    onSurface = KuotaColors.PrussianBlue,
+    surfaceVariant = KuotaColors.Lavender,
     onSurfaceVariant = KuotaColors.Slate,
-    outline = KuotaColors.Pebble,
+    outline = KuotaColors.Periwinkle,
     error = KuotaColors.AlarmRed,
-    onError = KuotaColors.Paper
+    onError = KuotaColors.White
 )
 
 @Composable

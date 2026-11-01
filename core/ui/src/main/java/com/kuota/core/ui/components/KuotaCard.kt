@@ -15,15 +15,15 @@ import com.kuota.core.ui.theme.KuotaColors
 import com.kuota.core.ui.theme.KuotaRadii
 
 enum class KuotaCardVariant {
-    Paper,      // White background, subtle Fog border
-    Fog,        // Fog background, subtle panel
-    Forest,     // Forest Ink background (dark section card)
-    Spruce,     // Spruce background (tonal depth)
-    Linen       // Linen Mist background (highlight container)
+    Paper,      // White background, subtle Periwinkle border
+    Fog,        // Lavender background, subtle panel
+    Forest,     // Lavender background with Periwinkle accent border (Light First)
+    Spruce,     // Lavender background with Persian Blue accent border
+    Linen       // White background with Periwinkle border
 }
 
 /**
- * Tarjeta base oficial de Kuota App según DESIGN.md.
+ * Tarjeta base oficial de Kuota App según paleta Light First.
  * - Radio por defecto: 10dp (cards estándar) o 28dp (largeCards hero).
  * - Cero sombras duras.
  */
@@ -40,20 +40,18 @@ fun KuotaCard(
     val backgroundColor = when (variant) {
         KuotaCardVariant.Paper -> KuotaColors.Paper
         KuotaCardVariant.Fog -> KuotaColors.Fog
-        KuotaCardVariant.Forest -> KuotaColors.ForestInk
-        KuotaCardVariant.Spruce -> KuotaColors.Spruce
-        KuotaCardVariant.Linen -> KuotaColors.LinenMist
+        KuotaCardVariant.Forest -> KuotaColors.Lavender
+        KuotaCardVariant.Spruce -> KuotaColors.Lavender
+        KuotaCardVariant.Linen -> KuotaColors.Paper
     }
 
-    val contentColor = when (variant) {
-        KuotaCardVariant.Paper, KuotaCardVariant.Fog -> KuotaColors.Charcoal
-        KuotaCardVariant.Forest, KuotaCardVariant.Spruce -> KuotaColors.Paper
-        KuotaCardVariant.Linen -> KuotaColors.ForestInk
-    }
+    val contentColor = KuotaColors.PrussianBlue
 
     val border = when (variant) {
-        KuotaCardVariant.Paper -> BorderStroke(1.dp, KuotaColors.Fog)
-        KuotaCardVariant.Linen -> BorderStroke(1.dp, KuotaColors.Spruce.copy(alpha = 0.2f))
+        KuotaCardVariant.Paper -> BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.5f))
+        KuotaCardVariant.Forest -> BorderStroke(1.5.dp, KuotaColors.Periwinkle)
+        KuotaCardVariant.Spruce -> BorderStroke(1.5.dp, KuotaColors.PersianBlue.copy(alpha = 0.4f))
+        KuotaCardVariant.Linen -> BorderStroke(1.dp, KuotaColors.Periwinkle)
         else -> null
     }
 

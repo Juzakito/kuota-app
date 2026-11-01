@@ -50,7 +50,25 @@ class FirebaseUserRepository @Inject constructor(
                 }
 
                 if (snapshot != null && snapshot.exists()) {
-                    val summary = snapshot.toObject(UserSummary::class.java)
+                    val summary = runCatching { snapshot.toObject(UserSummary::class.java) }.getOrNull()
+                        ?: UserSummary(
+                            uid = uid,
+                            kycStatus = snapshot.getString("kycStatus") ?: "approved",
+                            level = snapshot.getLong("level")?.toInt() ?: 1,
+                            maxCreditCents = snapshot.getLong("maxCreditCents")
+                                ?: snapshot.getLong("creditLimit")
+                                ?: 140000L,
+                            availableCreditCents = snapshot.getLong("availableCreditCents")
+                                ?: snapshot.getLong("availableCredit")
+                                ?: 140000L,
+                            usedCreditCents = snapshot.getLong("usedCreditCents")
+                                ?: snapshot.getLong("usedCredit")
+                                ?: 0L,
+                            role = snapshot.getString("role") ?: "buyer",
+                            businessName = snapshot.getString("businessName"),
+                            riskScore = snapshot.getLong("riskScore")?.toInt() ?: 720,
+                            updatedAt = System.currentTimeMillis()
+                        )
                     trySend(summary)
                 } else {
                     // Fallback a resumen inicial de Nivel 1

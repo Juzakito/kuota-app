@@ -62,12 +62,9 @@ class MainActivity : FragmentActivity() {
                 }
             }
 
-            val darkTheme = when (themeMode) {
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
-            KoutaTheme(darkTheme = darkTheme) {
+            // Modo 100% Light First conforme a la directiva de diseño (sin dark mode)
+            val darkTheme = false
+            KoutaTheme(darkTheme = false) {
                 MainScreen(
                     deepLink = pendingDeepLink.value,
                     onDeepLinkHandled = { pendingDeepLink.value = null }

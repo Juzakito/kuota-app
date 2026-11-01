@@ -142,11 +142,11 @@ fun OnboardingScreen(
         return
     }
 
-    // Flujo normal de Onboarding con barra de progreso continua
+    // Flujo normal de Onboarding con barra de progreso continua (Light First)
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(KuotaColors.Fog)
+            .background(KuotaColors.White)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -156,7 +156,7 @@ fun OnboardingScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
+                        .background(KuotaColors.White)
                         .padding(top = 16.dp, bottom = 12.dp, start = 16.dp, end = 16.dp)
                 ) {
                     Row(
@@ -170,7 +170,7 @@ fun OnboardingScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Atrás",
-                                tint = KuotaColors.ForestInk
+                                tint = KuotaColors.PrussianBlue
                             )
                         }
 
@@ -178,7 +178,7 @@ fun OnboardingScreen(
 
                         Text(
                             text = "Paso ${state.step} de 6",
-                            color = KuotaColors.Charcoal,
+                            color = KuotaColors.PrussianBlue,
                             style = KuotaTypography.bodySmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -189,8 +189,8 @@ fun OnboardingScreen(
                     ProgressBarHorizontal(
                         progress = state.step / 6f,
                         modifier = Modifier.fillMaxWidth(),
-                        fillColor = KuotaColors.LimeVoltage,
-                        trackColor = KuotaColors.LinenMist
+                        fillColor = KuotaColors.PersianBlue,
+                        trackColor = KuotaColors.Lavender
                     )
                 }
             }
@@ -418,14 +418,14 @@ private fun StepPhoneOtp(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color.White)
-                    .border(1.dp, KuotaColors.Charcoal.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                    .background(KuotaColors.White)
+                    .border(1.dp, KuotaColors.Periwinkle, RoundedCornerShape(10.dp))
                     .padding(horizontal = 14.dp, vertical = 15.dp)
             ) {
                 Text(
                     text = "🇵🇪 +51",
                     fontWeight = FontWeight.Bold,
-                    color = KuotaColors.ForestInk,
+                    color = KuotaColors.PrussianBlue,
                     fontSize = 16.sp
                 )
             }
@@ -441,10 +441,15 @@ private fun StepPhoneOtp(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = KuotaColors.ForestInk,
-                    unfocusedBorderColor = KuotaColors.Charcoal.copy(alpha = 0.2f),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedTextColor = KuotaColors.PrussianBlue,
+                    unfocusedTextColor = KuotaColors.PrussianBlue,
+                    focusedBorderColor = KuotaColors.PersianBlue,
+                    unfocusedBorderColor = KuotaColors.Periwinkle,
+                    focusedContainerColor = KuotaColors.White,
+                    unfocusedContainerColor = KuotaColors.White,
+                    focusedPlaceholderColor = KuotaColors.PrussianBlue.copy(alpha = 0.45f),
+                    unfocusedPlaceholderColor = KuotaColors.PrussianBlue.copy(alpha = 0.45f),
+                    cursorColor = KuotaColors.PersianBlue
                 )
             )
         }
@@ -464,7 +469,7 @@ private fun StepPhoneOtp(
             Text(
                 text = stringResource(R.string.onboarding_otp_label),
                 fontWeight = FontWeight.SemiBold,
-                color = KuotaColors.ForestInk,
+                color = KuotaColors.PrussianBlue,
                 fontSize = 14.sp
             )
 
@@ -479,10 +484,15 @@ private fun StepPhoneOtp(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = KuotaColors.ForestInk,
-                    unfocusedBorderColor = KuotaColors.Charcoal.copy(alpha = 0.2f),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedTextColor = KuotaColors.PrussianBlue,
+                    unfocusedTextColor = KuotaColors.PrussianBlue,
+                    focusedBorderColor = KuotaColors.PersianBlue,
+                    unfocusedBorderColor = KuotaColors.Periwinkle,
+                    focusedContainerColor = KuotaColors.White,
+                    unfocusedContainerColor = KuotaColors.White,
+                    focusedPlaceholderColor = KuotaColors.PrussianBlue.copy(alpha = 0.45f),
+                    unfocusedPlaceholderColor = KuotaColors.PrussianBlue.copy(alpha = 0.45f),
+                    cursorColor = KuotaColors.PersianBlue
                 )
             )
 
@@ -711,8 +721,8 @@ private fun RoleSelectionCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val borderColor = if (isSelected) KuotaColors.ForestInk else Color.Transparent
-    val borderWidth = if (isSelected) 2.dp else 0.dp
+    val borderColor = if (isSelected) KuotaColors.PersianBlue else KuotaColors.Periwinkle.copy(alpha = 0.5f)
+    val borderWidth = if (isSelected) 2.dp else 1.dp
 
     KuotaCard(
         modifier = Modifier
@@ -729,7 +739,7 @@ private fun RoleSelectionCard(
                 Text(
                     text = title,
                     fontWeight = FontWeight.Bold,
-                    color = KuotaColors.ForestInk,
+                    color = KuotaColors.PrussianBlue,
                     fontSize = 16.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -747,13 +757,13 @@ private fun RoleSelectionCard(
                     modifier = Modifier
                         .size(28.dp)
                         .clip(CircleShape)
-                        .background(KuotaColors.LimeVoltage),
+                        .background(KuotaColors.PersianBlue),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = null,
-                        tint = KuotaColors.ForestInk,
+                        tint = KuotaColors.White,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -827,8 +837,20 @@ private fun StepBusinessProfile(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        val fieldColors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = KuotaColors.PrussianBlue,
+            unfocusedTextColor = KuotaColors.PrussianBlue,
+            focusedBorderColor = KuotaColors.PersianBlue,
+            unfocusedBorderColor = KuotaColors.Periwinkle,
+            focusedContainerColor = KuotaColors.White,
+            unfocusedContainerColor = KuotaColors.White,
+            focusedPlaceholderColor = KuotaColors.PrussianBlue.copy(alpha = 0.45f),
+            unfocusedPlaceholderColor = KuotaColors.PrussianBlue.copy(alpha = 0.45f),
+            cursorColor = KuotaColors.PersianBlue
+        )
+
         // DNI del Titular
-        Text(text = stringResource(R.string.onboarding_dni_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Text(text = stringResource(R.string.onboarding_dni_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.PrussianBlue)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = d,
@@ -837,13 +859,14 @@ private fun StepBusinessProfile(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(10.dp),
+            colors = fieldColors
         )
 
         Spacer(modifier = Modifier.height(14.dp))
 
         // Nombres y Apellidos
-        Text(text = stringResource(R.string.onboarding_full_name_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Text(text = stringResource(R.string.onboarding_full_name_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.PrussianBlue)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = fn,
@@ -851,13 +874,14 @@ private fun StepBusinessProfile(
             placeholder = { Text("Ej. María Flores Quispe") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(10.dp),
+            colors = fieldColors
         )
 
         Spacer(modifier = Modifier.height(14.dp))
 
         // Nombre Comercial del Negocio
-        Text(text = stringResource(R.string.onboarding_business_name_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Text(text = stringResource(R.string.onboarding_business_name_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.PrussianBlue)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = bn,
@@ -865,13 +889,14 @@ private fun StepBusinessProfile(
             placeholder = { Text("Ej. Confecciones Mary") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(10.dp),
+            colors = fieldColors
         )
 
         Spacer(modifier = Modifier.height(14.dp))
 
         // Rubro Comercial
-        Text(text = stringResource(R.string.onboarding_business_category_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Text(text = stringResource(R.string.onboarding_business_category_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.PrussianBlue)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = c,
@@ -879,13 +904,14 @@ private fun StepBusinessProfile(
             placeholder = { Text("Ej. Textil / Confecciones / Galería") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(10.dp),
+            colors = fieldColors
         )
 
         Spacer(modifier = Modifier.height(14.dp))
 
         // RUC (Opcional)
-        Text(text = stringResource(R.string.onboarding_ruc_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Text(text = stringResource(R.string.onboarding_ruc_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.PrussianBlue)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = r,
@@ -894,13 +920,14 @@ private fun StepBusinessProfile(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(10.dp),
+            colors = fieldColors
         )
 
         Spacer(modifier = Modifier.height(14.dp))
 
         // Dirección
-        Text(text = stringResource(R.string.onboarding_address_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+        Text(text = stringResource(R.string.onboarding_address_label), fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.PrussianBlue)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = a,
@@ -908,7 +935,8 @@ private fun StepBusinessProfile(
             placeholder = { Text("Ej. Jr. Gamarra 1234, Tda 204") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(10.dp),
+            colors = fieldColors
         )
 
         Spacer(modifier = Modifier.height(14.dp))
@@ -916,7 +944,7 @@ private fun StepBusinessProfile(
         // Distrito y Provincia
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Distrito", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+                Text(text = "Distrito", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.PrussianBlue)
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = dist,
@@ -924,12 +952,13 @@ private fun StepBusinessProfile(
                     placeholder = { Text("La Victoria") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(10.dp),
+                    colors = fieldColors
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Provincia", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.ForestInk)
+                Text(text = "Provincia", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = KuotaColors.PrussianBlue)
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = prov,
@@ -937,7 +966,8 @@ private fun StepBusinessProfile(
                     placeholder = { Text("Lima") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(10.dp),
+                    colors = fieldColors
                 )
             }
         }
@@ -953,7 +983,7 @@ private fun StepBusinessProfile(
                 Icon(
                     imageVector = Icons.Default.MyLocation,
                     contentDescription = null,
-                    tint = KuotaColors.ForestInk,
+                    tint = KuotaColors.PersianBlue,
                     modifier = Modifier.size(18.dp)
                 )
             },
@@ -966,14 +996,14 @@ private fun StepBusinessProfile(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(KuotaColors.LimeVoltage.copy(alpha = 0.22f), RoundedCornerShape(8.dp))
+                    .background(KuotaColors.Lavender, RoundedCornerShape(8.dp))
                     .padding(horizontal = 14.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
-                    tint = KuotaColors.ForestInk,
+                    tint = KuotaColors.PersianBlue,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -981,7 +1011,7 @@ private fun StepBusinessProfile(
                     text = "GPS fijado: ${"%.4f".format(java.util.Locale.US, latitude)}, ${"%.4f".format(java.util.Locale.US, longitude)}",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = KuotaColors.ForestInk
+                    color = KuotaColors.PrussianBlue
                 )
             }
         }
@@ -1045,13 +1075,13 @@ private fun StepPermissions(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(KuotaColors.LimeVoltage),
+                        .background(KuotaColors.PersianBlue),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.CameraAlt,
                         contentDescription = null,
-                        tint = KuotaColors.ForestInk,
+                        tint = KuotaColors.White,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -1085,13 +1115,13 @@ private fun StepPermissions(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(KuotaColors.LimeVoltage),
+                        .background(KuotaColors.PersianBlue),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
-                        tint = KuotaColors.ForestInk,
+                        tint = KuotaColors.White,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -1284,13 +1314,13 @@ private fun KycCaptureItemCard(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(KuotaColors.LimeVoltage),
+                        .background(KuotaColors.PersianBlue),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = "Capturado",
-                        tint = KuotaColors.ForestInk,
+                        tint = KuotaColors.White,
                         modifier = Modifier.size(20.dp)
                     )
                 }

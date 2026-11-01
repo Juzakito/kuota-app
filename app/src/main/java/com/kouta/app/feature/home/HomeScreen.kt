@@ -288,8 +288,10 @@ fun HomeScreen(
 
     val openClaims = claims.count { it.status != "RESPONDIDO" }
     val salesTotal = recentSales.sumOf { it.amountCents }
-    val greetingName = ownerName.trim().ifBlank { businessName.trim() }
-    val pendingSteps = listOf(hasSession, canNotify, kycSummary != null).count { !it }
+    val isKycApproved = userSummary?.kycStatus == "approved" || kycSummary != null
+    val effectiveBusinessName = userSummary?.businessName?.trim()?.ifBlank { null } ?: businessName.trim().ifBlank { "Mi Negocio" }
+    val greetingName = userSummary?.businessName?.trim()?.ifBlank { null } ?: ownerName.trim().ifBlank { businessName.trim() }.ifBlank { "Emprendedor" }
+    val pendingSteps = listOf(hasSession, canNotify, isKycApproved).count { !it }
 
     val pendingInstallmentsList = remember(purchases) {
         purchases
