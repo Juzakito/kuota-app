@@ -7,6 +7,8 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -68,6 +70,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -101,7 +104,8 @@ private data class PaymentChannelOption(
     val secondaryLabel: String,
     val secondaryValue: String,
     val ruc: String = "20609999991",
-    val bankName: String
+    val bankName: String,
+    @DrawableRes val logoRes: Int? = null
 )
 
 private val PAYMENT_CHANNELS = listOf(
@@ -115,7 +119,8 @@ private val PAYMENT_CHANNELS = listOf(
         accountValue = "191-2698452-0-88",
         secondaryLabel = "Código Interbancario (CCI)",
         secondaryValue = "00219100269845208854",
-        bankName = "Banco de Crédito del Perú (BCP)"
+        bankName = "Banco de Crédito del Perú (BCP)",
+        logoRes = com.kouta.app.R.drawable.ic_logo_bcp
     ),
     PaymentChannelOption(
         id = "PAGO_MOVIL",
@@ -127,7 +132,8 @@ private val PAYMENT_CHANNELS = listOf(
         accountValue = "999888777",
         secondaryLabel = "Titular visible en billetera",
         secondaryValue = "KUOTA PERU RECAUDACION",
-        bankName = "Yape / Plin Interoperable"
+        bankName = "Yape / Plin Interoperable",
+        logoRes = com.kouta.app.R.drawable.ic_logo_yape
     ),
     PaymentChannelOption(
         id = "DEPOSITO",
@@ -139,7 +145,8 @@ private val PAYMENT_CHANNELS = listOf(
         accountValue = "191-2698452-0-88",
         secondaryLabel = "Referencia de comercio",
         secondaryValue = "KUOTA-INVENTARIO-B2B",
-        bankName = "Red de Agentes Autorizados"
+        bankName = "Red de Agentes Autorizados",
+        logoRes = null
     )
 )
 
@@ -152,6 +159,15 @@ private val PERU_BANKS = listOf(
     "Scotiabank Perú",
     "Banco de la Nación"
 )
+
+private fun getPeruBankLogo(bank: String): Int? = when {
+    bank.contains("BCP") -> com.kouta.app.R.drawable.ic_logo_bcp
+    bank.contains("Yape") -> com.kouta.app.R.drawable.ic_logo_yape
+    bank.contains("Plin") -> com.kouta.app.R.drawable.ic_logo_plin
+    bank.contains("BBVA") -> com.kouta.app.R.drawable.ic_logo_bbva
+    bank.contains("Interbank") -> com.kouta.app.R.drawable.ic_logo_interbank
+    else -> null
+}
 
 @Composable
 fun InstallmentPaymentWizardDialog(
@@ -355,11 +371,19 @@ fun InstallmentPaymentWizardDialog(
                                                 .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                channel.icon,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
+                                            if (channel.logoRes != null) {
+                                                Image(
+                                                    painter = painterResource(channel.logoRes),
+                                                    contentDescription = channel.title,
+                                                    modifier = Modifier.size(28.dp).clip(CircleShape)
+                                                )
+                                            } else {
+                                                Icon(
+                                                    channel.icon,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
                                         }
                                         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                             Text(
@@ -487,6 +511,15 @@ fun InstallmentPaymentWizardDialog(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
+                                            val bankLogo = getPeruBankLogo(bank)
+                                            if (bankLogo != null) {
+                                                Image(
+                                                    painter = painterResource(bankLogo),
+                                                    contentDescription = bank,
+                                                    modifier = Modifier.size(24.dp).clip(CircleShape)
+                                                )
+                                                Spacer(Modifier.width(10.dp))
+                                            }
                                             Text(
                                                 bank,
                                                 style = MaterialTheme.typography.bodyMedium,

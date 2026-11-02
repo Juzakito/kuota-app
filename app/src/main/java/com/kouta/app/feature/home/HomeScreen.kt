@@ -402,79 +402,93 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Barra de perfil y acciones de cabecera
+            // Fila de Marca Kuota y acciones superiores
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = KuotaColors.White,
-                    border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.5f)),
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable(onClick = onOpenProfile)
+                Image(
+                    painter = painterResource(R.drawable.ic_kuota_logo_horizontal),
+                    contentDescription = "KUOTA",
+                    modifier = Modifier.height(28.dp),
+                    contentScale = ContentScale.Fit
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        HomeAvatar(greetingName)
-                        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                            Text(
-                                if (greetingName.isBlank()) "Buenos días 👋" else "Buenos días, $greetingName 👋",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = KuotaColors.PrussianBlue,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                "Línea respaldada en ventas reales",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = KuotaColors.PrussianBlue.copy(alpha = 0.7f),
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.width(10.dp))
-                // Buscador circular
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(KuotaColors.White)
-                        .border(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f), CircleShape)
-                        .clickable(onClick = onActivityClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Search, contentDescription = "Buscar ventas", tint = KuotaColors.PersianBlue, modifier = Modifier.size(20.dp))
-                }
-                Spacer(Modifier.width(8.dp))
-                // Notificaciones circular
-                BadgedBox(
-                    badge = {
-                        if (unread > 0) {
-                            Badge(containerColor = com.kouta.app.core.designsystem.theme.KuotaCoral, contentColor = KuotaColors.White) {
-                                Text(if (unread > 9) "9+" else "$unread")
-                            }
-                        }
-                    }
-                ) {
+                    // Buscador circular
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(38.dp)
                             .clip(CircleShape)
                             .background(KuotaColors.White)
                             .border(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f), CircleShape)
-                            .clickable(onClick = onNotificationsClick),
+                            .clickable(onClick = onActivityClick),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = KuotaColors.PersianBlue, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Search, contentDescription = "Buscar ventas", tint = KuotaColors.PersianBlue, modifier = Modifier.size(18.dp))
+                    }
+
+                    // Notificaciones circular
+                    BadgedBox(
+                        badge = {
+                            if (unread > 0) {
+                                Badge(containerColor = com.kouta.app.core.designsystem.theme.KuotaCoral, contentColor = KuotaColors.White) {
+                                    Text(if (unread > 9) "9+" else "$unread")
+                                }
+                            }
+                        }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(KuotaColors.White)
+                                .border(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f), CircleShape)
+                                .clickable(onClick = onNotificationsClick),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = KuotaColors.PersianBlue, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                }
+            }
+
+            // Barra de perfil y saludo
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = KuotaColors.White,
+                border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.5f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onOpenProfile)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    HomeAvatar(greetingName)
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                        Text(
+                            if (greetingName.isBlank()) "Buenos días 👋" else "Buenos días, $greetingName 👋",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.PrussianBlue,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            "Línea respaldada en ventas reales",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = KuotaColors.PrussianBlue.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }

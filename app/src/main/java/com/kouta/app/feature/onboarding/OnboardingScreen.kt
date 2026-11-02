@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -181,6 +182,14 @@ fun OnboardingScreen(
                             color = KuotaColors.PrussianBlue,
                             style = KuotaTypography.bodySmall,
                             fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Image(
+                            painter = painterResource(R.drawable.kuota_mark),
+                            contentDescription = "KUOTA",
+                            modifier = Modifier.height(28.dp)
                         )
                     }
 
@@ -310,22 +319,16 @@ private fun StepWelcome(onStart: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(
+        Image(
+            painter = painterResource(R.drawable.ic_kuota_logo_horizontal),
+            contentDescription = "KUOTA",
             modifier = Modifier
-                .size(96.dp)
-                .clip(CircleShape)
-                .background(KuotaColors.ForestInk),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Store,
-                contentDescription = null,
-                tint = KuotaColors.LimeVoltage,
-                modifier = Modifier.size(52.dp)
-            )
-        }
+                .height(64.dp)
+                .padding(bottom = 12.dp),
+            contentScale = ContentScale.Fit
+        )
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = stringResource(R.string.onboarding_welcome_title),

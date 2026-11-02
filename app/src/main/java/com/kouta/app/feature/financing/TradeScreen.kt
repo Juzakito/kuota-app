@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -94,6 +95,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -456,7 +458,17 @@ fun TradeScreen(
                                             shape = RoundedCornerShape(12.dp),
                                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF742284))
                                         ) {
-                                            Text("Pagar con Yape", fontWeight = FontWeight.Bold, color = Color.White)
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(com.kouta.app.R.drawable.ic_logo_yape),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(20.dp).clip(CircleShape)
+                                                )
+                                                Text("Pagar con Yape", fontWeight = FontWeight.Bold, color = Color.White)
+                                            }
                                         }
 
                                         Button(
@@ -474,7 +486,17 @@ fun TradeScreen(
                                             shape = RoundedCornerShape(12.dp),
                                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00D2B5))
                                         ) {
-                                            Text("Pagar con Plin", fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(com.kouta.app.R.drawable.ic_logo_plin),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(20.dp).clip(CircleShape)
+                                                )
+                                                Text("Pagar con Plin", fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                            }
                                         }
                                     }
 
