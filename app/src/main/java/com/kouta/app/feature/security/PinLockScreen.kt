@@ -556,22 +556,12 @@ fun PinSetupBarrierScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.kuota_mark),
-                            contentDescription = "Logo Kuota",
-                            modifier = Modifier.height(36.dp)
-                        )
-                        Text(
-                            text = "kuota",
-                            fontSize = 23.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = KuotaColors.PersianBlue
-                        )
-                    }
+                    Image(
+                        painter = painterResource(R.drawable.ic_kuota_logo_horizontal),
+                        contentDescription = "Logo Kuota",
+                        modifier = Modifier.height(32.dp),
+                        contentScale = ContentScale.Fit
+                    )
                     Spacer(Modifier.weight(1f))
                     if (isConfirmStage) {
                         TextButton(

@@ -859,16 +859,17 @@ fun HomeScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFE0F2FE))
+                            .background(KuotaColors.Lavender)
+                            .border(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Icon(Icons.Default.ElectricBolt, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(14.dp))
+                            Icon(Icons.Default.ElectricBolt, contentDescription = null, tint = KuotaColors.PersianBlue, modifier = Modifier.size(14.dp))
                             Text(
                                 "CONSEJO DE KUOTA",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0284C7)
+                                color = KuotaColors.PersianBlue
                             )
                         }
                     }
@@ -995,7 +996,8 @@ fun HomeScreen(
                     val isSelected = transactionTab == idx
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = if (isSelected) Color(0xFF0F172A) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        color = if (isSelected) KuotaColors.PersianBlue else KuotaColors.Lavender,
+                        border = BorderStroke(1.dp, if (isSelected) KuotaColors.PersianBlue else KuotaColors.Periwinkle.copy(alpha = 0.6f)),
                         modifier = Modifier.clickable { transactionTab = idx }
                     ) {
                         Text(
@@ -1003,7 +1005,7 @@ fun HomeScreen(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isSelected) KuotaColors.White else KuotaColors.PrussianBlue
                         )
                     }
                 }

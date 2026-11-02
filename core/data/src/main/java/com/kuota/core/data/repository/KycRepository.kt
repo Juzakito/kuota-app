@@ -132,7 +132,30 @@ class DefaultKycRepository @Inject constructor(
     ): Result<String> = runCatching {
         val compressedBytes = compressImageIfNeeded(imageBytes)
 
-        // 1. Intentar Firebase Storage si el bucket está activo
+        // 1. Guardar primero en Firestore (100% nativo y gratuito en Firebase Spark)
+        val docId = when (fileName) {
+            "dni_front.jpg" -> "dni_front"
+            "dni_back.jpg" -> "dni_back"
+            "selfie.jpg" -> "selfie"
+            else -> fileName.replace(".", "_")
+        }
+        val base64Str = Base64.encodeToString(compressedBytes, Base64.NO_WRAP)
+        val docRef = firestore.collection("users")
+            .document(uid)
+            .collection("kyc_documents")
+            .document(docId)
+
+        val docData = mapOf(
+            "docId" to docId,
+            "fileName" to fileName,
+            "base64" to base64Str,
+            "mimeType" to mimeType,
+            "sizeBytes" to compressedBytes.size,
+            "uploadedAt" to FieldValue.serverTimestamp()
+        )
+        docRef.set(docData).await()
+
+        // 2. Intentar Firebase Storage en caso de que el bucket esté activo
         try {
             val storagePath = "kyc/$uid/$fileName"
             val storageRef = storage.reference.child(storagePath)
@@ -143,28 +166,7 @@ class DefaultKycRepository @Inject constructor(
             storageRef.putBytes(compressedBytes, metadata).await()
             return@runCatching storagePath
         } catch (e: Exception) {
-            // 2. Fallback a Firestore (Opción B: 100% Firebase gratis sin tarjeta)
-            val docId = when (fileName) {
-                "dni_front.jpg" -> "dni_front"
-                "dni_back.jpg" -> "dni_back"
-                "selfie.jpg" -> "selfie"
-                else -> fileName.replace(".", "_")
-            }
-            val base64Str = Base64.encodeToString(compressedBytes, Base64.NO_WRAP)
-            val docRef = firestore.collection("users")
-                .document(uid)
-                .collection("kyc_documents")
-                .document(docId)
-
-            val docData = mapOf(
-                "docId" to docId,
-                "fileName" to fileName,
-                "base64" to base64Str,
-                "mimeType" to mimeType,
-                "sizeBytes" to compressedBytes.size,
-                "uploadedAt" to FieldValue.serverTimestamp()
-            )
-            docRef.set(docData).await()
+            // Si Storage no está aprovisionado en Firebase, usamos la ruta Firestore
             return@runCatching "firestore:users/$uid/kyc_documents/$docId"
         }
     }

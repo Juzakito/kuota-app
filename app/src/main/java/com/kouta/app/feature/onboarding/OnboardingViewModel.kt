@@ -208,11 +208,42 @@ class OnboardingViewModel @Inject constructor(
                         "Configuración de Firebase pendiente: En la consola de Firebase activa 'Teléfono' en Authentication y agrega la huella SHA-1."
                     error.message?.contains("TOO_MANY_REQUESTS", ignoreCase = true) == true ->
                         "Demasiados intentos. Espera unos minutos antes de solicitar otro SMS."
+                    error.message?.contains("BILLING_NOT_ENABLED", ignoreCase = true) == true ||
+                    error.message?.contains("BILLING", ignoreCase = true) == true ->
+                        "Firebase en plan gratuito (Spark): Configura tu número como 'Teléfono de prueba' en Firebase Console o usa el botón de acceso de prueba abajo."
                     else -> error.message ?: "Error al enviar código SMS."
                 }
                 _uiState.update { it.copy(isOtpSending = false, errorMessage = errorMsg) }
             }
         )
+    }
+
+    /**
+     * Permite continuar sin SMS en Firebase gratuito (Spark) mediante sesión anónima nativa de Firebase.
+     */
+    fun continueWithDemoSession() {
+        _uiState.update { it.copy(isOtpSending = true, errorMessage = null) }
+        viewModelScope.launch {
+            val result = authRepository.signInAnonymously()
+            result.onSuccess {
+                kycRepository.initUserSummary()
+                _uiState.update {
+                    it.copy(
+                        isOtpSending = false,
+                        step = 2,
+                        errorMessage = null
+                    )
+                }
+                saveCurrentDraft()
+            }.onFailure { err ->
+                _uiState.update {
+                    it.copy(
+                        isOtpSending = false,
+                        errorMessage = err.message ?: "Error al iniciar sesión de prueba."
+                    )
+                }
+            }
+        }
     }
 
     fun verifyPhoneOtp() {

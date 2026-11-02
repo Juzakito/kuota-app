@@ -244,7 +244,8 @@ fun OnboardingScreen(
                         onPhoneChange = { viewModel.setPhone(it) },
                         onOtpChange = { viewModel.setOtpCode(it) },
                         onSendOtp = { activity?.let { viewModel.sendPhoneOtp(it) } },
-                        onVerifyOtp = { viewModel.verifyPhoneOtp() }
+                        onVerifyOtp = { viewModel.verifyPhoneOtp() },
+                        onContinueDemo = { viewModel.continueWithDemoSession() }
                     )
                     2 -> StepTermsAndPrivacy(
                         termsAgreed = state.termsAgreed,
@@ -380,7 +381,8 @@ private fun StepPhoneOtp(
     onPhoneChange: (String) -> Unit,
     onOtpChange: (String) -> Unit,
     onSendOtp: () -> Unit,
-    onVerifyOtp: () -> Unit
+    onVerifyOtp: () -> Unit,
+    onContinueDemo: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -466,6 +468,16 @@ private fun StepPhoneOtp(
                 isLoading = isOtpSending,
                 enabled = phone.length == 9,
                 variant = PillButtonVariant.Primary,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            PillButton(
+                text = "Continuar con acceso demo directo",
+                onClick = onContinueDemo,
+                isLoading = isOtpSending,
+                variant = PillButtonVariant.Secondary,
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
@@ -840,6 +852,12 @@ private fun StepBusinessProfile(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        val inputTextStyle = androidx.compose.ui.text.TextStyle(
+            color = KuotaColors.PrussianBlue,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 15.sp
+        )
+
         val fieldColors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = KuotaColors.PrussianBlue,
             unfocusedTextColor = KuotaColors.PrussianBlue,
@@ -863,6 +881,7 @@ private fun StepBusinessProfile(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
+            textStyle = inputTextStyle,
             colors = fieldColors
         )
 
@@ -878,6 +897,7 @@ private fun StepBusinessProfile(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
+            textStyle = inputTextStyle,
             colors = fieldColors
         )
 
@@ -893,6 +913,7 @@ private fun StepBusinessProfile(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
+            textStyle = inputTextStyle,
             colors = fieldColors
         )
 
@@ -908,6 +929,7 @@ private fun StepBusinessProfile(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
+            textStyle = inputTextStyle,
             colors = fieldColors
         )
 
@@ -924,6 +946,7 @@ private fun StepBusinessProfile(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
+            textStyle = inputTextStyle,
             colors = fieldColors
         )
 
@@ -939,6 +962,7 @@ private fun StepBusinessProfile(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
+            textStyle = inputTextStyle,
             colors = fieldColors
         )
 
@@ -956,6 +980,7 @@ private fun StepBusinessProfile(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
+                    textStyle = inputTextStyle,
                     colors = fieldColors
                 )
             }
@@ -970,6 +995,7 @@ private fun StepBusinessProfile(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
+                    textStyle = inputTextStyle,
                     colors = fieldColors
                 )
             }
