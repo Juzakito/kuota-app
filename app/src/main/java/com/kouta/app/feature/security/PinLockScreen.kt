@@ -103,6 +103,7 @@ import com.kouta.app.data.remote.ApiOutcome
 import com.kouta.app.data.remote.KuotaApiClient
 import com.kouta.app.data.remote.RequestOtpBody
 import com.kouta.app.data.remote.VerifyOtpBody
+import com.kuota.core.ui.theme.KuotaColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -263,16 +264,8 @@ fun PinLockBarrierScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF02060E))
+            .background(KuotaColors.White)
     ) {
-        Image(
-            painter = painterResource(R.drawable.kuota_welcome_bg),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds,
-            alpha = 0.45f
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -293,7 +286,7 @@ fun PinLockBarrierScreen(
 
                 Text(
                     text = "Desbloquea KUOTA",
-                    color = Color.White,
+                    color = KuotaColors.PrussianBlue,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.ExtraBold,
                     textAlign = TextAlign.Center
@@ -301,19 +294,19 @@ fun PinLockBarrierScreen(
 
                 Text(
                     text = "Confirma tu identidad para continuar",
-                    color = Color(0xFFA8BCD6),
+                    color = KuotaColors.PrussianBlue.copy(alpha = 0.7f),
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center
                 )
 
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = Color(0xFF0B1933),
-                    border = BorderStroke(1.dp, Color(0xFF17386E))
+                    color = KuotaColors.Lavender,
+                    border = BorderStroke(1.dp, KuotaColors.Periwinkle)
                 ) {
                     Text(
                         text = userIdentifier,
-                        color = Color(0xFFA8BCD6),
+                        color = KuotaColors.PrussianBlue,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
@@ -343,7 +336,7 @@ fun PinLockBarrierScreen(
                         Icon(
                             imageVector = if (showPinDigits) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (showPinDigits) "Ocultar PIN" else "Mostrar PIN",
-                            tint = Color(0xFF6E89AD),
+                            tint = KuotaColors.PersianBlue,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -352,7 +345,7 @@ fun PinLockBarrierScreen(
                 if (isLockedOut) {
                     Text(
                         text = "Bloqueo temporal por seguridad · intenta en ${formatCooldown(remainingLockoutSeconds)}",
-                        color = Color(0xFFFF6B6B),
+                        color = KuotaColors.AlarmRed,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
@@ -361,7 +354,7 @@ fun PinLockBarrierScreen(
                 } else if (errorMessage != null) {
                     Text(
                         text = errorMessage.orEmpty(),
-                        color = Color(0xFFFF6B6B),
+                        color = KuotaColors.AlarmRed,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
@@ -370,7 +363,7 @@ fun PinLockBarrierScreen(
                 } else {
                     Text(
                         text = if (canUseBiometrics) "Usa tu huella digital o ingresa tu PIN de 6 dígitos" else "PIN de seguridad de 6 dígitos",
-                        color = Color(0xFF6E84A3),
+                        color = KuotaColors.PrussianBlue.copy(alpha = 0.65f),
                         fontSize = 12.sp,
                         textAlign = TextAlign.Center
                     )
@@ -383,16 +376,16 @@ fun PinLockBarrierScreen(
                             .fillMaxWidth(0.84f)
                             .height(42.dp),
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color(0xFF1B3D6E)),
+                        border = BorderStroke(1.dp, KuotaColors.Periwinkle),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFF28C8FF),
-                            containerColor = Color(0xFF07152B)
+                            contentColor = KuotaColors.PersianBlue,
+                            containerColor = KuotaColors.Lavender
                         )
                     ) {
                         Icon(
                             imageVector = Icons.Default.Fingerprint,
                             contentDescription = null,
-                            tint = Color(0xFF28C8FF),
+                            tint = KuotaColors.PersianBlue,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(Modifier.width(8.dp))
@@ -400,7 +393,7 @@ fun PinLockBarrierScreen(
                             text = "Desbloquear con biometría",
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 13.sp,
-                            color = Color(0xFF28C8FF)
+                            color = KuotaColors.PersianBlue
                         )
                     }
                 }
@@ -431,20 +424,20 @@ fun PinLockBarrierScreen(
                     TextButton(onClick = { showRecoveryDialog = true }) {
                         Text(
                             text = "Olvidé mi clave",
-                            color = Color(0xFF28C8FF),
+                            color = KuotaColors.PersianBlue,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
                     Text(
                         text = "·",
-                        color = Color(0xFF4B6282),
+                        color = KuotaColors.Periwinkle,
                         fontSize = 14.sp
                     )
                     TextButton(onClick = { showSwitchUserDialog = true }) {
                         Text(
                             text = "No soy ${userDisplayName.split(" ").firstOrNull() ?: "este usuario"}",
-                            color = Color(0xFF9AB0CC),
+                            color = KuotaColors.PrussianBlue.copy(alpha = 0.65f),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             maxLines = 1,
@@ -545,16 +538,8 @@ fun PinSetupBarrierScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF02060E))
+            .background(KuotaColors.White)
     ) {
-        Image(
-            painter = painterResource(R.drawable.kuota_welcome_bg),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds,
-            alpha = 0.45f
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -584,7 +569,7 @@ fun PinSetupBarrierScreen(
                             text = "kuota",
                             fontSize = 23.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF2E7BFF)
+                            color = KuotaColors.PersianBlue
                         )
                     }
                     Spacer(Modifier.weight(1f))
@@ -596,11 +581,11 @@ fun PinSetupBarrierScreen(
                                 errorText = null
                             }
                         ) {
-                            Text("Atrás", color = Color(0xFF2E8BFF), fontWeight = FontWeight.SemiBold)
+                            Text("Atrás", color = KuotaColors.PersianBlue, fontWeight = FontWeight.SemiBold)
                         }
                     } else if (onCancelIfOptional != null) {
                         TextButton(onClick = onCancelIfOptional) {
-                            Text("Cancelar", color = Color(0xFF2E8BFF), fontWeight = FontWeight.SemiBold)
+                            Text("Cancelar", color = KuotaColors.PersianBlue, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -608,10 +593,10 @@ fun PinSetupBarrierScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.ExtraBold)) {
+                            withStyle(SpanStyle(color = KuotaColors.PrussianBlue, fontWeight = FontWeight.ExtraBold)) {
                                 append(if (!isConfirmStage) "Crea tu " else "Confirma tu ")
                             }
-                            withStyle(SpanStyle(color = Color(0xFF23D5FF), fontWeight = FontWeight.ExtraBold)) {
+                            withStyle(SpanStyle(color = KuotaColors.PersianBlue, fontWeight = FontWeight.ExtraBold)) {
                                 append("PIN")
                             }
                         },
@@ -627,7 +612,7 @@ fun PinSetupBarrierScreen(
                         } else {
                             "Ingresa nuevamente el PIN para confirmar\ny activar tu clave de seguridad."
                         },
-                        color = Color(0xFFA0B2C8),
+                        color = KuotaColors.PrussianBlue.copy(alpha = 0.7f),
                         fontSize = 15.sp,
                         lineHeight = 21.sp
                     )
@@ -657,7 +642,7 @@ fun PinSetupBarrierScreen(
                         Icon(
                             imageVector = if (showPinDigits) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (showPinDigits) "Ocultar PIN" else "Mostrar PIN",
-                            tint = Color(0xFF6E89AD),
+                            tint = KuotaColors.PersianBlue,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -666,7 +651,7 @@ fun PinSetupBarrierScreen(
                 if (errorText != null) {
                     Text(
                         text = errorText.orEmpty(),
-                        color = Color(0xFFFF6B6B),
+                        color = KuotaColors.AlarmRed,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
@@ -688,35 +673,23 @@ fun PinSetupBarrierScreen(
                 )
 
                 val isReady = currentPin.length == PinSecurityManager.PIN_LENGTH
-                val activeBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF0A64FF), Color(0xFF1F9DFF), Color(0xFF35DAFF))
-                )
-                val disabledBrush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF141E2E), Color(0xFF182436))
-                )
 
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp)
-                        .then(
-                            if (isReady) {
-                                Modifier.shadow(
-                                    elevation = 12.dp,
-                                    shape = RoundedCornerShape(50),
-                                    ambientColor = Color(0xFF1E9BFF),
-                                    spotColor = Color(0xFF35DAFF)
-                                )
-                            } else Modifier
-                        )
                         .clip(RoundedCornerShape(50))
-                        .background(if (isReady) activeBrush else disabledBrush)
+                        .background(if (isReady) KuotaColors.PersianBlue else KuotaColors.Lavender)
+                        .then(
+                            if (!isReady) Modifier.border(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f), RoundedCornerShape(50))
+                            else Modifier
+                        )
                         .clickable(enabled = isReady, onClick = ::onPrimaryAction),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = if (!isConfirmStage) "Continuar" else "Guardar PIN",
-                        color = if (isReady) Color.White else Color(0xFF7B8FA8),
+                        color = if (isReady) KuotaColors.White else KuotaColors.Periwinkle,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -729,13 +702,13 @@ fun PinSetupBarrierScreen(
                     Icon(
                         imageVector = Icons.Default.Lock,
                         contentDescription = null,
-                        tint = Color(0xFF28B8FF),
+                        tint = KuotaColors.PersianBlue,
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
                         text = "Tu información se guardará de forma segura en este dispositivo.",
-                        color = Color(0xFF8CA2C0),
+                        color = KuotaColors.PrussianBlue.copy(alpha = 0.65f),
                         fontSize = 12.sp
                     )
                 }
@@ -750,9 +723,9 @@ fun PinSetupBarrierScreen(
                 showBiometricOptInDialog = false
                 onPinConfigured()
             },
-            containerColor = Color(0xFF07152B),
-            titleContentColor = Color.White,
-            textContentColor = Color(0xFFA8BCD6),
+            containerColor = KuotaColors.White,
+            titleContentColor = KuotaColors.PrussianBlue,
+            textContentColor = KuotaColors.PrussianBlue.copy(alpha = 0.8f),
             title = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -761,14 +734,14 @@ fun PinSetupBarrierScreen(
                     Icon(
                         imageVector = Icons.Default.Fingerprint,
                         contentDescription = null,
-                        tint = Color(0xFF28C8FF),
+                        tint = KuotaColors.PersianBlue,
                         modifier = Modifier.size(28.dp)
                     )
                     Text(
                         text = "¿Activar desbloqueo biométrico?",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = Color.White
+                        color = KuotaColors.PrussianBlue
                     )
                 }
             },
@@ -777,17 +750,17 @@ fun PinSetupBarrierScreen(
                     Text(
                         text = "Ingresa a KUOTA de forma rápida y segura usando tu huella digital o datos biométricos admitidos por tu teléfono.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFFA8BCD6)
+                        color = KuotaColors.PrussianBlue.copy(alpha = 0.8f)
                     )
                     Text(
                         text = "Tu PIN de 6 dígitos seguirá siempre disponible como método de respaldo.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF6E89AD)
+                        color = KuotaColors.PrussianBlue.copy(alpha = 0.6f)
                     )
                     if (biometricOptInError != null) {
                         Text(
                             text = biometricOptInError.orEmpty(),
-                            color = Color(0xFFFF6B6B),
+                            color = KuotaColors.AlarmRed,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -831,9 +804,9 @@ fun PinSetupBarrierScreen(
                             }
                         )
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7BFF))
+                    colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue)
                 ) {
-                    Text("Activar ahora", fontWeight = FontWeight.Bold)
+                    Text("Activar ahora", fontWeight = FontWeight.Bold, color = KuotaColors.White)
                 }
             },
             dismissButton = {
@@ -845,7 +818,7 @@ fun PinSetupBarrierScreen(
                         onPinConfigured()
                     }
                 ) {
-                    Text("Ahora no, usar solo PIN", color = Color(0xFF8A93A6))
+                    Text("Ahora no, usar solo PIN", color = KuotaColors.PrussianBlue.copy(alpha = 0.6f))
                 }
             }
         )
@@ -908,18 +881,19 @@ fun KuotaSixDigitCircles(
             val colorDuration = KuotaMotion.resolveDurationMs(140, animatorScale)
             val borderColor by animateColorAsState(
                 targetValue = when {
-                    hasError -> Color(0xFFFF6B6B)
-                    isFilled -> Color(0xFF25DCFF)
-                    else -> Color(0xFF1A5299)
+                    hasError -> KuotaColors.AlarmRed
+                    isFilled -> KuotaColors.PersianBlue
+                    else -> KuotaColors.Periwinkle
                 },
                 animationSpec = tween(durationMillis = colorDuration),
                 label = "pinDotBorder"
             )
             val fillColor by animateColorAsState(
                 targetValue = when {
-                    hasError && isFilled -> Color(0xFFFF6B6B)
-                    isFilled && !showDigits -> Color(0xFF25DCFF)
-                    else -> Color(0xFF040B18)
+                    hasError && isFilled -> KuotaColors.AlarmRed
+                    isFilled && !showDigits -> KuotaColors.PersianBlue
+                    isFilled && showDigits -> KuotaColors.White
+                    else -> KuotaColors.Lavender
                 },
                 animationSpec = tween(durationMillis = colorDuration),
                 label = "pinDotFill"
@@ -937,7 +911,7 @@ fun KuotaSixDigitCircles(
                 if (isFilled && showDigits) {
                     Text(
                         text = enteredPin[i].toString(),
-                        color = Color(0xFF25DCFF),
+                        color = KuotaColors.PersianBlue,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
@@ -986,7 +960,7 @@ fun KuotaSixDigitKeypad(
                     ) {
                         Text(
                             text = digitStr,
-                            color = if (enabled) Color.White else Color(0xFF536680),
+                            color = if (enabled) KuotaColors.PrussianBlue else KuotaColors.Periwinkle,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -1012,7 +986,7 @@ fun KuotaSixDigitKeypad(
                     Icon(
                         imageVector = Icons.Default.Fingerprint,
                         contentDescription = "Desbloquear con huella o biometría",
-                        tint = if (enabled) Color(0xFF25DCFF) else Color(0xFF536680),
+                        tint = if (enabled) KuotaColors.PersianBlue else KuotaColors.Periwinkle,
                         modifier = Modifier.size(26.dp)
                     )
                 }
@@ -1030,7 +1004,7 @@ fun KuotaSixDigitKeypad(
             ) {
                 Text(
                     text = "0",
-                    color = if (enabled) Color.White else Color(0xFF536680),
+                    color = if (enabled) KuotaColors.PrussianBlue else KuotaColors.Periwinkle,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -1053,7 +1027,7 @@ fun KuotaSixDigitKeypad(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Backspace,
                     contentDescription = "Borrar último dígito",
-                    tint = if (!enabled) Color(0xFF536680) else if (isPressed) Color(0xFF25DCFF) else Color.White,
+                    tint = if (!enabled) KuotaColors.Periwinkle else if (isPressed) KuotaColors.PersianBlue else KuotaColors.PrussianBlue,
                     modifier = Modifier
                         .size(22.dp)
                         .scale(iconScale)
@@ -1082,15 +1056,15 @@ private fun PinKeyCell(
         label = "pinKeyScale"
     )
     val bgColor by animateColorAsState(
-        targetValue = if (isPressed && enabled) Color(0xFF122646) else Color(0xFF0B1629),
+        targetValue = if (isPressed && enabled) KuotaColors.Periwinkle else KuotaColors.Lavender,
         animationSpec = tween(durationMillis = microDuration),
         label = "pinKeyBg"
     )
     val borderColor by animateColorAsState(
         targetValue = if (isPressed && enabled) {
-            if (isBackspaceKey) Color(0xFF2E8BFF) else Color(0xFF25DCFF)
+            KuotaColors.PersianBlue
         } else {
-            Color(0xFF152A4A)
+            KuotaColors.Periwinkle.copy(alpha = 0.6f)
         },
         animationSpec = tween(durationMillis = microDuration),
         label = "pinKeyBorder"
@@ -1128,27 +1102,22 @@ private fun LockScreenUserAvatar(name: String) {
     Box(
         modifier = Modifier
             .size(68.dp)
-            .shadow(12.dp, CircleShape, ambientColor = Color(0xFF1E9BFF), spotColor = Color(0xFF25DCFF))
             .clip(CircleShape)
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFF0D2E6E), Color(0xFF1554B8))
-                )
-            )
-            .border(2.dp, Color(0xFF25DCFF), CircleShape),
+            .background(KuotaColors.Lavender)
+            .border(2.dp, KuotaColors.PersianBlue, CircleShape),
         contentAlignment = Alignment.Center
     ) {
         if (initials.isBlank()) {
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
-                tint = Color.White,
+                tint = KuotaColors.PersianBlue,
                 modifier = Modifier.size(34.dp)
             )
         } else {
             Text(
                 text = initials,
-                color = Color.White,
+                color = KuotaColors.PersianBlue,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold
             )

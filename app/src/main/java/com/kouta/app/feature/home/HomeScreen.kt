@@ -112,6 +112,7 @@ import com.kouta.app.core.designsystem.components.StatusPill
 import com.kouta.app.core.designsystem.motion.kuotaPressable
 import com.kouta.app.core.designsystem.motion.kuotaTabSectionReveal
 import com.kouta.app.core.designsystem.theme.kuotaColors
+import com.kuota.core.ui.theme.KuotaColors
 import com.kouta.app.core.push.KuotaEvents
 import com.kouta.app.core.sync.KuotaSync
 import com.kouta.app.core.util.NotificationHelper
@@ -408,8 +409,8 @@ fun HomeScreen(
             ) {
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = Color.White.copy(alpha = 0.16f),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f)),
+                    color = KuotaColors.White,
+                    border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.5f)),
                     modifier = Modifier
                         .weight(1f)
                         .clickable(onClick = onOpenProfile)
@@ -425,14 +426,14 @@ fun HomeScreen(
                                 if (greetingName.isBlank()) "Buenos días 👋" else "Buenos días, $greetingName 👋",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = KuotaColors.PrussianBlue,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 "Línea respaldada en ventas reales",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.85f),
+                                color = KuotaColors.PrussianBlue.copy(alpha = 0.7f),
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -446,19 +447,19 @@ fun HomeScreen(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.16f))
-                        .border(1.dp, Color.White.copy(alpha = 0.28f), CircleShape)
+                        .background(KuotaColors.White)
+                        .border(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f), CircleShape)
                         .clickable(onClick = onActivityClick),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = "Buscar ventas", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Search, contentDescription = "Buscar ventas", tint = KuotaColors.PersianBlue, modifier = Modifier.size(20.dp))
                 }
                 Spacer(Modifier.width(8.dp))
                 // Notificaciones circular
                 BadgedBox(
                     badge = {
                         if (unread > 0) {
-                            Badge(containerColor = com.kouta.app.core.designsystem.theme.KuotaCoral, contentColor = Color.White) {
+                            Badge(containerColor = com.kouta.app.core.designsystem.theme.KuotaCoral, contentColor = KuotaColors.White) {
                                 Text(if (unread > 9) "9+" else "$unread")
                             }
                         }
@@ -468,12 +469,12 @@ fun HomeScreen(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.16f))
-                            .border(1.dp, Color.White.copy(alpha = 0.28f), CircleShape)
+                            .background(KuotaColors.White)
+                            .border(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f), CircleShape)
                             .clickable(onClick = onNotificationsClick),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = KuotaColors.PersianBlue, modifier = Modifier.size(20.dp))
                     }
                 }
             }
@@ -484,8 +485,9 @@ fun HomeScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                color = Color.White.copy(alpha = 0.15f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f))
+                color = KuotaColors.White,
+                border = BorderStroke(1.5.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f)),
+                shadowElevation = 2.dp
             ) {
                 Column(
                     modifier = Modifier
@@ -507,7 +509,7 @@ fun HomeScreen(
                                 "Puedes financiar hasta",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.White.copy(alpha = 0.9f)
+                                color = KuotaColors.PrussianBlue.copy(alpha = 0.75f)
                             )
                             IconButton(
                                 onClick = { showBalance = !showBalance },
@@ -516,7 +518,7 @@ fun HomeScreen(
                                 Icon(
                                     if (showBalance) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                     contentDescription = "Ocultar monto",
-                                    tint = Color.White.copy(alpha = 0.85f),
+                                    tint = KuotaColors.PersianBlue,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -525,15 +527,15 @@ fun HomeScreen(
                         // Badge Nivel actual (Ej. "Nivel 1")
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = Color.White.copy(alpha = 0.22f),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f))
+                            color = KuotaColors.Lavender,
+                            border = BorderStroke(1.dp, KuotaColors.Periwinkle)
                         ) {
                             Text(
                                 text = "Nivel ${userCreditLevel.levelNumber}",
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = KuotaColors.PersianBlue
                             )
                         }
                     }
@@ -545,7 +547,7 @@ fun HomeScreen(
                                 text = integerPart,
                                 style = MaterialTheme.typography.headlineLarge.copy(fontSize = 40.sp),
                                 fontWeight = FontWeight.ExtraBold,
-                                color = Color.White,
+                                color = KuotaColors.PrussianBlue,
                                 letterSpacing = (-1).sp
                             )
                             if (decimalPart.isNotEmpty()) {
@@ -553,7 +555,7 @@ fun HomeScreen(
                                     text = decimalPart,
                                     style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White.copy(alpha = 0.8f),
+                                    color = KuotaColors.PrussianBlue.copy(alpha = 0.75f),
                                     modifier = Modifier.padding(bottom = 4.dp)
                                 )
                             }
@@ -563,7 +565,7 @@ fun HomeScreen(
                             text = "S/ ••••••••",
                             style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp),
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color.White
+                            color = KuotaColors.PrussianBlue
                         )
                     }
 
@@ -575,25 +577,26 @@ fun HomeScreen(
                     ) {
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = Color.White.copy(alpha = 0.16f)
+                            color = KuotaColors.Lavender,
+                            border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.5f))
                         ) {
                             Text(
                                 text = "${userCreditLevel.downPaymentPercentage}% inicial",
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.White
+                                color = KuotaColors.PersianBlue
                             )
                         }
                         Text(
                             text = "·",
-                            color = Color.White.copy(alpha = 0.6f),
+                            color = KuotaColors.Periwinkle,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = "Compras hasta ${PurchaseOffer.formatPen(maxPurchaseCapacityCents)}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.9f),
+                            color = KuotaColors.PrussianBlue.copy(alpha = 0.8f),
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -605,8 +608,8 @@ fun HomeScreen(
                             .fillMaxWidth()
                             .height(5.dp)
                             .clip(RoundedCornerShape(3.dp)),
-                        color = com.kouta.app.core.designsystem.theme.KuotaEmerald,
-                        trackColor = Color.White.copy(alpha = 0.25f)
+                        color = KuotaColors.PersianBlue,
+                        trackColor = KuotaColors.Lavender
                     )
                 }
             }
@@ -617,8 +620,8 @@ fun HomeScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                color = Color.White.copy(alpha = 0.15f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f))
+                color = KuotaColors.Lavender,
+                border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f))
             ) {
                 if (nextUpcomingPair != null) {
                     val (activePurchase, nextInstallment) = nextUpcomingPair
@@ -638,27 +641,27 @@ fun HomeScreen(
                                 Icon(
                                     Icons.Default.CalendarMonth,
                                     contentDescription = null,
-                                    tint = Color.White,
+                                    tint = KuotaColors.PersianBlue,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Text(
                                     "Próxima cuota",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = KuotaColors.PrussianBlue
                                 )
                             }
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(com.kouta.app.core.designsystem.theme.KuotaCoral.copy(alpha = 0.35f))
+                                    .background(com.kouta.app.core.designsystem.theme.KuotaCoral.copy(alpha = 0.15f))
                                     .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     "Vence: ${nextInstallment.dueAt}",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = com.kouta.app.core.designsystem.theme.KuotaCoral
                                 )
                             }
                         }
@@ -675,7 +678,7 @@ fun HomeScreen(
                                 Text(
                                     "${activePurchase.supplierName} · Cuota #${nextInstallment.sequenceNumber}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.9f),
+                                    color = KuotaColors.PrussianBlue.copy(alpha = 0.75f),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -684,7 +687,7 @@ fun HomeScreen(
                                     if (showBalance) PurchaseOffer.formatPen(nextInstallment.amountCents) else "S/ ••••••",
                                     style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = KuotaColors.PrussianBlue
                                 )
                             }
 
@@ -695,8 +698,8 @@ fun HomeScreen(
                                 onClick = { wizardTargetPair = activePurchase to nextInstallment },
                                 shape = RoundedCornerShape(50),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.White,
-                                    contentColor = Color(0xFF1E40AF)
+                                    containerColor = KuotaColors.PersianBlue,
+                                    contentColor = KuotaColors.White
                                 ),
                                 contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
                                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
@@ -720,35 +723,36 @@ fun HomeScreen(
                             Icon(
                                 Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = com.kouta.app.core.designsystem.theme.KuotaEmerald,
+                                tint = com.kouta.app.core.designsystem.theme.KuotaSuccess,
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
                                 "No tienes cuotas pendientes",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = KuotaColors.PrussianBlue
                             )
                         }
                         Text(
                             "Tu línea de crédito está al 100% disponible. Puedes realizar compras a crédito en cualquier proveedor aliado.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.85f)
+                            color = KuotaColors.PrussianBlue.copy(alpha = 0.75f)
                         )
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable(onClick = onFinanceClick),
                             shape = RoundedCornerShape(12.dp),
-                            color = Color.White.copy(alpha = 0.18f)
+                            color = KuotaColors.White,
+                            border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.5f))
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Explorar proveedores aliados →", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White)
-                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Text("Explorar proveedores aliados →", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = KuotaColors.PersianBlue)
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = KuotaColors.PersianBlue, modifier = Modifier.size(16.dp))
                             }
                         }
                     }
