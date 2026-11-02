@@ -1,0 +1,46 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="44dp"
+    android:height="44dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+  <!-- Store wall background -->
+  <path
+      android:fillColor="#E2E8F0"
+      android:pathData="M8,18 L40,18 L40,40 L8,40 Z" />
+  <!-- Store door -->
+  <path
+      android:fillColor="#94A3B8"
+      android:pathData="M20,26 L28,26 L28,40 L20,40 Z" />
+  <!-- Windows -->
+  <path
+      android:fillColor="#BAE6FD"
+      android:pathData="M11,26 L17,26 L17,34 L11,34 Z" />
+  <path
+      android:fillColor="#BAE6FD"
+      android:pathData="M31,26 L37,26 L37,34 L31,34 Z" />
+  <!-- Awning roof base -->
+  <path
+      android:fillColor="#FACC15"
+      android:pathData="M6,12 L42,12 L40,20 L8,20 Z" />
+  <!-- Awning stripes in Persian Blue -->
+  <path
+      android:fillColor="#1A3BB0"
+      android:pathData="M10,12 L14,12 L13,20 L9,20 Z" />
+  <path
+      android:fillColor="#1A3BB0"
+      android:pathData="M18,12 L22,12 L21,20 L17,20 Z" />
+  <path
+      android:fillColor="#1A3BB0"
+      android:pathData="M26,12 L30,12 L29,20 L25,20 Z" />
+  <path
+      android:fillColor="#1A3BB0"
+      android:pathData="M34,12 L38,12 L37,20 L33,20 Z" />
+  <!-- Awning scallops -->
+  <path
+      android:fillColor="#FACC15"
+      android:pathData="M6,20 Q9,23 12,20 Q15,23 18,20 Q21,23 24,20 Q27,23 30,20 Q33,23 36,20 Q39,23 42,20 L40,19 L8,19 Z" />
+  <!-- Star / Sparkle badge at top -->
+  <path
+      android:fillColor="#F59E0B"
+      android:pathData="M24,4 L25.5,8 L29.5,8.5 L26.5,11.5 L27.5,15.5 L24,13.5 L20.5,15.5 L21.5,11.5 L18.5,8.5 L22.5,8 Z" />
+</vector>

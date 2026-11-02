@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="40dp"
+    android:viewportWidth="100"
+    android:viewportHeight="60">
+  <!-- MIA Logo: Modern olive green / pastel typography with circular detail -->
+  <path
+      android:fillColor="#84CC16"
+      android:pathData="M14,18 L22,18 L28,34 L34,18 L42,18 L42,42 L36,42 L36,25 L30,40 L26,40 L20,25 L20,42 L14,42 Z" />
+  <!-- I letter -->
+  <path
+      android:fillColor="#84CC16"
+      android:pathData="M48,18 L54,18 L54,42 L48,42 Z" />
+  <!-- A letter -->
+  <path
+      android:fillColor="#84CC16"
+      android:pathData="M68,18 L76,18 L86,42 L79,42 L77,36 L67,36 L65,42 L58,42 Z M69,31 L75,31 L72,23 Z" />
+  <!-- Circular badge accent -->
+  <path
+      android:fillColor="#FACC15"
+      android:pathData="M78,16 A4,4 0 1,1 86,16 A4,4 0 1,1 78,16 Z" />
+</vector>

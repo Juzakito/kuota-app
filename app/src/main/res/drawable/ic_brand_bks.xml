@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="40dp"
+    android:viewportWidth="100"
+    android:viewportHeight="60">
+  <!-- BKS Logo: Yellow block with black bold typography -->
+  <path
+      android:fillColor="#FACC15"
+      android:pathData="M10,12 L32,12 L32,48 L10,48 Z" />
+  <!-- B letter cut in yellow and black -->
+  <path
+      android:fillColor="#0F172A"
+      android:pathData="M24,18 L38,18 C43,18 46,20 46,24 C46,26 44,28 42,29 C45,30 48,32 48,36 C48,41 44,43 38,43 L24,43 Z M31,23 L31,28 L37,28 C39,28 40,27 40,25.5 C40,24 39,23 37,23 Z M31,33 L31,38 L38,38 C40,38 41,37 41,35.5 C41,34 40,33 38,33 Z" />
+  <!-- K letter -->
+  <path
+      android:fillColor="#0F172A"
+      android:pathData="M52,18 L58,18 L58,28 L67,18 L75,18 L63,30 L76,43 L68,43 L58,32 L58,43 L52,43 Z" />
+  <!-- S letter -->
+  <path
+      android:fillColor="#0F172A"
+      android:pathData="M81,37 C81,38 82,39 84,39 C86,39 87,38 87,37 C87,35 85,34 82,33 C78,32 75,30 75,26 C75,21 79,18 85,18 C90,18 94,21 94,25 L88,25 C88,23 87,22 85,22 C83,22 82,23 82,24 C82,25 83,26 86,27 C90,28 94,30 94,34 C94,39 90,43 84,43 C78,43 74,39 74,34 Z" />
+</vector>

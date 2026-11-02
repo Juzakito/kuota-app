@@ -1,6 +1,8 @@
 package com.kouta.app.feature.home
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -31,9 +33,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
@@ -41,19 +45,30 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.ElectricBolt
+import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.SouthWest
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.SupportAgent
@@ -74,6 +89,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -82,6 +99,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -94,15 +112,20 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.kouta.app.R
 import com.kouta.app.di.AppEntryPoint
 import dagger.hilt.android.EntryPointAccessors
@@ -144,6 +167,25 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+
+data class StorePartner(
+    val name: String,
+    val category: String,
+    val initialPercent: Int,
+    val logoDrawable: Int,
+    val address: String,
+    val distance: String,
+    val highlight: String = "Desde $initialPercent% inicial"
+)
+
+val defaultStorePartners = listOf(
+    StorePartner("Adidas", "Ropa & Calzado Deportivo", 20, com.kouta.app.R.drawable.ic_brand_adidas, "Jockey Plaza / Real Plaza", "a 1.5 km", "Desde 20% inicial"),
+    StorePartner("BKS", "Bicicletas & Accesorios", 30, com.kouta.app.R.drawable.ic_brand_bks, "Av. La Marina 1840", "a 2.3 km", "Desde 30% inicial"),
+    StorePartner("MIA", "Moda Femenina & Denim", 20, com.kouta.app.R.drawable.ic_brand_mia, "Galería San Pedro Tda 104", "a 450 m", "Desde 1 cuota"),
+    StorePartner("Textil Gamarra", "Telas & Confecciones al por mayor", 30, com.kouta.app.R.drawable.ic_brand_store, "Jr. Gamarra 840, La Victoria", "a 350 m", "Desde 30% inicial"),
+    StorePartner("Confecciones Mary", "Moda Urbana & Denim Mayorista", 40, com.kouta.app.R.drawable.ic_brand_store, "Galería Santa Rosa Tda 205", "a 500 m", "Desde 40% inicial"),
+    StorePartner("Distribuidora Central", "Abarrotes & Insumos B2B", 20, com.kouta.app.R.drawable.ic_brand_store, "Av. Aviación 1200", "a 1.2 km", "Desde 20% inicial")
+)
 
 @Composable
 fun HomeScreen(
@@ -375,11 +417,28 @@ fun HomeScreen(
     val nextLevelGoalCents = nextLevel.minLineCents * 2L
     val salesProgressRatio = (salesTotal.toFloat() / nextLevelGoalCents.toFloat()).coerceIn(0f, 1f)
 
+    val principalLineCents = remember(availableLineCents) { (availableLineCents * 70L) / 100L }
+    val cotidianaLineCents = remember(availableLineCents, principalLineCents) { availableLineCents - principalLineCents }
+
+    var showLevelModal by remember { mutableStateOf(false) }
+    var showNearbyStoresModal by remember { mutableStateOf(false) }
+    var showHelpModal by remember { mutableStateOf(false) }
+    var showHowToUseModal by remember { mutableStateOf(false) }
+    var showWhereToUseModal by remember { mutableStateOf(false) }
+    var showPrincipalLineModal by remember { mutableStateOf(false) }
+    var showCotidianaLineModal by remember { mutableStateOf(false) }
+    var showPayMobileModal by remember { mutableStateOf(false) }
+    var showPayServicesModal by remember { mutableStateOf(false) }
+    var showCouponsModal by remember { mutableStateOf(false) }
+    var showInviteEarnModal by remember { mutableStateOf(false) }
+    var selectedStoreForQuickView by remember { mutableStateOf<StorePartner?>(null) }
+
     val atmosphericHeaderBrush = Brush.verticalGradient(
         listOf(
-            com.kouta.app.core.designsystem.theme.KuotaAtmosphericDeep,
-            com.kouta.app.core.designsystem.theme.KuotaAtmosphericMid,
-            com.kouta.app.core.designsystem.theme.KuotaAtmosphericLight
+            Color(0xFFFDE047), // Vibrant Cashea energetic yellow
+            Color(0xFFFEF08A).copy(alpha = 0.85f),
+            Color(0xFFFEF9C3).copy(alpha = 0.45f),
+            KuotaColors.White
         )
     )
 
@@ -390,445 +449,514 @@ fun HomeScreen(
             .verticalScroll(rememberScrollState())
     ) {
         // -------------------------------------------------------------
-        // 1. CABECERA AZUL REAL & BALANCE DE FINANCIAMIENTO (HOME-01, HOME-02, Link Bank & Ethan Carter)
+        // CABECERA ESTILO CASHEA B2B: DOS LÍNEAS DE COMPRA
         // -------------------------------------------------------------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(atmosphericHeaderBrush)
                 .padding(horizontal = 20.dp)
-                .padding(top = 16.dp, bottom = 22.dp)
+                .padding(top = 16.dp, bottom = 12.dp)
                 .kuotaTabSectionReveal(sectionIndex = 0),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Barra de perfil y acciones de cabecera
-            // Fila de Marca Kuota y acciones superiores
+            // Fila Superior: [Píldora Nivel 1] [Píldora Tiendas cerca] [Círculo Ayuda (?)]
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_kuota_logo_horizontal),
-                    contentDescription = "KUOTA",
-                    modifier = Modifier.height(28.dp),
-                    contentScale = ContentScale.Fit
-                )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // 1. Píldora Nivel
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = KuotaColors.White,
+                    border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.7f)),
+                    modifier = Modifier.clickable { showLevelModal = true },
+                    shadowElevation = 1.dp
                 ) {
-                    // Buscador circular
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(KuotaColors.White)
-                            .border(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f), CircleShape)
-                            .clickable(onClick = onActivityClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Search, contentDescription = "Buscar ventas", tint = KuotaColors.PersianBlue, modifier = Modifier.size(18.dp))
-                    }
-
-                    // Notificaciones circular
-                    BadgedBox(
-                        badge = {
-                            if (unread > 0) {
-                                Badge(containerColor = com.kouta.app.core.designsystem.theme.KuotaCoral, contentColor = KuotaColors.White) {
-                                    Text(if (unread > 9) "9+" else "$unread")
-                                }
-                            }
-                        }
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(KuotaColors.White)
-                                .border(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f), CircleShape)
-                                .clickable(onClick = onNotificationsClick),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = KuotaColors.PersianBlue, modifier = Modifier.size(18.dp))
-                        }
-                    }
-                }
-            }
-
-            // Barra de perfil y saludo
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = KuotaColors.White,
-                border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.5f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onOpenProfile)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    HomeAvatar(greetingName)
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                        Text(
-                            if (greetingName.isBlank()) "Buenos días 👋" else "Buenos días, $greetingName 👋",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = KuotaColors.PrussianBlue,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            "Línea respaldada en ventas reales",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = KuotaColors.PrussianBlue.copy(alpha = 0.7f),
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
-
-            // =========================================================
-            // TARJETA PRINCIPAL PROTAGONISTA FUSIONADA (PRD Rediseño UI/UX)
-            // =========================================================
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = KuotaColors.White,
-                border = BorderStroke(1.5.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f)),
-                shadowElevation = 2.dp
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    // Encabezado: "Puedes financiar hasta" + Nivel actual
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                "Puedes financiar hasta",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = KuotaColors.PrussianBlue.copy(alpha = 0.75f)
-                            )
-                            IconButton(
-                                onClick = { showBalance = !showBalance },
-                                modifier = Modifier.size(24.dp)
-                            ) {
-                                Icon(
-                                    if (showBalance) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = "Ocultar monto",
-                                    tint = KuotaColors.PersianBlue,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-
-                        // Badge Nivel actual (Ej. "Nivel 1")
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = KuotaColors.Lavender,
-                            border = BorderStroke(1.dp, KuotaColors.Periwinkle)
-                        ) {
-                            Text(
-                                text = "Nivel ${userCreditLevel.levelNumber}",
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = KuotaColors.PersianBlue
-                            )
-                        }
-                    }
-
-                    // Monto gigante protagonista
-                    if (showBalance) {
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            Text(
-                                text = integerPart,
-                                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 40.sp),
-                                fontWeight = FontWeight.ExtraBold,
-                                color = KuotaColors.PrussianBlue,
-                                letterSpacing = (-1).sp
-                            )
-                            if (decimalPart.isNotEmpty()) {
-                                Text(
-                                    text = decimalPart,
-                                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
-                                    fontWeight = FontWeight.Bold,
-                                    color = KuotaColors.PrussianBlue.copy(alpha = 0.75f),
-                                    modifier = Modifier.padding(bottom = 4.dp)
-                                )
-                            }
-                        }
-                    } else {
+                        Image(
+                            painter = painterResource(R.drawable.kuota_mark),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
                         Text(
-                            text = "S/ ••••••••",
-                            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp),
-                            fontWeight = FontWeight.ExtraBold,
+                            text = "Nivel ${userCreditLevel.levelNumber}",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
                             color = KuotaColors.PrussianBlue
                         )
                     }
+                }
 
-                    // Términos del nivel: ("50% inicial", "compras hasta S/ 1400")
+                // 2. Píldora Tiendas Cerca
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = KuotaColors.White,
+                    border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.7f)),
+                    modifier = Modifier.clickable { showNearbyStoresModal = true },
+                    shadowElevation = 1.dp
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = KuotaColors.Lavender,
-                            border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.5f))
-                        ) {
-                            Text(
-                                text = "${userCreditLevel.downPaymentPercentage}% inicial",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = KuotaColors.PersianBlue
-                            )
-                        }
-                        Text(
-                            text = "·",
-                            color = KuotaColors.Periwinkle,
-                            fontWeight = FontWeight.Bold
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = KuotaColors.PersianBlue,
+                            modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Compras hasta ${PurchaseOffer.formatPen(maxPurchaseCapacityCents)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = KuotaColors.PrussianBlue.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Medium
+                            text = "Tiendas cerca",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.PrussianBlue
                         )
                     }
+                }
 
-                    // Barra de progreso simple debajo (progreso visual limpio sin texto largo)
-                    LinearProgressIndicator(
-                        progress = { salesProgressRatio },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(5.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        color = KuotaColors.PersianBlue,
-                        trackColor = KuotaColors.Lavender
+                // 3. Botón Circular Ayuda (?)
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(KuotaColors.White)
+                        .border(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.7f), CircleShape)
+                        .clickable { showHelpModal = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                        contentDescription = "Ayuda",
+                        tint = KuotaColors.PersianBlue,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
 
-            // =========================================================
-            // SECCIÓN "PRÓXIMA CUOTA" (PRD Rediseño UI/UX)
-            // =========================================================
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                color = KuotaColors.Lavender,
-                border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f))
+            // Encabezado de Sección: "Tus líneas" + "¿Cómo las uso?"
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (nextUpcomingPair != null) {
-                    val (activePurchase, nextInstallment) = nextUpcomingPair
+                Text(
+                    text = "Tus líneas",
+                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 23.sp),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = KuotaColors.PrussianBlue
+                )
+                Text(
+                    text = "¿Cómo las uso?",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = KuotaColors.PersianBlue,
+                    modifier = Modifier
+                        .clickable { showHowToUseModal = true }
+                        .padding(vertical = 4.dp, horizontal = 2.dp)
+                )
+            }
+
+            // Tarjeta Tip flotante: "¿Dónde uso mis líneas?"
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showWhereToUseModal = true },
+                shape = RoundedCornerShape(16.dp),
+                color = KuotaColors.Lavender,
+                border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.7f)),
+                shadowElevation = 1.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_brand_store),
+                        contentDescription = null,
+                        modifier = Modifier.size(42.dp)
+                    )
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.CalendarMonth,
-                                    contentDescription = null,
-                                    tint = KuotaColors.PersianBlue,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    "Próxima cuota",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = KuotaColors.PrussianBlue
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(com.kouta.app.core.designsystem.theme.KuotaCoral.copy(alpha = 0.15f))
-                                    .padding(horizontal = 8.dp, vertical = 2.dp)
-                            ) {
-                                Text(
-                                    "Vence: ${nextInstallment.dueAt}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = com.kouta.app.core.designsystem.theme.KuotaCoral
-                                )
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1f, fill = false),
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Text(
-                                    "${activePurchase.supplierName} · Cuota #${nextInstallment.sequenceNumber}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = KuotaColors.PrussianBlue.copy(alpha = 0.75f),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                // Monto en tamaño reducido (fontSize = 19.sp, titleLarge)
-                                Text(
-                                    if (showBalance) PurchaseOffer.formatPen(nextInstallment.amountCents) else "S/ ••••••",
-                                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
-                                    fontWeight = FontWeight.Bold,
-                                    color = KuotaColors.PrussianBlue
-                                )
-                            }
-
-                            Spacer(Modifier.width(12.dp))
-
-                            // Botón limpio sin quiebres de texto
-                            Button(
-                                onClick = { wizardTargetPair = activePurchase to nextInstallment },
-                                shape = RoundedCornerShape(50),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = KuotaColors.PersianBlue,
-                                    contentColor = KuotaColors.White
-                                ),
-                                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-                            ) {
-                                Text(
-                                    text = "Pagar ahora",
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    maxLines = 1,
-                                    softWrap = false
-                                )
-                            }
-                        }
+                        Text(
+                            text = "<Desde 1 cuota con la Cotidiana.>",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = KuotaColors.PrussianBlue.copy(alpha = 0.75f)
+                        )
+                        Text(
+                            text = "¿Dónde uso mis líneas?",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.PrussianBlue
+                        )
                     }
-                } else {
+                }
+            }
+
+            // Dos tarjetas de línea en paralelo: Principal y Cotidiana
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Tarjeta 1: Principal
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { showPrincipalLineModal = true },
+                    shape = RoundedCornerShape(16.dp),
+                    color = KuotaColors.White,
+                    border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.7f)),
+                    shadowElevation = 1.dp
+                ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Icon(
-                                Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = com.kouta.app.core.designsystem.theme.KuotaSuccess,
-                                modifier = Modifier.size(18.dp)
-                            )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                "No tienes cuotas pendientes",
+                                text = "Principal",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = KuotaColors.PrussianBlue
                             )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = KuotaColors.PrussianBlue.copy(alpha = 0.6f),
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
-                        Text(
-                            "Tu línea de crédito está al 100% disponible. Puedes realizar compras a crédito en cualquier proveedor aliado.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = KuotaColors.PrussianBlue.copy(alpha = 0.75f)
-                        )
-                        Surface(
+
+                        Row(verticalAlignment = Alignment.Top) {
+                            Text(
+                                text = "S/ ${principalLineCents / 100}",
+                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp),
+                                fontWeight = FontWeight.ExtraBold,
+                                color = KuotaColors.PrussianBlue
+                            )
+                            Text(
+                                text = ".00",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = KuotaColors.PrussianBlue,
+                                modifier = Modifier.padding(top = 1.dp)
+                            )
+                            Text(
+                                text = " de S/ ${availableLineCents / 100}",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = KuotaColors.PrussianBlue.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(start = 3.dp, top = 2.dp)
+                            )
+                        }
+
+                        // Barra acento en amarillo/dorado
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(onClick = onFinanceClick),
-                            shape = RoundedCornerShape(12.dp),
-                            color = KuotaColors.White,
-                            border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.5f))
+                                .fillMaxWidth(0.65f)
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(Color(0xFFFACC15))
+                        )
+                    }
+                }
+
+                // Tarjeta 2: Cotidiana
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { showCotidianaLineModal = true },
+                    shape = RoundedCornerShape(16.dp),
+                    color = KuotaColors.White,
+                    border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.7f)),
+                    shadowElevation = 1.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Explorar proveedores aliados →", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = KuotaColors.PersianBlue)
-                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = KuotaColors.PersianBlue, modifier = Modifier.size(16.dp))
-                            }
+                            Text(
+                                text = "Cotidiana",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = KuotaColors.PrussianBlue
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = KuotaColors.PrussianBlue.copy(alpha = 0.6f),
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
+
+                        Row(verticalAlignment = Alignment.Top) {
+                            Text(
+                                text = "S/ ${cotidianaLineCents / 100}",
+                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp),
+                                fontWeight = FontWeight.ExtraBold,
+                                color = KuotaColors.PrussianBlue
+                            )
+                            Text(
+                                text = ".00",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = KuotaColors.PrussianBlue,
+                                modifier = Modifier.padding(top = 1.dp)
+                            )
+                            Text(
+                                text = " de S/ ${availableLineCents / 100}",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = KuotaColors.PrussianBlue.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(start = 3.dp, top = 2.dp)
+                            )
+                        }
+
+                        // Barra acento en amarillo/dorado
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.5f)
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(Color(0xFFFACC15))
+                        )
                     }
                 }
             }
         }
-        Spacer(Modifier.height(14.dp))
 
         // -------------------------------------------------------------
-        // 2. ACCIONES RÁPIDAS: FILA DE CUATRO (HOME-04, Vaulta Style)
+        // CUATRO ACCIONES RÁPIDAS (Pagar celular, Pagar servicios, Canjear cupones, Invitar y ganar)
         // -------------------------------------------------------------
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 20.dp, vertical = 6.dp)
                 .kuotaTabSectionReveal(sectionIndex = 1),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             val quickActions = listOf(
-                Triple("Kuotear", Icons.Default.Storefront) { onFinanceClick() },
-                Triple("Cobrar", Icons.Default.Link) {
-                    TradeScreenNavState.openLink()
-                    onFinanceClick()
-                },
-                Triple("Mis cuotas", Icons.Default.CalendarMonth) { onCardsClick() },
-                Triple("Proveedores", Icons.Default.Store) { onFinanceClick() }
+                Triple("Pagar celular", Icons.Default.Smartphone) { showPayMobileModal = true },
+                Triple("Pagar servicios", Icons.AutoMirrored.Filled.ReceiptLong) { showPayServicesModal = true },
+                Triple("Canjear cupones", Icons.Default.ConfirmationNumber) { showCouponsModal = true },
+                Triple("Invitar y ganar", Icons.Default.CardGiftcard) { showInviteEarnModal = true }
             )
 
             quickActions.forEach { (label, icon, onClick) ->
-                Card(
+                Surface(
                     modifier = Modifier
                         .weight(1f)
                         .clickable(onClick = onClick),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    color = KuotaColors.White,
+                    border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f)),
+                    shadowElevation = 1.dp
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 12.dp, horizontal = 4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(42.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFFFEF9C3).copy(alpha = 0.6f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(icon, contentDescription = label, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = label,
+                                tint = KuotaColors.PrussianBlue,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                         Text(
                             text = label,
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                             fontWeight = FontWeight.Bold,
+                            color = KuotaColors.PrussianBlue,
                             textAlign = TextAlign.Center,
-                            maxLines = 1
+                            maxLines = 2,
+                            lineHeight = 14.sp
                         )
                     }
+                }
+            }
+        }
+
+        // -------------------------------------------------------------
+        // TIENDAS DISPONIBLES (Carrusel de comercios y marcas aliadas)
+        // -------------------------------------------------------------
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .clickable { showNearbyStoresModal = true },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Ver todas las tiendas disponibles",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = KuotaColors.PrussianBlue
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = KuotaColors.PrussianBlue,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(defaultStorePartners) { store ->
+                    Surface(
+                        modifier = Modifier
+                            .width(108.dp)
+                            .height(84.dp)
+                            .clickable { selectedStoreForQuickView = store },
+                        shape = RoundedCornerShape(14.dp),
+                        color = KuotaColors.White,
+                        border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f)),
+                        shadowElevation = 1.dp
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(store.logoDrawable),
+                                contentDescription = store.name,
+                                modifier = Modifier.size(54.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Recordatorio de cuota pendiente si existe
+        if (nextUpcomingPair != null) {
+            val (activePurchase, nextInstallment) = nextUpcomingPair
+            Spacer(Modifier.height(14.dp))
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = KuotaColors.Lavender,
+                border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.7f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = KuotaColors.PersianBlue, modifier = Modifier.size(15.dp))
+                            Text("Próxima cuota por pagar", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = KuotaColors.PersianBlue)
+                        }
+                        Text(
+                            "${activePurchase.supplierName} · Cuota #${nextInstallment.sequenceNumber} (${PurchaseOffer.formatPen(nextInstallment.amountCents)})",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = KuotaColors.PrussianBlue
+                        )
+                        Text("Vence el ${nextInstallment.dueAt}", style = MaterialTheme.typography.labelSmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.7f))
+                    }
+                    Button(
+                        onClick = { wizardTargetPair = activePurchase to nextInstallment },
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Text("Pagar", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        // Banner inferior de llamado a compra al crédito
+        Spacer(Modifier.height(14.dp))
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .clickable { onFinanceClick() },
+            shape = RoundedCornerShape(20.dp),
+            color = Color(0xFFFEF08A),
+            border = BorderStroke(1.dp, Color(0xFFFACC15).copy(alpha = 0.7f))
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Lo que necesitas para tu negocio",
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = KuotaColors.PrussianBlue
+                )
+                Text(
+                    text = "Compra hoy en tiendas aliadas y paga desde 1 hasta 4 cuotas semanales fijas sin intereses ocultos.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = KuotaColors.PrussianBlue.copy(alpha = 0.8f),
+                    lineHeight = 18.sp
+                )
+                Row(
+                    modifier = Modifier.padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = "Escanear QR de compra",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = KuotaColors.PersianBlue
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = KuotaColors.PersianBlue,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }
@@ -1351,6 +1479,138 @@ fun HomeScreen(
                     }
                     isPayingInstallment = false
                 }
+            }
+        )
+    }
+
+    if (showLevelModal) {
+        LevelExplanationDialog(
+            userCreditLevel = userCreditLevel,
+            availableLineCents = availableLineCents,
+            onDismiss = { showLevelModal = false },
+            onViewAllLevels = {
+                showLevelModal = false
+                onCardsClick()
+            }
+        )
+    }
+
+    if (showNearbyStoresModal) {
+        NearbyStoresSheetDialog(
+            onDismiss = { showNearbyStoresModal = false },
+            onStoreClick = { store ->
+                showNearbyStoresModal = false
+                selectedStoreForQuickView = store
+            },
+            onScanQr = {
+                showNearbyStoresModal = false
+                onFinanceClick()
+            }
+        )
+    }
+
+    if (showHelpModal) {
+        HelpSupportSheetDialog(
+            onDismiss = { showHelpModal = false }
+        )
+    }
+
+    if (showHowToUseModal) {
+        HowToUseLinesSheetDialog(
+            onDismiss = { showHowToUseModal = false },
+            onStartShopping = {
+                showHowToUseModal = false
+                onFinanceClick()
+            }
+        )
+    }
+
+    if (showWhereToUseModal) {
+        WhereToUseLinesSheetDialog(
+            onDismiss = { showWhereToUseModal = false },
+            onScanQr = {
+                showWhereToUseModal = false
+                onFinanceClick()
+            },
+            onExploreStores = {
+                showWhereToUseModal = false
+                showNearbyStoresModal = true
+            }
+        )
+    }
+
+    if (showPrincipalLineModal) {
+        PrincipalLineSheetDialog(
+            principalLineCents = principalLineCents,
+            totalLineCents = availableLineCents,
+            downPaymentPercentage = userCreditLevel.downPaymentPercentage,
+            onDismiss = { showPrincipalLineModal = false },
+            onFinance = {
+                showPrincipalLineModal = false
+                onFinanceClick()
+            }
+        )
+    }
+
+    if (showCotidianaLineModal) {
+        CotidianaLineSheetDialog(
+            cotidianaLineCents = cotidianaLineCents,
+            totalLineCents = availableLineCents,
+            onDismiss = { showCotidianaLineModal = false },
+            onFinance = {
+                showCotidianaLineModal = false
+                onFinanceClick()
+            }
+        )
+    }
+
+    if (showPayMobileModal) {
+        PayMobileRechargeSheetDialog(
+            availableCents = cotidianaLineCents,
+            onDismiss = { showPayMobileModal = false },
+            onRechargeSuccess = { operator, phone, amountCents ->
+                showPayMobileModal = false
+                Toast.makeText(context, "¡Recarga exitosa! S/ ${amountCents / 100} a $operator $phone", Toast.LENGTH_LONG).show()
+                KuotaEvents.bump()
+            }
+        )
+    }
+
+    if (showPayServicesModal) {
+        PayServicesSheetDialog(
+            availableCents = cotidianaLineCents,
+            onDismiss = { showPayServicesModal = false },
+            onPaymentSuccess = { serviceName, supplyCode, amountCents ->
+                showPayServicesModal = false
+                Toast.makeText(context, "¡Pago registrado! S/ ${amountCents / 100} en $serviceName (Sum: $supplyCode)", Toast.LENGTH_LONG).show()
+                KuotaEvents.bump()
+            }
+        )
+    }
+
+    if (showCouponsModal) {
+        CouponsSheetDialog(
+            onDismiss = { showCouponsModal = false },
+            onApplyCoupon = { code, discountDesc ->
+                showCouponsModal = false
+                Toast.makeText(context, "Cupón $code activado: $discountDesc", Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+
+    if (showInviteEarnModal) {
+        InviteEarnSheetDialog(
+            onDismiss = { showInviteEarnModal = false }
+        )
+    }
+
+    selectedStoreForQuickView?.let { store ->
+        StorePartnerDetailSheetDialog(
+            store = store,
+            onDismiss = { selectedStoreForQuickView = null },
+            onScanQr = {
+                selectedStoreForQuickView = null
+                onFinanceClick()
             }
         )
     }
@@ -2044,5 +2304,1606 @@ private fun CheckRow(
             contentDescription = null,
             tint = if (done) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
         )
+    }
+}
+
+// -------------------------------------------------------------------------
+// DIÁLOGOS Y SHEETS MODALES INTERACTIVOS PARA HOME CASHEA STYLE
+// -------------------------------------------------------------------------
+
+@Composable
+fun LevelExplanationDialog(
+    userCreditLevel: com.kouta.app.domain.model.CreditLevel,
+    availableLineCents: Long,
+    onDismiss: () -> Unit,
+    onViewAllLevels: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFEF9C3)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.kuota_mark),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "Nivel ${userCreditLevel.levelNumber} · Kuota",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = KuotaColors.PrussianBlue
+                                )
+                                Text(
+                                    text = "Escala de Crédito para Comerciantes",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = KuotaColors.PrussianBlue.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = KuotaColors.Lavender,
+                        border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Línea aprobada", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                                Text(
+                                    PurchaseOffer.formatPen(availableLineCents),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = KuotaColors.PrussianBlue
+                                )
+                            }
+                            HorizontalDivider(color = KuotaColors.Periwinkle.copy(alpha = 0.4f))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Inicial requerida", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                                Text(
+                                    "${userCreditLevel.downPaymentPercentage}% en tiendas aliadas",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = KuotaColors.PersianBlue
+                                )
+                            }
+                            HorizontalDivider(color = KuotaColors.Periwinkle.copy(alpha = 0.4f))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Plazo de pago", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                                Text(
+                                    "Hasta 4 cuotas semanales fijas",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = KuotaColors.PrussianBlue
+                                )
+                            }
+                        }
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            "Requisitos para subir al Nivel ${(userCreditLevel.levelNumber + 1).coerceAtMost(6)}:",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.PrussianBlue
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = KuotaColors.PersianBlue, modifier = Modifier.size(16.dp))
+                            Text("Paga 3 cuotas semanales consecutivas a tiempo", style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = KuotaColors.PersianBlue, modifier = Modifier.size(16.dp))
+                            Text("Registra al menos S/ 500 en ventas en tu negocio", style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = KuotaColors.PersianBlue, modifier = Modifier.size(16.dp))
+                            Text("Cero días de mora acumulada", style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Button(
+                        onClick = onViewAllLevels,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                    ) {
+                        Text("Ver escala de 6 niveles de crédito", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NearbyStoresSheetDialog(
+    onDismiss: () -> Unit,
+    onStoreClick: (StorePartner) -> Unit,
+    onScanQr: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("Todos") }
+    val categories = listOf("Todos", "Textil", "Calzado", "Moda", "Abarrotes")
+
+    val filteredStores = remember(searchQuery, selectedCategory) {
+        defaultStorePartners.filter { store ->
+            val matchesCategory = selectedCategory == "Todos" || store.category.contains(selectedCategory, ignoreCase = true)
+            val matchesQuery = searchQuery.isBlank() || store.name.contains(searchQuery, ignoreCase = true) || store.address.contains(searchQuery, ignoreCase = true)
+            matchesCategory && matchesQuery
+        }
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.85f)
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                "Tiendas y Proveedores Cerca",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = KuotaColors.PrussianBlue
+                            )
+                            Text(
+                                "Compra al crédito con tu Línea Principal o Cotidiana",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = KuotaColors.PrussianBlue.copy(alpha = 0.7f)
+                            )
+                        }
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Buscar por nombre, rubro o galería...", color = KuotaColors.PrussianBlue.copy(alpha = 0.5f)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = KuotaColors.PersianBlue) },
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = KuotaColors.PersianBlue,
+                            unfocusedBorderColor = KuotaColors.Periwinkle
+                        )
+                    )
+
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(categories) { cat ->
+                            val isSelected = cat == selectedCategory
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = if (isSelected) KuotaColors.PersianBlue else KuotaColors.Lavender,
+                                border = BorderStroke(1.dp, if (isSelected) KuotaColors.PersianBlue else KuotaColors.Periwinkle),
+                                modifier = Modifier.clickable { selectedCategory = cat }
+                            ) {
+                                Text(
+                                    text = cat,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) KuotaColors.White else KuotaColors.PrussianBlue
+                                )
+                            }
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        filteredStores.forEach { store ->
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onStoreClick(store) },
+                                shape = RoundedCornerShape(16.dp),
+                                color = KuotaColors.White,
+                                border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f)),
+                                shadowElevation = 1.dp
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color(0xFFFEF9C3).copy(alpha = 0.5f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Image(
+                                            painter = painterResource(store.logoDrawable),
+                                            contentDescription = store.name,
+                                            modifier = Modifier.size(36.dp),
+                                            contentScale = ContentScale.Fit
+                                        )
+                                    }
+
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Text(store.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                                        Text(store.category, style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.7f))
+                                        Text("${store.address} · ${store.distance}", style = MaterialTheme.typography.labelSmall, color = KuotaColors.PersianBlue, fontWeight = FontWeight.SemiBold)
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = Color(0xFFFEF08A),
+                                        border = BorderStroke(1.dp, Color(0xFFFACC15))
+                                    ) {
+                                        Text(
+                                            text = store.highlight,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                            fontWeight = FontWeight.Bold,
+                                            color = KuotaColors.PrussianBlue
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Button(
+                        onClick = onScanQr,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                    ) {
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Escanear QR de compra en tienda", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HelpSupportSheetDialog(
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Centro de Ayuda y Soporte",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.PrussianBlue
+                        )
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = KuotaColors.Lavender,
+                        border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text("Preguntas Frecuentes", fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                            Text(
+                                "¿Cómo comprar con Kuota?\n" +
+                                "1. Acércate a una tienda aliada o pide por WhatsApp.\n" +
+                                "2. Escanea el código QR oficial del comercio.\n" +
+                                "3. Elige tu plan en cuotas y confirma.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = KuotaColors.PrussianBlue,
+                                lineHeight = 18.sp
+                            )
+                            HorizontalDivider(color = KuotaColors.Periwinkle.copy(alpha = 0.4f))
+                            Text(
+                                "¿Cómo pagar mis cuotas?\n" +
+                                "Puedes pagar directamente desde la sección 'Mis cuotas' o 'Próximos pagos' usando Yape, Plin o transferencia bancaria.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = KuotaColors.PrussianBlue,
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/51999999999?text=Hola%20Kuota,%20necesito%20ayuda%20con%20mi%20cuenta"))
+                            runCatching { context.startActivity(intent) }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                    ) {
+                        Icon(Icons.Default.SupportAgent, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Chatear por WhatsApp con Soporte", fontWeight = FontWeight.Bold)
+                    }
+
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        border = BorderStroke(1.dp, KuotaColors.Periwinkle)
+                    ) {
+                        Text("Cerrar", color = KuotaColors.PrussianBlue, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HowToUseLinesSheetDialog(
+    onDismiss: () -> Unit,
+    onStartShopping: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "¿Cómo uso mis dos líneas?",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.PrussianBlue
+                        )
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFFFEF9C3).copy(alpha = 0.6f),
+                        border = BorderStroke(1.dp, Color(0xFFFACC15).copy(alpha = 0.7f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                "1. La Línea Principal (70% del cupo)",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = KuotaColors.PrussianBlue
+                            )
+                            Text(
+                                "Para metas grandes y compras mayoristas: stock de temporada, pedidos de telas, fardos y mercadería para tu negocio en hasta 4 cuotas semanales.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = KuotaColors.PrussianBlue.copy(alpha = 0.85f),
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = KuotaColors.Lavender,
+                        border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.7f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                "2. La Línea Cotidiana (30% del cupo)",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = KuotaColors.PrussianBlue
+                            )
+                            Text(
+                                "Para tu día a día: insumos urgentes, empaques, repuestos, recargas de celular y servicios básicos. Paga desde 1 cuota a 7 o 14 días.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = KuotaColors.PrussianBlue.copy(alpha = 0.85f),
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = onStartShopping,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                    ) {
+                        Text("¡Entendido, empezar a comprar!", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WhereToUseLinesSheetDialog(
+    onDismiss: () -> Unit,
+    onScanQr: () -> Unit,
+    onExploreStores: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "¿Dónde uso mis líneas?",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.PrussianBlue
+                        )
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    val places = listOf(
+                        Triple("Tiendas Físicas Aliadas", "Gamarra, Polvos Azules, Caquetá, Mesa Redonda y más de 250 locales comerciales.", Icons.Default.Storefront),
+                        Triple("Pedidos por WhatsApp", "Pide a tus proveedores de confianza y escanea el QR que te compartan.", Icons.Default.PhoneAndroid),
+                        Triple("Recargas y Servicios", "Paga la recarga de tu celular y recibos de luz, agua o internet directamente en la app.", Icons.Default.Smartphone)
+                    )
+
+                    places.forEach { (title, desc, icon) ->
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = KuotaColors.Lavender,
+                            border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(42.dp)
+                                        .clip(CircleShape)
+                                        .background(KuotaColors.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(icon, contentDescription = null, tint = KuotaColors.PersianBlue, modifier = Modifier.size(20.dp))
+                                }
+                                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(title, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue, style = MaterialTheme.typography.titleSmall)
+                                    Text(desc, style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.75f), lineHeight = 16.sp)
+                                }
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = onExploreStores,
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            shape = RoundedCornerShape(50),
+                            border = BorderStroke(1.dp, KuotaColors.PersianBlue)
+                        ) {
+                            Text("Ver tiendas", color = KuotaColors.PersianBlue, fontWeight = FontWeight.Bold)
+                        }
+                        Button(
+                            onClick = onScanQr,
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            shape = RoundedCornerShape(50),
+                            colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                        ) {
+                            Text("Escanear QR", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PrincipalLineSheetDialog(
+    principalLineCents: Long,
+    totalLineCents: Long,
+    downPaymentPercentage: Int,
+    onDismiss: () -> Unit,
+    onFinance: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Línea Principal", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                            Text("Para metas y compras mayores", style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.7f))
+                        }
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFFFEF9C3).copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, Color(0xFFFACC15).copy(alpha = 0.7f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("Disponible en Línea Principal", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                            Text(
+                                "S/ ${principalLineCents / 100}.00",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = KuotaColors.PrussianBlue
+                            )
+                            Text(
+                                "De tu línea total de ${PurchaseOffer.formatPen(totalLineCents)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = KuotaColors.PrussianBlue.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Inicial requerida:", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                            Text("$downPaymentPercentage%", fontWeight = FontWeight.Bold, color = KuotaColors.PersianBlue)
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Plazos disponibles:", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                            Text("Hasta 4 cuotas semanales", fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Ideal para:", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                            Text("Mercadería y stock mayorista", fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Button(
+                        onClick = onFinance,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                    ) {
+                        Text("Escanear QR de compra", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CotidianaLineSheetDialog(
+    cotidianaLineCents: Long,
+    totalLineCents: Long,
+    onDismiss: () -> Unit,
+    onFinance: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Línea Cotidiana", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                            Text("Para tu día a día desde 1 cuota", style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.7f))
+                        }
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = KuotaColors.Lavender,
+                        border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.7f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("Disponible en Línea Cotidiana", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                            Text(
+                                "S/ ${cotidianaLineCents / 100}.00",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = KuotaColors.PrussianBlue
+                            )
+                            Text(
+                                "De tu línea total de ${PurchaseOffer.formatPen(totalLineCents)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = KuotaColors.PrussianBlue.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Plazo de pago:", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                            Text("Desde 1 cuota (a 7 o 14 días)", fontWeight = FontWeight.Bold, color = KuotaColors.PersianBlue)
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Inicial:", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                            Text("Mínima o S/ 0 según tienda", fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Ideal para:", style = MaterialTheme.typography.bodyMedium, color = KuotaColors.PrussianBlue)
+                            Text("Insumos rápidos, recargas y servicios", fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Button(
+                        onClick = onFinance,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                    ) {
+                        Text("Usar en compra o servicios", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PayMobileRechargeSheetDialog(
+    availableCents: Long,
+    onDismiss: () -> Unit,
+    onRechargeSuccess: (operator: String, phone: String, amountCents: Long) -> Unit
+) {
+    var selectedOperator by remember { mutableStateOf("Claro") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var selectedAmountCents by remember { mutableLongStateOf(1000L) }
+    val operators = listOf("Claro", "Movistar", "Entel", "Bitel")
+    val amounts = listOf(500L to "S/ 5", 1000L to "S/ 10", 2000L to "S/ 20", 3000L to "S/ 30", 5000L to "S/ 50")
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Pagar Celular / Recargas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                            Text("Financia con tu Línea Cotidiana", style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.7f))
+                        }
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Text("Selecciona tu operador:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        operators.forEach { op ->
+                            val isSelected = op == selectedOperator
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { selectedOperator = op },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) KuotaColors.PersianBlue else KuotaColors.Lavender,
+                                border = BorderStroke(1.dp, if (isSelected) KuotaColors.PersianBlue else KuotaColors.Periwinkle)
+                            ) {
+                                Text(
+                                    text = op,
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    color = if (isSelected) KuotaColors.White else KuotaColors.PrussianBlue
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = phoneNumber,
+                        onValueChange = { if (it.length <= 9) phoneNumber = it.filter { ch -> ch.isDigit() } },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Número de celular (9 dígitos)") },
+                        leadingIcon = { Text("+51", modifier = Modifier.padding(start = 12.dp), fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = KuotaColors.PersianBlue,
+                            unfocusedBorderColor = KuotaColors.Periwinkle
+                        )
+                    )
+
+                    Text("Monto a recargar:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        amounts.forEach { (cents, label) ->
+                            val isSelected = cents == selectedAmountCents
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { selectedAmountCents = cents },
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) Color(0xFFFEF08A) else KuotaColors.Lavender,
+                                border = BorderStroke(1.dp, if (isSelected) Color(0xFFFACC15) else KuotaColors.Periwinkle)
+                            ) {
+                                Text(
+                                    text = label,
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    color = KuotaColors.PrussianBlue
+                                )
+                            }
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            if (phoneNumber.length == 9) {
+                                onRechargeSuccess(selectedOperator, phoneNumber, selectedAmountCents)
+                            }
+                        },
+                        enabled = phoneNumber.length == 9,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                    ) {
+                        Text("Recargar S/ ${selectedAmountCents / 100} en 1 cuota", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PayServicesSheetDialog(
+    availableCents: Long,
+    onDismiss: () -> Unit,
+    onPaymentSuccess: (serviceName: String, supplyCode: String, amountCents: Long) -> Unit
+) {
+    var selectedService by remember { mutableStateOf("Luz del Sur") }
+    var supplyCode by remember { mutableStateOf("") }
+    val services = listOf("Luz del Sur", "Sedapal", "Enel", "Movistar Hogar", "Claro Hogar", "Win Internet")
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Pagar Servicios Básicos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                            Text("Paga tus recibos con tu Línea Cotidiana", style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.7f))
+                        }
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Text("Selecciona la empresa o servicio:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(services) { srv ->
+                            val isSelected = srv == selectedService
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = if (isSelected) KuotaColors.PersianBlue else KuotaColors.Lavender,
+                                border = BorderStroke(1.dp, if (isSelected) KuotaColors.PersianBlue else KuotaColors.Periwinkle),
+                                modifier = Modifier.clickable { selectedService = srv }
+                            ) {
+                                Text(
+                                    text = srv,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) KuotaColors.White else KuotaColors.PrussianBlue
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = supplyCode,
+                        onValueChange = { supplyCode = it.filter { ch -> ch.isDigit() } },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Número de suministro / código de cliente") },
+                        placeholder = { Text("Ej. 1849204") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = KuotaColors.PersianBlue,
+                            unfocusedBorderColor = KuotaColors.Periwinkle
+                        )
+                    )
+
+                    if (supplyCode.length >= 6) {
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color(0xFFFEF9C3).copy(alpha = 0.6f),
+                            border = BorderStroke(1.dp, Color(0xFFFACC15).copy(alpha = 0.7f))
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("Recibo de $selectedService", fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                                    Text("Vencimiento: en 4 días", style = MaterialTheme.typography.labelSmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.7f))
+                                }
+                                Text("S/ 86.40", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = KuotaColors.PrussianBlue)
+                            }
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            if (supplyCode.length >= 6) {
+                                onPaymentSuccess(selectedService, supplyCode, 8640L)
+                            }
+                        },
+                        enabled = supplyCode.length >= 6,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                    ) {
+                        Text(if (supplyCode.length >= 6) "Pagar S/ 86.40 en 1 cuota" else "Ingresa tu número de suministro", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CouponsSheetDialog(
+    onDismiss: () -> Unit,
+    onApplyCoupon: (code: String, discountDesc: String) -> Unit
+) {
+    var couponInput by remember { mutableStateOf("") }
+    val coupons = listOf(
+        Pair("GAMARRA50", "S/ 50 de descuento en compras de mercadería textil > S/ 300"),
+        Pair("INICIALCERO", "0% de inicial en tu primera compra con Línea Cotidiana"),
+        Pair("PUNTUAL20", "S/ 20 de saldo a favor al completar 3 cuotas puntuales")
+    )
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Canjear Cupones",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.PrussianBlue
+                        )
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = couponInput,
+                            onValueChange = { couponInput = it.uppercase() },
+                            modifier = Modifier.weight(1f),
+                            placeholder = { Text("Código de cupón") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = KuotaColors.PersianBlue,
+                                unfocusedBorderColor = KuotaColors.Periwinkle
+                            )
+                        )
+                        Button(
+                            onClick = {
+                                if (couponInput.isNotBlank()) {
+                                    onApplyCoupon(couponInput, "Descuento activado exitosamente")
+                                }
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                        ) {
+                            Text("Canjear", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Text("Cupones disponibles para tu cuenta:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+
+                    coupons.forEach { (code, desc) ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onApplyCoupon(code, desc) },
+                            shape = RoundedCornerShape(14.dp),
+                            color = KuotaColors.Lavender,
+                            border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.7f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = Color(0xFFFEF08A),
+                                        border = BorderStroke(1.dp, Color(0xFFFACC15))
+                                    ) {
+                                        Text(
+                                            code,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = KuotaColors.PrussianBlue
+                                        )
+                                    }
+                                    Text(desc, style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue)
+                                }
+                                Text("Aplicar →", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = KuotaColors.PersianBlue)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun InviteEarnSheetDialog(
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val referralCode = "KUOTA-JOSE-789"
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Invitar y Ganar",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = KuotaColors.PrussianBlue
+                        )
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFFFEF9C3).copy(alpha = 0.7f),
+                        border = BorderStroke(1.dp, Color(0xFFFACC15).copy(alpha = 0.7f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                "¡Gana S/ 25 en crédito para tu negocio!",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = KuotaColors.PrussianBlue
+                            )
+                            Text(
+                                "Comparte tu código con otros comerciantes y proveedores. Cuando realicen su primera compra al crédito, ambos recibirán S/ 25 de descuento.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = KuotaColors.PrussianBlue.copy(alpha = 0.85f),
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = KuotaColors.Lavender,
+                        border = BorderStroke(1.dp, KuotaColors.Periwinkle)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("Tu código de invitación", style = MaterialTheme.typography.labelSmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.7f))
+                                Text(referralCode, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = KuotaColors.PrussianBlue)
+                            }
+                            IconButton(onClick = {
+                                clipboardManager.setText(AnnotatedString(referralCode))
+                                Toast.makeText(context, "Código copiado: $referralCode", Toast.LENGTH_SHORT).show()
+                            }) {
+                                Icon(Icons.Default.ContentCopy, contentDescription = "Copiar código", tint = KuotaColors.PersianBlue)
+                            }
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            val shareMessage = "¡Hola! Te invito a usar Kuota App para comprar mercadería al crédito en cuotas semanales sin intereses ocultos. Usa mi código $referralCode y llévate S/ 25 de descuento en tu primera compra: https://kuota.pe/app"
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, shareMessage)
+                            }
+                            context.startActivity(Intent.createChooser(intent, "Compartir invitación Kuota"))
+                        },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Compartir por WhatsApp", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StorePartnerDetailSheetDialog(
+    store: StorePartner,
+    onDismiss: () -> Unit,
+    onScanQr: () -> Unit
+) {
+    val context = LocalContext.current
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = KuotaColors.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                            .align(Alignment.CenterHorizontally)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(54.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFFEF9C3).copy(alpha = 0.5f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(store.logoDrawable),
+                                    contentDescription = store.name,
+                                    modifier = Modifier.size(40.dp),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+                            Column {
+                                Text(store.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = KuotaColors.PrussianBlue)
+                                Text(store.category, style = MaterialTheme.typography.bodySmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.7f))
+                            }
+                        }
+
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = KuotaColors.PrussianBlue)
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = KuotaColors.Lavender,
+                        border = BorderStroke(1.dp, KuotaColors.Periwinkle.copy(alpha = 0.6f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(Icons.Default.LocationOn, contentDescription = null, tint = KuotaColors.PersianBlue, modifier = Modifier.size(16.dp))
+                                Text(store.address, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, color = KuotaColors.PrussianBlue)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFF59E0B), modifier = Modifier.size(16.dp))
+                                Text("4.9 (120+ ventas verificadas con Kuota)", style = MaterialTheme.typography.labelSmall, color = KuotaColors.PrussianBlue.copy(alpha = 0.8f))
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = KuotaColors.PersianBlue, modifier = Modifier.size(16.dp))
+                                Text("Acepta Línea Principal y Línea Cotidiana", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = KuotaColors.PersianBlue)
+                            }
+                        }
+                    }
+
+                    Button(
+                        onClick = onScanQr,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(containerColor = KuotaColors.PersianBlue, contentColor = KuotaColors.White)
+                    ) {
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Escanear QR en ${store.name}", fontWeight = FontWeight.Bold)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/51999999999?text=Hola%20${Uri.encode(store.name)},%20quisiera%20comprar%20al%20crédito%20con%20Kuota"))
+                            runCatching { context.startActivity(intent) }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        border = BorderStroke(1.dp, KuotaColors.PersianBlue)
+                    ) {
+                        Text("Contactar por WhatsApp", color = KuotaColors.PersianBlue, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
     }
 }

@@ -1,0 +1,45 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="40dp"
+    android:viewportWidth="120"
+    android:viewportHeight="75">
+  <!-- Adidas Trefoil Icon -->
+  <path
+      android:fillColor="#00529B"
+      android:pathData="M60,4 C57,14 51,24 42,30 C51,32 60,26 64,18 C68,26 77,32 86,30 C77,24 71,14 68,4 Z" />
+  <path
+      android:fillColor="#00529B"
+      android:pathData="M38,16 C34,24 28,31 20,35 C28,38 37,35 43,28 C45,23 44,19 38,16 Z" />
+  <path
+      android:fillColor="#00529B"
+      android:pathData="M90,16 C84,19 83,23 85,28 C91,35 100,38 108,35 C100,31 94,24 90,16 Z" />
+  <!-- Three horizontal cut lines across the trefoil -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M15,24 L113,24 L113,27 L15,27 Z" />
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M22,31 L106,31 L106,34 L22,34 Z" />
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M32,37 L96,37 L96,40 L32,40 Z" />
+  <!-- Text: adidas -->
+  <path
+      android:fillColor="#00529B"
+      android:pathData="M24,58 C21,58 19,60 19,63 C19,66 21,68 24,68 C27,68 29,66 29,63 L29,54 L27,54 L27,59 C26,58 25,58 24,58 Z" />
+  <path
+      android:fillColor="#00529B"
+      android:pathData="M37,58 C34,58 32,60 32,63 C32,66 34,68 37,68 C40,68 42,66 42,63 L42,50 L40,50 L40,59 C39,58 38,58 37,58 Z" />
+  <path
+      android:fillColor="#00529B"
+      android:pathData="M48,52 L46,52 L46,54 L48,54 Z M48,58 L46,58 L46,68 L48,68 Z" />
+  <path
+      android:fillColor="#00529B"
+      android:pathData="M56,58 C53,58 51,60 51,63 C51,66 53,68 56,68 C59,68 61,66 61,63 L61,50 L59,50 L59,59 C58,58 57,58 56,58 Z" />
+  <path
+      android:fillColor="#00529B"
+      android:pathData="M69,58 C66,58 64,60 64,63 C64,66 66,68 69,68 C72,68 74,66 74,63 L74,54 L72,54 L72,59 C71,58 70,58 69,58 Z" />
+  <path
+      android:fillColor="#00529B"
+      android:pathData="M80,58 C77,58 76,59 76,61 C76,63 78,64 81,64 C83,65 84,66 84,67 C84,68 82,69 80,69 C77,69 76,68 75,67 L74,68 C75,70 77,71 80,71 C84,71 86,69 86,66 C86,63 84,62 81,62 C79,61 78,60 78,59 C78,58 79,57 80,57 C83,57 84,58 85,59 L86,58 C85,57 83,56 80,56 Z" />
+</vector>
